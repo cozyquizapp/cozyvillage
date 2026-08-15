@@ -11,7 +11,7 @@
 import Phaser from "phaser";
 import {
   VIEW, GLADE, gladeHalf, PLACES, PATH, RAIL, PROPS, FUTURE_PARCELS,
-  TREE_RING, RULES, UPGRADES
+  TREE_RING, RULES, UPGRADES, K
 } from "../game/config.js";
 import {
   state, bus, melde, kistenPlaetze, wagenKapazitaet, speichern, istFreigeschaltet
@@ -79,11 +79,11 @@ export default class GladeScene extends Phaser.Scene {
         this.tiefeSetzen(this.add.image(x, y, `tree-${v++ % 3}-d`).setOrigin(0.5, 1), y);
       }
     }
-    for (let x = 14; x <= VIEW.width - 14; x += TREE_RING.stepX) {
-      const y = GLADE.top + 2 + ((x * 13) % 4);
+    for (let x = 14 * K; x <= VIEW.width - 14 * K; x += TREE_RING.stepX) {
+      const y = GLADE.top + 2 * K + ((x * 13) % (4 * K));
       this.tiefeSetzen(this.add.image(x, y, `tree-${v++ % 3}-d`).setOrigin(0.5, 1), y);
-      const yb = GLADE.bottom + 3;
-      this.tiefeSetzen(this.add.image(x + 6, yb, "shrub-d").setOrigin(0.5, 1), yb);
+      const yb = GLADE.bottom + 3 * K;
+      this.tiefeSetzen(this.add.image(x + 6 * K, yb, "shrub-d").setOrigin(0.5, 1), yb);
     }
   }
 
@@ -110,7 +110,8 @@ export default class GladeScene extends Phaser.Scene {
   baueBeet() {
     const b = PLACES.beet;
     this.buesche = [];
-    const versatz = [[-16, -6], [-6, 2], [4, -4], [14, 3], [-10, 8], [8, 8]];
+    const versatz = [[-16, -6], [-6, 2], [4, -4], [14, 3], [-10, 8], [8, 8]]
+      .map(([dx, dy]) => [dx * K, dy * K]);
     versatz.forEach(([dx, dy], i) => {
       const bild = this.add.image(b.x + dx, b.y + dy, "bush-0").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, b.y + dy);
@@ -145,11 +146,11 @@ export default class GladeScene extends Phaser.Scene {
 
   baueNest() {
     const n = PLACES.nest;
-    this.tiefeSetzen(this.add.image(n.x, n.y, "nest").setOrigin(0.5, 1), n.y - 2);
-    this.wolf = this.add.image(n.x - 1, n.y - 8, "wolf-sleep").setOrigin(0.5, 1);
+    this.tiefeSetzen(this.add.image(n.x, n.y, "nest").setOrigin(0.5, 1), n.y - 2 * K);
+    this.wolf = this.add.image(n.x - 1 * K, n.y - 8 * K, "wolf-sleep").setOrigin(0.5, 1);
     this.tiefeSetzen(this.wolf, n.y - 1);
     this.tiefeSetzen(this.add.image(n.x, n.y, "nest-rim").setOrigin(0.5, 1), n.y);
-    this.bluete = this.add.image(n.x + 20, n.y - 6, "blossom").setOrigin(0.5, 1);
+    this.bluete = this.add.image(n.x + 20 * K, n.y - 6 * K, "blossom").setOrigin(0.5, 1);
     this.tiefeSetzen(this.bluete, n.y);
     this.bluete.setVisible(state.ausbauten.wagenlager);
 
@@ -175,15 +176,15 @@ export default class GladeScene extends Phaser.Scene {
       });
     } else {
       this.tweens.add({
-        targets: this.wolf, y: this.wolf.y - 1, duration: 1400,
+        targets: this.wolf, y: this.wolf.y - 1 * K, duration: 1400,
         yoyo: true, repeat: -1, ease: "Sine.easeInOut"
       });
     }
   }
 
   baueWagen() {
-    this.wagenBild = this.add.image(RAIL.home, RAIL.y + 4, "cart").setOrigin(0.5, 1);
-    this.tiefeSetzen(this.wagenBild, RAIL.y + 4);
+    this.wagenBild = this.add.image(RAIL.home, RAIL.y + 4 * K, "cart").setOrigin(0.5, 1);
+    this.tiefeSetzen(this.wagenBild, RAIL.y + 4 * K);
     this.wagenKisten = [];
     this.wagenBild.setInteractive({ useHandCursor: true });
     this.wagenBild.on("pointerup", () => bus.emit("oeffne", {
@@ -204,14 +205,14 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   baueLaterne() {
-    const x = PLACES.station.x - 30, y = PLACES.station.y - 4;
+    const x = PLACES.station.x - 30 * K, y = PLACES.station.y - 4 * K;
     this.tiefeSetzen(this.add.image(x, y, "lamp").setOrigin(0.5, 1), y);
-    const schein = this.add.ellipse(x, y - 1, 44, 22, 0xffce78, 0.13).setDepth(6);
+    const schein = this.add.ellipse(x, y - 1 * K, 44 * K, 22 * K, 0xffce78, 0.13).setDepth(6);
     this.tweens.add({
       targets: schein, alpha: 0.2, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
     });
     const standSchein = this.add.ellipse(
-      PLACES.store.x, PLACES.store.y - 2, 62, 26, 0xffce78, 0.12
+      PLACES.store.x, PLACES.store.y - 2 * K, 62 * K, 26 * K, 0xffce78, 0.12
     ).setDepth(6);
     this.tweens.add({
       targets: standSchein, alpha: 0.17, duration: 1500, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
@@ -225,12 +226,12 @@ export default class GladeScene extends Phaser.Scene {
   aktualisiereStation() {
     const plaetze = kistenPlaetze();
     const s = PLACES.station;
-    const breite = 8 + plaetze * 10;
-    const links = s.x - breite / 2 + 8;
+    const breite = (8 + plaetze * 10) * K;
+    const links = s.x - breite / 2 + 8 * K;
     while (this.stationKisten.length > state.kisten) this.stationKisten.pop().destroy();
     while (this.stationKisten.length < state.kisten) {
       const i = this.stationKisten.length;
-      const kiste = this.add.image(links + i * 10, s.y - 14, "crate").setOrigin(0.5, 1);
+      const kiste = this.add.image(links + i * 10 * K, s.y - 14 * K, "crate").setOrigin(0.5, 1);
       this.tiefeSetzen(kiste, s.y + 1);
       this.stationKisten.push(kiste);
       // Die Kiste landet mit einem kurzen Stauchen, statt zu erscheinen.
@@ -246,12 +247,12 @@ export default class GladeScene extends Phaser.Scene {
     while (this.regalKisten.length < anzahl) {
       const i = this.regalKisten.length;
       const reihe = Math.floor(i / 4), spalte = i % 4;
-      const x = s.x - 20 + spalte * 10;
-      const y = s.y - 28 + reihe * 10;
+      const x = s.x - 20 * K + spalte * 10 * K;
+      const y = s.y - 28 * K + reihe * 10 * K;
       const kiste = this.add.image(x, y, "crate").setOrigin(0.5, 1);
       this.tiefeSetzen(kiste, s.y + 1 + reihe);
       this.regalKisten.push(kiste);
-      kiste.y -= 8;
+      kiste.y -= 8 * K;
       kiste.setAlpha(0);
       this.tweens.add({ targets: kiste, y, alpha: 1, duration: 260, ease: "Back.easeOut" });
     }
@@ -270,8 +271,8 @@ export default class GladeScene extends Phaser.Scene {
   setzeWagenKisten() {
     const x = this.wagenBild.x;
     this.wagenKisten.forEach((k, i) => {
-      k.x = x - 7 + (i % 2) * 9;
-      k.y = RAIL.y - 7 - Math.floor(i / 2) * 8;
+      k.x = x - 7 * K + (i % 2) * 9 * K;
+      k.y = RAIL.y - 7 * K - Math.floor(i / 2) * 8 * K;
     });
   }
 
@@ -332,7 +333,7 @@ export default class GladeScene extends Phaser.Scene {
     this.station.setTexture("station-2");
     this.bluete.setVisible(true).setScale(0);
     this.tweens.add({ targets: this.bluete, scale: 1, duration: 420, ease: "Back.easeOut" });
-    this.funken.emitParticleAt(PLACES.station.x, PLACES.station.y - 24, 16);
+    this.funken.emitParticleAt(PLACES.station.x, PLACES.station.y - 24 * K, 16);
     this.cameras.main.flash(180, 255, 226, 160, false);
     this.aktualisiereStation();
     melde("Das Wagenlager steht – die Verladestation hat jetzt ein Vordach");
@@ -373,7 +374,7 @@ export default class GladeScene extends Phaser.Scene {
           b.traegt = false;
           b.phase = "hin";
           this.aktualisiereStation();
-          this.funken.emitParticleAt(PLACES.station.x, PLACES.station.y - 12, 4);
+          this.funken.emitParticleAt(PLACES.station.x, PLACES.station.y - 12 * K, 4);
           bus.emit("aendert");
         } else {
           melde("Verladestation voll – Bramble wartet auf den Wurzelwagen");
@@ -385,7 +386,7 @@ export default class GladeScene extends Phaser.Scene {
     const x = PATH.from.x + (PATH.to.x - PATH.from.x) * b.fortschritt;
     const y = PATH.from.y + (PATH.to.y - PATH.from.y) * b.fortschritt;
     const laeuft = b.phase === "hin" || b.phase === "zurueck";
-    const wippen = b.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 : 0;
+    const wippen = b.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 * K : 0;
     // Laufzyklus über vier Bilder; beim Tragen die zweite Zeile des Blattes
     const bild = laeuft ? Math.floor(this.time.now / 150) % 4 : 0;
     const reihe = b.traegt ? "beaver-carry-" : "beaver-";
@@ -396,7 +397,7 @@ export default class GladeScene extends Phaser.Scene {
     const kisteImSprite = this.textures.exists("beaver-carry-0");
     this.brambleKiste.setVisible(b.traegt && !kisteImSprite);
     if (this.brambleKiste.visible) {
-      this.brambleKiste.setPosition(x + 6, y - 4).setDepth(11 + y);
+      this.brambleKiste.setPosition(x + 6 * K, y - 4 * K).setDepth(11 + y);
     }
   }
 
@@ -431,7 +432,7 @@ export default class GladeScene extends Phaser.Scene {
         state.wagenLadung = 0;
         this.aktualisiereWagen();
         this.aktualisiereRegal();
-        this.funken.emitParticleAt(PLACES.store.x, PLACES.store.y - 30, 14);
+        this.funken.emitParticleAt(PLACES.store.x, PLACES.store.y - 30 * K, 14);
         this.weckeWolf();
         bus.emit("aendert");
         speichern();
@@ -448,12 +449,12 @@ export default class GladeScene extends Phaser.Scene {
   weckeWolf() {
     melde("Cozywolf hebt kurz das Ohr");
     this.tweens.add({
-      targets: this.wolf, y: this.wolf.y - 2, duration: 160, yoyo: true, repeat: 1, ease: "Sine.easeOut"
+      targets: this.wolf, y: this.wolf.y - 2 * K, duration: 160, yoyo: true, repeat: 1, ease: "Sine.easeOut"
     });
-    const herz = this.add.image(this.wolf.x - 8, this.wolf.y - 18, "spark")
+    const herz = this.add.image(this.wolf.x - 8 * K, this.wolf.y - 18 * K, "spark")
       .setTint(0xff9cc0).setScale(2).setDepth(950);
     this.tweens.add({
-      targets: herz, y: herz.y - 12, alpha: 0, duration: 1100,
+      targets: herz, y: herz.y - 12 * K, alpha: 0, duration: 1100,
       ease: "Sine.easeOut", onComplete: () => herz.destroy()
     });
   }

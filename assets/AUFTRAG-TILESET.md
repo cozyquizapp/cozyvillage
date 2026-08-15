@@ -26,10 +26,12 @@ Bitte **nicht alles auf einmal** liefern. Zuerst eine kleine **Stilprobe**,
 damit ein Missverständnis über Perspektive, Palette oder Kantenschärfe
 zwanzig Teile kostet und nicht zweihundert:
 
-**Stilprobe (Batch 1):** Graskacheln mit Übergangsset · zwei Laubbäume
-(einer hell, einer dunkel) · Beerenbusch in drei Leuchtstufen · Kiste 8 × 8 ·
-Verladestation Stufe 1 · Wurzelwagen · Schienenstück · Biber, nur Zeile 1
-und Zeile 5 · Wasser-Mitte mit vier Bildern.
+**Stilprobe (Batch 1):** Graskachel mit 9er-Übergangsset · Erdweg mit
+9er-Übergangsset · ein heller und ein dunkler Laubbaum · Beerenbusch in drei
+Leuchtstufen · Kiste 16 × 16 · Verladestation Stufe 1 · Wurzelwagen ·
+Schienenstück · Biber mit den Zeilen „Gehen nach vorn" und „Tragen" ·
+Wasser-Mitte mit vier Bildern · Cozywolf mit den Zeilen „Schlafen" und
+„Gehen nach vorn".
 
 Erst nach Freigabe der Stilprobe folgt der Rest.
 
@@ -69,7 +71,7 @@ frontal, Bodenkacheln flach von oben und Fahrzeuge oder Gebäude
 
 **Fehler 2 — hochaufgelöste Zeichnung mit Pixel-Optik.** Bilder mit vielen
 Zwischentönen und weichen Rändern sehen aus wie Pixel-Art, sind aber keine.
-Auf 32 Pixel Figurenhöhe wird daraus Matsch.
+Auf 64 Pixel Figurenhöhe wird daraus Matsch.
 
 > **Prüfregel:** Beim Hineinzoomen auf einen Rand darf **kein** weicher
 > Übergang zwischen zwei Farben sichtbar sein — nur eine harte Kante.
@@ -79,16 +81,28 @@ Auf 32 Pixel Figurenhöhe wird daraus Matsch.
 
 ## 1 · Technische Vorgaben — bitte exakt einhalten
 
+> **Maßstab geändert (Stand nach Batch 1).** Fellgrund lief zuerst auf
+> 320 × 180 mit 32er-Figuren. Bei dieser Größe reichen die Pixel nicht für
+> Fell, Rinde oder Kistenlatten — die Grafik wird zwangsläufig schlicht.
+> Das Spiel läuft jetzt auf **640 × 360**. Alle Maße im Auftrag sind
+> gegenüber Batch 1 **verdoppelt**.
+>
+> Die Komposition bleibt dabei exakt gleich: Eine Figur nimmt weiterhin
+> 17,8 % der Bildhöhe ein. Es stehen nur **viermal so viele Pixel** zum
+> Zeichnen zur Verfügung. Genau dort beginnt der Detailgrad, der gewünscht
+> ist — Fellstruktur, Rindenmaserung, sichtbare Latten an der Kiste.
+
+
 | Punkt | Vorgabe |
 |---|---|
-| Kachelgröße | **16 × 16 Pixel** |
+| Kachelgröße | **32 × 32 Pixel** |
 | Perspektive | **3/4-Draufsicht** (wie Stardew Valley), *nicht* isometrisch, *nicht* reine Seitenansicht |
 | Format | **PNG mit Alphakanal**, unkomprimiert, ohne Interlacing |
 | Kantenbehandlung | **Harte Kanten, kein Anti-Aliasing, keine Verläufe, keine Halbtransparenz.** Jedes Pixel ist entweder voll deckend oder voll durchsichtig |
 | Pixelraster | Ein Bildpixel = ein Gestaltungspixel. Keine skalierte Vorlage, keine 2×- oder 4×-Ausgabe |
 | Farbtiefe | Feste, begrenzte Palette (siehe Abschnitt 3) |
 | Hintergrund | Vollständig transparent, kein Schachbrett, keine Rahmen, keine Wasserzeichen, keine Beschriftungen im Bild |
-| Zielauflösung des Spiels | 320 × 180 Pixel Spielfläche |
+| Zielauflösung des Spiels | 640 × 360 Pixel Spielfläche |
 
 ### Lichtrichtung
 
@@ -114,7 +128,7 @@ Aufkleber.
 ```
 fellgrund-tileset/
   LIZENZ.txt                 ← zwingend, siehe Abschnitt 7
-  boden.png                  Bodenkacheln, 16×16 im Raster
+  boden.png                  Bodenkacheln, 32×32 im Raster
   natur.png                  Bäume, Büsche, Steine, Blumen
   gebaeude.png               Gebäude und Stationen
   gueter.png                 Kisten, Fässer, Güter, Schienen
@@ -126,7 +140,7 @@ fellgrund-tileset/
 ```
 
 Jede Datei ist ein **gleichmäßiges Raster**. Die Rasterweite steht im
-Dateinamen, wenn sie von 16 abweicht, z. B. `gebaeude_32.png`.
+Dateinamen, wenn sie von 32 abweicht, z. B. `gebaeude_64.png`.
 Keine unregelmäßigen Atlanten, kein Packing, keine JSON-Beschreibung nötig.
 
 ---
@@ -175,7 +189,7 @@ dunkler rechnen.
 
 ## 4 · Inhaltsliste
 
-### 4.1 `boden.png` — Bodenkacheln, 16 × 16
+### 4.1 `boden.png` — Bodenkacheln, 32 × 32
 
 Jede Bodenart als **vollständiges Übergangsset** (9 Kacheln: vier Ecken,
 vier Kanten, eine Mitte), plus zwei Variationskacheln für die Mitte, damit
@@ -201,15 +215,15 @@ links weiter ausbeult als rechts, ein leicht schiefer Stamm.
 
 | Objekt | Größe | Anzahl Varianten |
 |---|---|---|
-| Laubbaum, hell (steht in der Lichtung) | 32 × 48 | 4 |
-| Laubbaum, dunkel (bildet den Waldrand) | 32 × 48 | 4 |
-| Nadelbaum, dunkel | 32 × 48 | 3 |
-| Busch | 16 × 16 | 4 |
-| Beerenbusch mit leuchtenden Beeren | 16 × 16 | 3 Leuchtstufen derselben Pflanze |
-| Baumstumpf | 16 × 16 | 2 |
-| Findling / Stein | 16 × 16 und 32 × 16 | je 2 |
-| Farn, Pilzgruppe | 16 × 16 | je 2 |
-| Seerosenblatt fürs Wasser | 16 × 16 | 2 |
+| Laubbaum, hell (steht in der Lichtung) | 64 × 96 | 4 |
+| Laubbaum, dunkel (bildet den Waldrand) | 64 × 96 | 4 |
+| Nadelbaum, dunkel | 64 × 96 | 3 |
+| Busch | 32 × 32 | 4 |
+| Beerenbusch mit leuchtenden Beeren | 32 × 32 | 3 Leuchtstufen derselben Pflanze |
+| Baumstumpf | 32 × 32 | 2 |
+| Findling / Stein | 32 × 32 und 64 × 32 | je 2 |
+| Farn, Pilzgruppe | 32 × 32 | je 2 |
+| Seerosenblatt fürs Wasser | 32 × 32 | 2 |
 
 ### 4.3 `gebaeude.png` — Gebäude und Stationen
 
@@ -224,28 +238,28 @@ Stufe 2 ist erkennbar dieselbe Stelle wie Stufe 1, nur weiter gediehen.
 
 | Gebäude | Größe | Stufen | Beschreibung |
 |---|---|---|---|
-| Verladestation | 32 × 32 → 48 × 40 | 3 | Holzplattform mit Kistenplätzen. Stufe 2 bekommt ein Vordach, Stufe 3 einen Kran oder eine Rampe |
-| Vorratsstand | 64 × 48 | 3 | Offener Unterstand auf Pfosten, darunter **drei Regalbretter**, auf denen Kisten stehen. Die Regalbretter müssen leer zeichenbar sein — Kisten werden im Spiel einzeln daraufgesetzt |
-| Werkstatt | 48 × 40 | 3 | Werkbank unter einem Dach, Werkzeug an der Rückwand |
-| Küche | 48 × 40 | 3 | Offene Feuerstelle mit Topf und Ablage |
-| Wasserbecken / Quelle | 48 × 32 | 3 | Gefasstes Becken mit Zulaufrinne |
-| Nest der Hauptfigur | 40 × 24 | 3 | Flache Mulde aus Moos und Zweigen, von oben gesehen. **Zusätzlich als eigene Datei ein „vorderer Rand"** (nur der untere Bogen der Mulde), damit die Figur sichtbar darin liegen kann |
-| Schlafplatz für Bewohner | 32 × 24 | 2 | kleinere Mulde oder Korb |
-| Laterne auf Pfosten | 16 × 32 | 2 | zwei Zustände: hell und etwas gedimmt, für flackerndes Licht |
+| Verladestation | 96 × 80 | 3 | Holzplattform mit Kistenplätzen. Stufe 2 bekommt ein Vordach, Stufe 3 einen Kran oder eine Rampe |
+| Vorratsstand | 128 × 96 | 3 | Offener Unterstand auf Pfosten, darunter **drei Regalbretter**, auf denen Kisten stehen. Die Regalbretter müssen leer zeichenbar sein — Kisten werden im Spiel einzeln daraufgesetzt |
+| Werkstatt | 96 × 80 | 3 | Werkbank unter einem Dach, Werkzeug an der Rückwand |
+| Küche | 96 × 80 | 3 | Offene Feuerstelle mit Topf und Ablage |
+| Wasserbecken / Quelle | 96 × 64 | 3 | Gefasstes Becken mit Zulaufrinne |
+| Nest der Hauptfigur | 80 × 48 | 3 | Flache Mulde aus Moos und Zweigen, von oben gesehen. **Zusätzlich als eigene Datei ein „vorderer Rand"** (nur der untere Bogen der Mulde), damit die Figur sichtbar darin liegen kann |
+| Schlafplatz für Bewohner | 64 × 48 | 2 | kleinere Mulde oder Korb |
+| Laterne auf Pfosten | 32 × 64 | 3 | zwei Zustände: hell und etwas gedimmt, für flackerndes Licht |
 
 ### 4.4 `gueter.png` — Güter und Wege
 
-- **Kiste**, 8 × 8 — das wichtigste Einzelteil des ganzen Spiels. Sie wird
+- **Kiste**, 16 × 16 — das wichtigste Einzelteil des ganzen Spiels. Sie wird
   getragen, gestapelt, geladen und ins Regal gestellt. Sie muss auf hellem
   Gras **und** auf dunklem Holz lesbar sein
 - Kiste in **drei Füllzuständen** (leer, halb, voll leuchtend)
-- Fass 12 × 12, Sack 10 × 10, Korb 12 × 10
-- **Schienenstück**, 16 × 16, waagerecht: Schotterbett, Schwellen, zwei
+- Fass 24 × 24, Sack 20 × 20, Korb 24 × 20
+- **Schienenstück**, 32 × 32, waagerecht: Schotterbett, Schwellen, zwei
   Schienenstränge mit Lichtkante oben
 - Schienen-Endstück mit Prellbock
-- **Wurzelwagen**, 24 × 16, Seitenansicht, offene Ladefläche, zwei Räder.
+- **Wurzelwagen**, 48 × 32, 3/4-Draufsicht, offene Ladefläche, zwei Räder.
   Zusätzlich zwei Radstellungen für eine einfache Fahranimation
-- Wegweiser, Zaunstück, Torbogen — je 16 × 16
+- Wegweiser, Zaunstück, Torbogen — je 32 × 32
 
 ### 4.4b Bewegte Teile — Wasser, Licht, Pflanzen
 
@@ -255,17 +269,17 @@ eine **nahtlose Schleife**: Das letzte Bild geht ohne Sprung ins erste über.
 
 | Teil | Größe | Bilder | Bewegung |
 |---|---|---|---|
-| Wasseroberfläche, Mitte | 16 × 16 | 4 | ruhiges Glitzern, ein bis zwei Pixel wandern seitlich |
-| Wasser-Ufer, ganzes Übergangsset | 16 × 16 | 4 je Kachel | die Schaumkante am Ufer bewegt sich mit |
-| Wasserfall / Zulaufrinne | 16 × 32 | 4 | senkrecht fallend, Schleife |
-| Wasserspritzer am Auftreffpunkt | 16 × 16 | 4 | |
-| Seerosenblatt | 16 × 16 | 2 | leichtes Wiegen |
-| Schilf am Ufer | 16 × 16 | 3 | Wiegen im Wind |
-| Laterne | 16 × 32 | 3 | Flackern: hell, mittel, schwach |
-| Beerenbusch | 16 × 16 | 3 | Leuchten der Beeren an- und abschwellend |
-| Blüte am Nest | 16 × 16 | 4 | sanftes Funkeln |
-| Grasbüschel im Wind | 16 × 16 | 3 | zwei bis drei Pixel Neigung, mehr nicht |
-| Rauch aus einem Schornstein | 16 × 16 | 4 | aufsteigend |
+| Wasseroberfläche, Mitte | 32 × 32 | 4 | ruhiges Glitzern, ein bis zwei Pixel wandern seitlich |
+| Wasser-Ufer, ganzes Übergangsset | 32 × 32 | 4 je Kachel | die Schaumkante am Ufer bewegt sich mit |
+| Wasserfall / Zulaufrinne | 32 × 64 | 4 | senkrecht fallend, Schleife |
+| Wasserspritzer am Auftreffpunkt | 32 × 32 | 4 | |
+| Seerosenblatt | 32 × 32 | 2 | leichtes Wiegen |
+| Schilf am Ufer | 32 × 32 | 3 | Wiegen im Wind |
+| Laterne | 32 × 64 | 3 | Flackern: hell, mittel, schwach |
+| Beerenbusch | 32 × 32 | 3 | Leuchten der Beeren an- und abschwellend |
+| Blüte am Nest | 32 × 32 | 4 | sanftes Funkeln |
+| Grasbüschel im Wind | 32 × 32 | 3 | zwei bis drei Pixel Neigung, mehr nicht |
+| Rauch aus einem Schornstein | 32 × 32 | 4 | aufsteigend |
 
 **Wichtig:** Die Bewegung bleibt klein. Ein bis drei Pixel Versatz reichen.
 Fellgrund ist ein ruhiger Ort — es soll atmen, nicht zappeln.
@@ -275,7 +289,7 @@ Datei, in Abspielreihenfolge von links nach rechts.
 
 ### 4.5 `bewohner_<name>.png` — die Tiere
 
-Ein Spritesheet je Tier. **Rasterweite 32 × 32**, Figur mittig, Füße auf der
+Ein Spritesheet je Tier. **Rasterweite 64 × 64**, Figur mittig, Füße auf der
 unteren Rasterkante.
 
 Benötigte Tiere: **Biber, Eichhörnchen, Axolotl, Biene, Maulwurf.**
@@ -288,7 +302,7 @@ Je Tier folgende Zeilen im Spritesheet, jede Zeile eine Blickrichtung:
 | 2 | Stehen und Gehen, **nach rechts** | 4 |
 | 3 | Stehen und Gehen, **nach hinten** | 4 |
 | 4 | **Arbeiten** (bücken, hacken, greifen), nach vorn | 4 |
-| 5 | **Tragen** — dieselbe Gehanimation, aber mit erhobenen Armen, sodass eine 8 × 8-Kiste davor passt | 4 |
+| 5 | **Tragen** — dieselbe Gehanimation, aber mit erhobenen Armen, sodass eine 16 × 16-Kiste davor passt | 4 |
 | 6 | Schlafen / Ruhen | 2 |
 
 Nach links wird im Spiel gespiegelt — bitte **keine** eigene Linkszeile.
@@ -307,16 +321,16 @@ nie am Boden. Deshalb bekommt sie **nicht** das Schema aus 4.5, sondern:
 | 4 | Fliegen, seitlich | 4 |
 | 5 | Landen | 3 |
 
-Rasterweite ebenfalls **32 × 32**. Im Sitzen sind die Füße auf der unteren
+Rasterweite ebenfalls **64 × 64**. Im Sitzen sind die Füße auf der unteren
 Rasterkante, im Flug ist die Figur mittig.
 
-Zusätzlich als Einzelbild: **Sitzstange** 16 × 16 (ein kurzer Ast mit
+Zusätzlich als Einzelbild: **Sitzstange** 32 × 32 (ein kurzer Ast mit
 Halterung), auf der die Eule stehen kann.
 
 **Figurenregel für alle Tiere** (damit die Besetzung wie eine Familie wirkt):
 
 - fast schwarzer Umriss `#181016` rundherum
-- höchstens **fünf Farben** pro Figur
+- höchstens **zehn Farben** pro Figur
 - **zwei Pixel Wangenröte** in `#F0885E`
 - **großer Kopf, kleiner Körper** — der Kopf ist etwa 45 % der Figurenhöhe
 - Augen als einfache dunkle Punkte oder geschlossene Bögen, kein Weiß
@@ -341,7 +355,7 @@ handgezeichnete Fassung auf Spritegröße, die dieselbe Figur zeigt.
 - **buschiger Schwanz** als eigene Form neben dem Körper, heller als das Fell
 - Wangenröte `#F0885E` wie bei allen anderen Tieren
 
-Rasterweite **32 × 32**, Figurenhöhe etwa 32 Pixel.
+Rasterweite **64 × 64**, Figurenhöhe etwa 60 Pixel.
 
 | Zeile | Inhalt | Bilder |
 |---|---|---|
@@ -355,8 +369,8 @@ Rasterweite **32 × 32**, Figurenhöhe etwa 32 Pixel.
 | 8 | Freude (kurzes Hüpfen, Ohren nach oben) | 4 |
 
 **Wichtig zur Schlafhaltung:** Die eingerollte Figur muss in eine Nestmulde
-von **40 × 24** passen, und der *vordere Rand* der Mulde (siehe 4.3) wird im
-Spiel **über** die Figur gelegt. Die unteren drei bis vier Pixelzeilen der
+von **80 × 48** passen, und der *vordere Rand* der Mulde (siehe 4.3) wird im
+Spiel **über** die Figur gelegt. Die unteren sechs bis acht Pixelzeilen der
 schlafenden Figur dürfen also verdeckt werden — dort bitte nichts
 Wesentliches platzieren.
 
@@ -386,7 +400,7 @@ Wesentliches platzieren.
 5. Stammen alle Farben aus der Palette in Abschnitt 3?
 6. Sind die Baumkronen **unterschiedlich geformt** — nicht dieselbe Form in
    mehreren Größen?
-7. Ist die 8 × 8-Kiste sowohl auf `#487646` (Gras) als auch auf `#96693C`
+7. Ist die 16 × 16-Kiste sowohl auf `#487646` (Gras) als auch auf `#96693C`
    (Holz) klar erkennbar?
 8. Läuft jede Bildfolge **nahtlos** — geht das letzte Bild ohne Sprung ins
    erste über?

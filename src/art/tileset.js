@@ -65,67 +65,90 @@ function zelle(scene, blatt, key, sx, sy, sw, sh, { trimmen = true } = {}) {
   return true;
 }
 
+/** Maße eines Blattes, oder null wenn es fehlt. */
+function masse(scene, blatt) {
+  const t = scene.textures.get(blatt);
+  if (!t || t.key === "__MISSING") return null;
+  const bild = t.getSourceImage();
+  return { w: bild.width, h: bild.height };
+}
+
 /**
  * Ersetzt die Platzhaltertexturen durch die gelieferten.
- * Gibt zurück, welche Schlüssel tatsächlich ersetzt wurden.
+ *
+ * Die Zellgrößen werden aus den Blattmaßen abgeleitet, nicht fest verdrahtet –
+ * dadurch passt dieselbe Verdrahtung für 32er- und 64er-Figuren.
  */
 export function setzeTileset(scene) {
   const ersetzt = [];
-  const nimm = (key, ...args) => { if (zelle(scene, ...args, key ? {} : {})) ersetzt.push(key); };
+  const nimm = (blatt, key, sx, sy, sw, sh, opt) => {
+    if (zelle(scene, blatt, key, sx, sy, sw, sh, opt)) ersetzt.push(key);
+  };
 
-  // natur_32x48.png – 5 Zellen à 32×48
-  const natur = [
-    ["tree-0", 0], ["tree-0-d", 1],
-    ["bush-0", 2], ["bush-1", 3], ["bush-2", 4]
-  ];
-  for (const [key, i] of natur) {
-    if (zelle(scene, "blatt-natur", key, i * 32, 0, 32, 48)) ersetzt.push(key);
+  // natur – 5 Zellen nebeneinander: heller Baum, dunkler Baum, Busch 1–3
+  const natur = masse(scene, "blatt-natur");
+  if (natur) {
+    const zw = natur.w / 5, zh = natur.h;
+    nimm("blatt-natur", "tree-0", 0, 0, zw, zh);
+    nimm("blatt-natur", "tree-0-d", zw, 0, zw, zh);
+    nimm("blatt-natur", "bush-0", zw * 2, 0, zw, zh);
+    nimm("blatt-natur", "bush-1", zw * 3, 0, zw, zh);
+    nimm("blatt-natur", "bush-2", zw * 4, 0, zw, zh);
+    // Der Waldkranz nutzt drei Varianten; solange nur zwei geliefert sind, doppeln.
+    for (const k of ["tree-1", "tree-2"]) nimm("blatt-natur", k, 0, 0, zw, zh);
+    for (const k of ["tree-1-d", "tree-2-d"]) nimm("blatt-natur", k, zw, 0, zw, zh);
   }
-  // Der Waldkranz nutzt drei Varianten – hier gibt es zwei, also doppeln.
-  for (const key of ["tree-1", "tree-2"]) {
-    if (zelle(scene, "blatt-natur", key, 0, 0, 32, 48)) ersetzt.push(key);
+
+  // gebaeude – Verladestation Stufe 1 füllt das ganze Blatt
+  const geb = masse(scene, "blatt-gebaeude");
+  if (geb) nimm("blatt-gebaeude", "station-1", 0, 0, geb.w, geb.h);
+
+  // gueter – 4 Zellen: Kiste, Schiene, Wagen A, Wagen B
+  const gue = masse(scene, "blatt-gueter");
+  if (gue) {
+    const zw = gue.w / 4;
+    nimm("blatt-gueter", "crate", 0, 0, zw, gue.h);
+    nimm("blatt-gueter", "schiene", zw, 0, zw, gue.h);
+    nimm("blatt-gueter", "cart", zw * 2, 0, zw, gue.h);
+    nimm("blatt-gueter", "cart-b", zw * 3, 0, zw, gue.h);
   }
-  for (const key of ["tree-1-d", "tree-2-d"]) {
-    if (zelle(scene, "blatt-natur", key, 32, 0, 32, 48)) ersetzt.push(key);
-  }
 
-  // gebaeude_32.png – Verladestation Stufe 1
-  if (zelle(scene, "blatt-gebaeude", "station-1", 0, 0, 32, 32)) ersetzt.push("station-1");
-
-  // gueter_32x16.png – 4 Zellen à 32×16: Kiste, Schiene, Wagen A, Wagen B
-  if (zelle(scene, "blatt-gueter", "crate", 0, 0, 32, 16)) ersetzt.push("crate");
-  if (zelle(scene, "blatt-gueter", "schiene", 32, 0, 32, 16)) ersetzt.push("schiene");
-  if (zelle(scene, "blatt-gueter", "cart", 64, 0, 32, 16)) ersetzt.push("cart");
-  if (zelle(scene, "blatt-gueter", "cart-b", 96, 0, 32, 16)) ersetzt.push("cart-b");
-
-  // bewegt.png – vier Wasserbilder à 16×16
-  for (let i = 0; i < 4; i++) {
-    if (zelle(scene, "blatt-bewegt", `wasser-${i}`, i * 16, 0, 16, 16, { trimmen: false })) {
-      ersetzt.push(`wasser-${i}`);
+  // bewegt – vier Wasserbilder, ohne Trimmen weil Kacheln randlos sind
+  const beweg = masse(scene, "blatt-bewegt");
+  if (beweg) {
+    const zw = beweg.w / 4;
+    for (let i = 0; i < 4; i++) {
+      nimm("blatt-bewegt", `wasser-${i}`, i * zw, 0, zw, beweg.h, { trimmen: false });
     }
   }
 
-  // boden.png – 18 Zellen à 16×16: 3×3 Gras, 3×3 Erdweg
-  for (let i = 0; i < 18; i++) {
-    if (zelle(scene, "blatt-boden", `boden-${i}`, i * 16, 0, 16, 16, { trimmen: false })) {
-      ersetzt.push(`boden-${i}`);
+  // boden – 18 Kacheln in einer Reihe
+  const boden = masse(scene, "blatt-boden");
+  if (boden) {
+    const zw = boden.w / 18;
+    for (let i = 0; i < 18; i++) {
+      nimm("blatt-boden", `boden-${i}`, i * zw, 0, zw, boden.h, { trimmen: false });
     }
   }
 
-  // bewohner_biber.png – 4×2 Zellen à 32×32, oben Gehen, unten Tragen
-  for (let i = 0; i < 4; i++) {
-    if (zelle(scene, "blatt-biber", `beaver-${i}`, i * 32, 0, 32, 32)) ersetzt.push(`beaver-${i}`);
-    if (zelle(scene, "blatt-biber", `beaver-carry-${i}`, i * 32, 32, 32, 32)) {
-      ersetzt.push(`beaver-carry-${i}`);
+  // bewohner_biber – 4×2 Zellen: oben Gehen, unten Tragen
+  const biber = masse(scene, "blatt-biber");
+  if (biber) {
+    const zw = biber.w / 4, zh = biber.h / 2;
+    for (let i = 0; i < 4; i++) {
+      nimm("blatt-biber", `beaver-${i}`, i * zw, 0, zw, zh);
+      nimm("blatt-biber", `beaver-carry-${i}`, i * zw, zh, zw, zh);
     }
   }
 
-  // cozywolf.png – oben Schlafen, unten Gehen
-  for (let i = 0; i < 4; i++) {
-    if (zelle(scene, "blatt-wolf", `wolf-sleep-${i}`, i * 32, 0, 32, 32)) ersetzt.push(`wolf-sleep-${i}`);
+  // cozywolf – oben Schlafen, unten Gehen
+  const wolf = masse(scene, "blatt-wolf");
+  if (wolf) {
+    const zw = wolf.w / 4, zh = wolf.h / 2;
+    for (let i = 0; i < 4; i++) nimm("blatt-wolf", `wolf-sleep-${i}`, i * zw, 0, zw, zh);
+    nimm("blatt-wolf", "wolf-sleep", 0, 0, zw, zh);
+    nimm("blatt-wolf", "wolf-stand", 0, zh, zw, zh);
   }
-  if (zelle(scene, "blatt-wolf", "wolf-sleep", 0, 0, 32, 32)) ersetzt.push("wolf-sleep");
-  if (zelle(scene, "blatt-wolf", "wolf-stand", 0, 32, 32, 32)) ersetzt.push("wolf-stand");
 
   return ersetzt;
 }

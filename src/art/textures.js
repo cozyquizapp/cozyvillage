@@ -15,14 +15,18 @@ import {
   WOLF_HALF, WOLF_LIGHT, WOLF_TAIL, WOLF_PAL,
   WOLF_SLEEP, WOLF_SLEEP_PAL, BEAVER, BEAVER_PAL, CRITTERS
 } from "./sprites.js";
-import { VIEW, GLADE, gladeHalf, insideGlade, PATH, RAIL, PLACES } from "../game/config.js";
+import { VIEW, GLADE, gladeHalf, insideGlade, PATH, RAIL, PLACES, K } from "../game/config.js";
 
 /** Legt eine Leinwandtextur an und ruft die Zeichenfunktion darauf auf. */
 function tex(scene, key, w, h, draw) {
   if (scene.textures.exists(key)) scene.textures.remove(key);
-  const canvas = scene.textures.createCanvas(key, w, h);
+  // Die Zeichenbefehle bleiben im Entwurfsmaßstab; die Leinwand ist K-fach
+  // größer. Platzhalter werden dadurch klotzig, aber maßhaltig – die feinen
+  // Fassungen liefert das Tileset.
+  const canvas = scene.textures.createCanvas(key, w * K, h * K);
   const ctx = canvas.getContext();
   ctx.imageSmoothingEnabled = false;
+  ctx.setTransform(K, 0, 0, K, 0, 0);
   draw(ctx);
   canvas.refresh();
   return canvas;
@@ -91,36 +95,37 @@ function drawRock(ctx, cx, baseY, w) {
  * Hintergrund: Wald, Lichtung, Teich, Weg, Schienen
  * --------------------------------------------------------------- */
 function drawBackground(ctx) {
+  const s = (v) => v / K;   // Weltmaß → Entwurfsmaß
   const rnd = makeRandom(31);
-  const { width: W, height: H } = VIEW;
+  const W = VIEW.width / K, H = VIEW.height / K;
 
   rect(ctx, "#0D1811", 0, 0, W, H);
   for (let i = 0; i < 900; i++) {
     const x = Math.floor(rnd() * W);
     const y = Math.floor(rnd() * H);
-    if (insideGlade(x, y)) continue;
+    if (insideGlade(x * K, y * K)) continue;
     const r = 4 + Math.floor(rnd() * 5);
     const bright = rnd() > 0.45;
     ellipse(ctx, bright ? "#152B1C" : "#101F15", x, y, r, r * 0.8);
     ellipse(ctx, bright ? "#1D3A26" : "#16301F", x - 1, y - 1, r - 2, r * 0.55);
   }
 
-  for (let y = GLADE.top - 2; y <= GLADE.bottom + 2; y++) {
-    const hw = gladeHalf(Math.min(GLADE.bottom, Math.max(GLADE.top, y)));
-    if (hw > 0) rect(ctx, "#21391F", GLADE.cx - hw - 2, y, hw * 2 + 4, 1);
+  for (let y = s(GLADE.top) - 2; y <= s(GLADE.bottom) + 2; y++) {
+    const hw = s(gladeHalf(Math.min(GLADE.bottom, Math.max(GLADE.top, y * K))));
+    if (hw > 0) rect(ctx, "#21391F", s(GLADE.cx) - hw - 2, y, hw * 2 + 4, 1);
   }
-  for (let y = GLADE.top; y <= GLADE.bottom; y++) {
-    const hw = gladeHalf(y);
+  for (let y = s(GLADE.top); y <= s(GLADE.bottom); y++) {
+    const hw = s(gladeHalf(y * K));
     if (hw <= 0) continue;
-    rect(ctx, PAL.grassSh, GLADE.cx - hw, y, hw * 2, 1);
-    rect(ctx, y < GLADE.top + 2 ? PAL.grassLt : PAL.grass, GLADE.cx - hw + 2, y, hw * 2 - 4, 1);
+    rect(ctx, PAL.grassSh, s(GLADE.cx) - hw, y, hw * 2, 1);
+    rect(ctx, y < s(GLADE.top) + 2 ? PAL.grassLt : PAL.grass, s(GLADE.cx) - hw + 2, y, hw * 2 - 4, 1);
   }
 
   // Grasbüschel in drei Helligkeiten statt gleichmäßigem Rauschen
   for (let i = 0; i < 620; i++) {
     const x = Math.floor(rnd() * W);
-    const y = GLADE.top + Math.floor(rnd() * (GLADE.bottom - GLADE.top));
-    if (!insideGlade(x, y)) continue;
+    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
+    if (!insideGlade(x * K, y * K)) continue;
     const v = rnd();
     const c = v > 0.78 ? PAL.grassHi : v > 0.42 ? PAL.grassDk : PAL.grassLt;
     rect(ctx, c, x, y, 2 + Math.floor(rnd() * 2), 1);
@@ -128,8 +133,8 @@ function drawBackground(ctx) {
   }
   for (let i = 0; i < 60; i++) {
     const x = Math.floor(rnd() * W);
-    const y = GLADE.top + Math.floor(rnd() * (GLADE.bottom - GLADE.top));
-    if (!insideGlade(x, y)) continue;
+    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
+    if (!insideGlade(x * K, y * K)) continue;
     const c = ["#EDA8C6", "#F7E8AE", "#C6B0E6"][Math.floor(rnd() * 3)];
     rect(ctx, c, x, y, 2, 1);
     rect(ctx, c, x, y - 1, 1, 1);
@@ -138,8 +143,8 @@ function drawBackground(ctx) {
   // Erdflecken brechen die gleichmäßige Wiese auf
   for (let i = 0; i < 12; i++) {
     const x = Math.floor(rnd() * W);
-    const y = GLADE.top + Math.floor(rnd() * (GLADE.bottom - GLADE.top));
-    if (!insideGlade(x, y)) continue;
+    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
+    if (!insideGlade(x * K, y * K)) continue;
     const rx = 6 + Math.floor(rnd() * 8);
     const ry = 3 + Math.floor(rnd() * 3);
     ellipse(ctx, PAL.grassDk, x, y, rx, ry);
@@ -148,7 +153,7 @@ function drawBackground(ctx) {
   }
 
   // Teich
-  const pond = PLACES.pond;
+  const pond = { x: s(PLACES.pond.x), y: s(PLACES.pond.y) };
   ellipse(ctx, PAL.grassSh, pond.x, pond.y, 27, 14);
   ellipse(ctx, PAL.waterDk, pond.x, pond.y, 24, 12);
   ellipse(ctx, PAL.water, pond.x, pond.y - 1, 22, 11);
@@ -157,8 +162,8 @@ function drawBackground(ctx) {
   // Trampelpfad zwischen Beet und Verladestation
   for (let i = 0; i <= 26; i++) {
     const q = i / 26;
-    const x = PATH.from.x + (PATH.to.x - PATH.from.x) * q;
-    const y = PATH.from.y + (PATH.to.y - PATH.from.y) * q;
+    const x = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
+    const y = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
     const r = 3 + Math.round(rnd());
     ellipse(ctx, PAL.pathDk, x, y, r + 1, r * 0.7 + 1);
     ellipse(ctx, PAL.path, x, y, r, r * 0.7);
@@ -166,27 +171,28 @@ function drawBackground(ctx) {
   }
 
   // Schienenstrecke
-  rect(ctx, PAL.grassSh, RAIL.from - 5, RAIL.y - 7, RAIL.to - RAIL.from + 10, 15);
-  rect(ctx, PAL.ballast, RAIL.from - 4, RAIL.y - 6, RAIL.to - RAIL.from + 8, 13);
-  for (let x = RAIL.from; x < RAIL.to; x += 6) {
-    rect(ctx, "#3A2C1C", x, RAIL.y - 5, 4, 10);
-    rect(ctx, PAL.tie, x, RAIL.y - 5, 4, 9);
-    rect(ctx, "#6E5638", x, RAIL.y - 5, 4, 1);
+  const rf = s(RAIL.from), rt = s(RAIL.to), rY = s(RAIL.y);
+  rect(ctx, PAL.grassSh, rf - 5, rY - 7, rt - rf + 10, 15);
+  rect(ctx, PAL.ballast, rf - 4, rY - 6, rt - rf + 8, 13);
+  for (let x = rf; x < rt; x += 6) {
+    rect(ctx, "#3A2C1C", x, rY - 5, 4, 10);
+    rect(ctx, PAL.tie, x, rY - 5, 4, 9);
+    rect(ctx, "#6E5638", x, rY - 5, 4, 1);
   }
-  rect(ctx, "#3A2C1C", RAIL.from - 4, RAIL.y - 5, RAIL.to - RAIL.from + 8, 1);
-  rect(ctx, PAL.rail, RAIL.from - 4, RAIL.y - 5, RAIL.to - RAIL.from + 8, 1);
-  rect(ctx, PAL.railHi, RAIL.from - 4, RAIL.y - 6, RAIL.to - RAIL.from + 8, 1);
-  rect(ctx, PAL.rail, RAIL.from - 4, RAIL.y + 4, RAIL.to - RAIL.from + 8, 1);
-  rect(ctx, "#3A2C1C", RAIL.from - 4, RAIL.y + 5, RAIL.to - RAIL.from + 8, 1);
-  rect(ctx, PAL.ink, RAIL.to, RAIL.y - 9, 4, 17);
-  rect(ctx, PAL.wood, RAIL.to, RAIL.y - 8, 3, 15);
+  rect(ctx, "#3A2C1C", rf - 4, rY - 5, rt - rf + 8, 1);
+  rect(ctx, PAL.rail, rf - 4, rY - 5, rt - rf + 8, 1);
+  rect(ctx, PAL.railHi, rf - 4, rY - 6, rt - rf + 8, 1);
+  rect(ctx, PAL.rail, rf - 4, rY + 4, rt - rf + 8, 1);
+  rect(ctx, "#3A2C1C", rf - 4, rY + 5, rt - rf + 8, 1);
+  rect(ctx, PAL.ink, rt, rY - 9, 4, 17);
+  rect(ctx, PAL.wood, rt, rY - 8, 3, 15);
 }
 
 /* --------------------------------------------------------------- *
  * Alle Texturen anlegen
  * --------------------------------------------------------------- */
 export function makeTextures(scene) {
-  tex(scene, "bg", VIEW.width, VIEW.height, drawBackground);
+  tex(scene, "bg", VIEW.width / K, VIEW.height / K, drawBackground);
 
   // Beerenbusch, drei Leuchtstufen
   for (let g = 0; g < 3; g++) {

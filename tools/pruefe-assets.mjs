@@ -33,9 +33,9 @@ const PALETTE = [
 
 /* Grenzwerte. Figurendateien duerfen mehr Farben haben als eine einzelne
    Figur, weil mehrere Bilder in einer Datei liegen. */
-const MAX_FARBEN_FIGUR = 12;
-const MAX_FARBEN_KACHEL = 24;
-const MAX_FARBEN_BLATT = 48;
+const MAX_FARBEN_FIGUR = 24;
+const MAX_FARBEN_KACHEL = 32;
+const MAX_FARBEN_BLATT = 64;
 
 const ARG = process.argv[2];
 if (!ARG) {
@@ -101,8 +101,8 @@ function pruefe(datei) {
     .map(([f, n]) => ({ farbe: f, pixel: n, naechste: naechsteFarbe(f).farbe }))
     .sort((a, b) => b.pixel - a.pixel);
 
-  const raster16 = w % 16 === 0 && h % 16 === 0;
   const raster32 = w % 32 === 0 && h % 32 === 0;
+  const raster64 = w % 64 === 0 && h % 64 === 0;
 
   const fehler = [];
   const warnungen = [];
@@ -111,11 +111,11 @@ function pruefe(datei) {
     const anteil = ((halbtransparent / (halbtransparent + deckend)) * 100).toFixed(1);
     fehler.push(`${halbtransparent} halbtransparente Pixel (${anteil} %) – Anti-Aliasing am Rand`);
   }
-  if (art === "figur" && !raster32) {
-    fehler.push(`Maße ${w}×${h} sind kein Vielfaches von 32 – Spritesheet-Raster stimmt nicht`);
+  if (art === "figur" && !raster64) {
+    fehler.push(`Maße ${w}×${h} sind kein Vielfaches von 64 – Spritesheet-Raster stimmt nicht`);
   }
-  if (art !== "figur" && !raster16) {
-    warnungen.push(`Maße ${w}×${h} sind kein Vielfaches von 16`);
+  if (art !== "figur" && !raster32) {
+    warnungen.push(`Maße ${w}×${h} sind kein Vielfaches von 32`);
   }
   if (farben.size > grenze) {
     fehler.push(`${farben.size} Farben (erlaubt bis ${grenze}) – deutet auf weiche Verläufe hin`);
@@ -126,8 +126,12 @@ function pruefe(datei) {
     warnungen.push(`${fremd.length} Farben außerhalb der Palette (${fremdAnteil.toFixed(1)} % der Fläche)`);
   }
   // Sehr hohe Figurendichte deutet auf eine hochskalierte Zeichnung hin
-  if (art === "figur" && h >= 128) {
-    fehler.push(`Figurenhöhe ${h} px – zu groß. Direkt in 32 px zeichnen, nicht herunterrechnen`);
+  // Jedes Figurenblatt hat mindestens zwei Zeilen à 64 px.
+  if (art === "figur" && h < 128) {
+    fehler.push(`Blatthöhe ${h} px – Zellen sind kleiner als 64. Auf den neuen Maßstab bringen`);
+  }
+  if (art === "figur" && h >= 256) {
+    fehler.push(`Figurenhöhe ${h} px – zu groß. Direkt in 64 px zeichnen, nicht herunterrechnen`);
   }
 
   return { datei, w, h, farben: farben.size, halbtransparent, fremd, fehler, warnungen };
