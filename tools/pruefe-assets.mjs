@@ -75,6 +75,39 @@ function artVon(name) {
   return "blatt";
 }
 
+/**
+ * Misst, ob eine Kachel nahtlos an sich selbst anschließt.
+ *
+ * Beim Kacheln stößt die rechte Spalte an die linke der nächsten Kachel.
+ * Ist der Farbsprung dort deutlich größer als zwischen zwei benachbarten
+ * Spalten im Inneren, entsteht ein Gitternetz über der ganzen Fläche.
+ * Zurückgegeben wird das Verhältnis Nahtsprung zu Innensprung.
+ */
+function naht(data, w, x0, y0, kw, kh) {
+  const at = (x, y) => {
+    const i = ((y0 + y) * w + (x0 + x)) * 4;
+    return [data[i], data[i + 1], data[i + 2]];
+  };
+  const diff = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+
+  let nahtH = 0, innenH = 0, nH = 0;
+  for (let y = 0; y < kh; y++) {
+    nahtH += diff(at(kw - 1, y), at(0, y));
+    for (let x = 0; x < kw - 1; x++) { innenH += diff(at(x, y), at(x + 1, y)); nH++; }
+  }
+  let nahtV = 0, innenV = 0, nV = 0;
+  for (let x = 0; x < kw; x++) {
+    nahtV += diff(at(x, kh - 1), at(x, 0));
+    for (let y = 0; y < kh - 1; y++) { innenV += diff(at(x, y), at(x, y + 1)); nV++; }
+  }
+  const mH = nH ? innenH / nH : 0;
+  const mV = nV ? innenV / nV : 0;
+  return Math.max(
+    (nahtH / kh) / Math.max(mH, 2),
+    (nahtV / kw) / Math.max(mV, 2)
+  );
+}
+
 function pruefe(datei) {
   const png = PNG.sync.read(readFileSync(datei));
   const { width: w, height: h, data } = png;
@@ -126,6 +159,22 @@ function pruefe(datei) {
     warnungen.push(`${fremd.length} Farben außerhalb der Palette (${fremdAnteil.toFixed(1)} % der Fläche)`);
   }
   // Sehr hohe Figurendichte deutet auf eine hochskalierte Zeichnung hin
+  // Bodenkacheln müssen nahtlos an sich selbst anschließen
+  if (art === "kachel" && halbtransparent === 0) {
+    const kh = h, kw = kh;
+    let schlimmste = 0, index = -1;
+    for (let i = 0; i < Math.floor(w / kw); i++) {
+      const v = naht(data, w, i * kw, 0, kw, kh);
+      if (v > schlimmste) { schlimmste = v; index = i; }
+    }
+    if (schlimmste > 1.8) {
+      fehler.push(
+        `Kachel ${index} kachelt nicht nahtlos – der Farbsprung an der Naht ist ` +
+        `${schlimmste.toFixed(1)}× so groß wie im Inneren. Ergibt ein sichtbares Gitter`
+      );
+    }
+  }
+
   // Jedes Figurenblatt hat mindestens zwei Zeilen à 64 px.
   if (art === "figur" && h < 128) {
     fehler.push(`Blatthöhe ${h} px – Zellen sind kleiner als 64. Auf den neuen Maßstab bringen`);

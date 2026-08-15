@@ -129,6 +129,9 @@ Aufkleber.
 fellgrund-tileset/
   LIZENZ.txt                 ← zwingend, siehe Abschnitt 7
   boden.png                  Bodenkacheln, 32×32 im Raster
+  wege.png                   Wegflecken, unregelmäßig, ohne Rahmen
+  waldrahmen_1_hinten.png    Wald hinter allem, 640×360
+  waldrahmen_1_vorn.png      unterste Baumreihe, über den Figuren
   natur.png                  Bäume, Büsche, Steine, Blumen
   gebaeude.png               Gebäude und Stationen
   gueter.png                 Kisten, Fässer, Güter, Schienen
@@ -201,6 +204,37 @@ große Flächen nicht gleichmäßig aussehen.
 4. **Wasser** für einen Teich, mit Uferkanten zum Gras
 5. **Steinplatten** für spätere befestigte Plätze
 
+> **Nahtlosigkeit ist Pflicht.** Die Mittelkachel jeder Bodenart muss an sich
+> selbst anschließen, ohne dass eine Fuge sichtbar wird. Beim Kacheln stößt
+> die rechte Spalte an die linke der nächsten Kachel — ist der Farbsprung dort
+> größer als zwischen zwei benachbarten Spalten im Inneren, entsteht ein
+> Gitternetz über der ganzen Wiese.
+>
+> **Prüfregel:** Die Kachel neunmal in einem 3 × 3-Raster nebeneinanderlegen.
+> Wenn man erkennen kann, wo eine Kachel aufhört, ist sie nicht nahtlos.
+> Insbesondere darf **keine Kachel einen dunkleren Rahmen** haben.
+> Der Prüfer im Projekt misst das automatisch.
+
+### Wege: keine Kacheln, sondern Flecken
+
+Wege in Fellgrund laufen **diagonal und geschwungen**, nicht am Raster
+entlang. Ein 9er-Übergangsset kann das nicht abbilden, und ein vollständiger
+Satz dafür bräuchte 47 Kacheln.
+
+Stattdessen bitte **Wegflecken**: unregelmäßige, abgetretene Erdflächen mit
+weicher, ausgefranster Kante, die sich beim Überlappen zu einem
+durchgehenden Pfad verbinden.
+
+| Teil | Größe | Anzahl |
+|---|---|---|
+| Wegfleck, rund | 32 × 32 | 4 Varianten |
+| Wegfleck, länglich | 64 × 32 | 3 Varianten |
+| Trittstein im Weg | 16 × 16 | 3 Varianten |
+
+Wichtig: **kein Rahmen, keine geraden Kanten.** Die Flecken werden im Spiel
+entlang der tatsächlichen Route gestempelt und überlappen sich. Dieselbe
+Technik gilt später für Beete und befestigte Plätze.
+
 Dazu als lose Einzelkacheln (kein Übergangsset nötig):
 - 6 Grasbüschel-Varianten (unterschiedliche Höhe und Helligkeit)
 - 6 Blumen-Varianten in Rosa, Hellgelb und Flieder
@@ -224,6 +258,32 @@ links weiter ausbeult als rechts, ein leicht schiefer Stamm.
 | Findling / Stein | 32 × 32 und 64 × 32 | je 2 |
 | Farn, Pilzgruppe | 32 × 32 | je 2 |
 | Seerosenblatt fürs Wasser | 32 × 32 | 2 |
+
+### 4.2b `waldrahmen_*.png` — der Wald ringsum
+
+Der Wald schließt die Lichtung ab und ändert sich im ganzen Spiel **genau
+dreimal**, an den Ausbaustufen. Deshalb lohnt sich hier ein gemaltes Bild
+statt einzelner Bäume — es darf üppig sein.
+
+Bitte **zwei Ebenen je Ausbaustufe**:
+
+| Datei | Inhalt | Größe |
+|---|---|---|
+| `waldrahmen_1_hinten.png` | Wald oben, links und rechts; liegt hinter allem | 640 × 360 |
+| `waldrahmen_1_vorn.png` | nur die unterste Baum- und Buschreihe; liegt über den Figuren | 640 × 360 |
+
+Der Grund für die Teilung: Ein Tier muss hinter einem Baum am unteren Rand
+verschwinden können. Bei einem einzigen Bild ginge das nicht.
+
+Beide Ebenen sind **außen deckend und innen durchsichtig** — die Lichtung in
+der Mitte bleibt frei, damit der gekachelte Boden durchscheint. Die Kante zur
+Lichtung ist organisch und unregelmäßig, keine saubere Ellipse.
+
+Der Wald ist **dunkler als die Lichtung**, damit der Ort selbst der hellste
+Punkt im Bild bleibt.
+
+Zunächst nur Ausbaustufe 1. Die Stufen 2 und 3 folgen, wenn die Lichtung
+wächst.
 
 ### 4.3 `gebaeude.png` — Gebäude und Stationen
 
@@ -402,12 +462,14 @@ Wesentliches platzieren.
    mehreren Größen?
 7. Ist die 16 × 16-Kiste sowohl auf `#487646` (Gras) als auch auf `#96693C`
    (Holz) klar erkennbar?
-8. Läuft jede Bildfolge **nahtlos** — geht das letzte Bild ohne Sprung ins
+8. Kachelt jede Bodenkachel **nahtlos** — ist im 3 × 3-Raster keine Fuge
+   erkennbar, und hat keine Kachel einen dunkleren Rahmen?
+9. Läuft jede Bildfolge **nahtlos** — geht das letzte Bild ohne Sprung ins
    erste über?
-9. Bleibt die Bewegung überall bei ein bis drei Pixeln?
-10. Trägt Cozywolf alle nicht verhandelbaren Merkmale aus 4.7, und bleibt
+10. Bleibt die Bewegung überall bei ein bis drei Pixeln?
+11. Trägt Cozywolf alle nicht verhandelbaren Merkmale aus 4.7, und bleibt
     seine Schlafhaltung in den unteren vier Pixelzeilen frei von Wichtigem?
-11. Liegt `LIZENZ.txt` bei?
+12. Liegt `LIZENZ.txt` bei?
 
 ---
 

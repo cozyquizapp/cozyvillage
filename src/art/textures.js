@@ -94,7 +94,33 @@ function drawRock(ctx, cx, baseY, w) {
 /* --------------------------------------------------------------- *
  * Hintergrund: Wald, Lichtung, Teich, Weg, Schienen
  * --------------------------------------------------------------- */
-function drawBackground(ctx) {
+/**
+ * Kachelt die Lichtung mit den gelieferten Bodenkacheln.
+ * Ohne Lieferung bleibt die einfarbige Fläche stehen – der Hintergrund
+ * entsteht immer zur Laufzeit, damit Wege und Parzellen veränderbar bleiben.
+ */
+function kacheleBoden(ctx, scene, s) {
+  const t = scene && scene.textures.get("blatt-boden");
+  if (!t || t.key === "__MISSING") return false;
+  const bild = t.getSourceImage();
+  const kw = bild.width / 18;          // 18 Kacheln in einer Reihe
+  const kh = bild.height;
+  const zeichen = kw / K;              // Kachelbreite im Entwurfsmaß
+  const rnd = makeRandom(53);
+
+  const W = VIEW.width / K, H = VIEW.height / K;
+  for (let y = s(GLADE.top) - zeichen; y <= s(GLADE.bottom) + zeichen; y += zeichen) {
+    for (let x = 0; x < W; x += zeichen) {
+      if (!insideGlade((x + zeichen / 2) * K, (y + zeichen / 2) * K)) continue;
+      // Kachel 0 ist reines Gras, 1–4 tragen Blumen und Steinchen
+      const wahl = rnd() > 0.72 ? 1 + Math.floor(rnd() * 4) : 0;
+      ctx.drawImage(bild, wahl * kw, 0, kw, kh, x, y, zeichen, zeichen);
+    }
+  }
+  return true;
+}
+
+function drawBackground(ctx, scene) {
   const s = (v) => v / K;   // Weltmaß → Entwurfsmaß
   const rnd = makeRandom(31);
   const W = VIEW.width / K, H = VIEW.height / K;
@@ -121,8 +147,11 @@ function drawBackground(ctx) {
     rect(ctx, y < s(GLADE.top) + 2 ? PAL.grassLt : PAL.grass, s(GLADE.cx) - hw + 2, y, hw * 2 - 4, 1);
   }
 
-  // Grasbüschel in drei Helligkeiten statt gleichmäßigem Rauschen
-  for (let i = 0; i < 620; i++) {
+  // Gelieferte Kacheln legen sich über die einfarbige Fläche
+  const gekachelt = kacheleBoden(ctx, scene, s);
+
+  // Grasbüschel nur, solange keine Kacheln geliefert sind
+  for (let i = 0; gekachelt ? false : i < 620; i++) {
     const x = Math.floor(rnd() * W);
     const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
     if (!insideGlade(x * K, y * K)) continue;
@@ -131,7 +160,7 @@ function drawBackground(ctx) {
     rect(ctx, c, x, y, 2 + Math.floor(rnd() * 2), 1);
     rect(ctx, c, x + 1, y - 1, 1, 1);
   }
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; gekachelt ? false : i < 60; i++) {
     const x = Math.floor(rnd() * W);
     const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
     if (!insideGlade(x * K, y * K)) continue;
@@ -159,8 +188,21 @@ function drawBackground(ctx) {
   ellipse(ctx, PAL.water, pond.x, pond.y - 1, 22, 11);
   ellipse(ctx, PAL.waterLt, pond.x - 4, pond.y - 4, 13, 5);
 
-  // Trampelpfad zwischen Beet und Verladestation
-  for (let i = 0; i <= 26; i++) {
+  // Trampelpfad – aus Erdkacheln, sonst gezeichnet
+  const bodenT = scene && scene.textures.get("blatt-boden");
+  if (gekachelt && bodenT) {
+    const bild = bodenT.getSourceImage();
+    const kw = bild.width / 18, kh = bild.height, zeichen = kw / K;
+    for (let i = 0; i <= 40; i++) {
+      const q = i / 40;
+      const x = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
+      const y = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
+      const wahl = 9 + Math.floor(rnd() * 4);   // Erdkacheln liegen hinten im Blatt
+      ctx.drawImage(bild, wahl * kw, 0, kw, kh,
+        Math.round(x / zeichen) * zeichen, Math.round(y / zeichen) * zeichen, zeichen, zeichen);
+    }
+  }
+  for (let i = 0; gekachelt ? false : i <= 26; i++) {
     const q = i / 26;
     const x = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
     const y = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
@@ -192,7 +234,7 @@ function drawBackground(ctx) {
  * Alle Texturen anlegen
  * --------------------------------------------------------------- */
 export function makeTextures(scene) {
-  tex(scene, "bg", VIEW.width / K, VIEW.height / K, drawBackground);
+  tex(scene, "bg", VIEW.width / K, VIEW.height / K, (ctx) => drawBackground(ctx, scene));
 
   // Beerenbusch, drei Leuchtstufen
   for (let g = 0; g < 3; g++) {
