@@ -769,7 +769,9 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ------------------------------------------------------------------ *
-   * Sprite-Engine: Zeichenraster + Palette, 1 Zeichen = 1 Pixel
+   * Zeichen-Grundlagen
+   * Licht kommt konsequent von oben links: Highlight oben/links,
+   * Schattenkante unten/rechts, Schlagschatten nach unten rechts.
    * ------------------------------------------------------------------ */
   function drawSprite(ctx, rows, pal, ox, oy) {
     ox = Math.round(ox); oy = Math.round(oy);
@@ -791,8 +793,9 @@
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
-  // Ellipse in der 3/4-Perspektive: ein Kreis am Boden erscheint gestaucht
+  // Ein Kreis am Boden erscheint in der 3/4-Ansicht gestaucht
   function ellipse(ctx, color, cx, cy, rx, ry, fromDy, toDy) {
+    ry = Math.max(1, Math.round(ry)); rx = Math.max(1, Math.round(rx));
     var a = (fromDy === undefined) ? -ry : Math.max(-ry, fromDy);
     var b = (toDy === undefined) ? ry : Math.min(ry, toDy);
     for (var dy = a; dy <= b; dy++) {
@@ -802,14 +805,18 @@
     }
   }
 
+  // Schlagschatten – der wichtigste Grund, warum ein Objekt am Boden steht
+  function shadow(ctx, cx, cy, rx, ry, alpha) {
+    ellipse(ctx, "rgba(12,26,20," + (alpha === undefined ? 0.34 : alpha) + ")", cx, cy, rx, ry);
+  }
+
   function fit(canvas, w, h, maxScale) {
     var host = canvas.parentElement;
     var avail = host ? host.clientWidth : w;
     var s = Math.floor(avail / w);
     if (!isFinite(s) || s < 1) s = 1;
     if (s > maxScale) s = maxScale;
-    canvas.width = w * s;
-    canvas.height = h * s;
+    canvas.width = w * s; canvas.height = h * s;
     canvas.style.width = (w * s) + "px";
     canvas.style.height = (h * s) + "px";
     var ctx = canvas.getContext("2d");
@@ -819,90 +826,93 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Palette – Nachtstimmung, aber gesättigte, lesbare Farben
+   * Palette mit echtem Kontrastumfang: von hellem Grasbüschel
+   * bis zur fast schwarzen Umrisskante
    * ------------------------------------------------------------------ */
-  var GRASS = "#3E6B47";
-  var GRASS_LT = "#4E8253";
-  var GRASS_DK = "#325940";
-  var FOREST = "#1E3630";
-  var FOREST_DK = "#16281F";
-  var SOIL = "#5A4430";
-  var SOIL_DK = "#43301F";
-  var PATH_C = "#8A7A5C";
-  var PATH_DK = "#6B5D45";
-  var WOOD = "#9A6E44";
-  var WOOD_DK = "#63472C";
-  var WOOD_LT = "#BC8D57";
-  var RAIL = "#8A7758";
-  var TIE = "#57432F";
-  var STONE = "#8B917E";
-  var STONE_DK = "#5E6553";
-  var ROOF = "#9E4E3C";
-  var ROOF_DK = "#77382B";
-  var ROOF_LT = "#BC6349";
-  var LEAF = "#4A8B54";
-  var LEAF_DK = "#2F6640";
-  var BERRY = "#F7C651";
-  var LAMP = "#FFD98A";
-  var WATER = "#2E5A72";
-  var WATER_LT = "#3F7793";
+  var GRASS_HI = "#79AC63";
+  var GRASS_LT = "#5D9153";
+  var GRASS    = "#487646";
+  var GRASS_DK = "#37603C";
+  var GRASS_SH = "#284833";
+  var FOREST   = "#1E3527";
+  var FOREST_DK = "#122016";
+  var OUTLINE  = "#1B2A20";
+
+  var SOIL_HI = "#8A6942", SOIL = "#6B4F33", SOIL_DK = "#453017";
+  var PATH_HI = "#B5A177", PATH_C = "#9A8862", PATH_DK = "#6E6046";
+
+  var WOOD_HI = "#D2A468", WOOD_LT = "#BC8F55", WOOD = "#96693C";
+  var WOOD_DK = "#5E4227", WOOD_OUT = "#33230F";
+
+  var STONE_HI = "#B7BCA7", STONE = "#98A08B", STONE_DK = "#66705A", STONE_OUT = "#333B2E";
+  var ROOF_HI = "#C9765A", ROOF = "#A85440", ROOF_DK = "#7A3A2B", ROOF_OUT = "#48211A";
+
+  var LEAF_HI = "#77BE6D", LEAF = "#4E9455", LEAF_DK = "#357045", LEAF_OUT = "#1F4028";
+  var TRUNK = "#7E5734", TRUNK_DK = "#4C331D";
+
+  var BERRY = "#FFD05C", BERRY_HI = "#FFF2C0";
+  var LAMP = "#FFDC96";
+  var WATER_HI = "#93CFE0", WATER_LT = "#4E93A8", WATER = "#31708C", WATER_DK = "#204C60";
+  var RAIL_HI = "#B49874", RAIL = "#8A7758", TIE = "#5A4630", BALLAST = "#3A5340";
 
   /* ------------------------------------------------------------------ *
    * Figuren
    * ------------------------------------------------------------------ */
   var BEAVER_A = [
-    "...bbbb...",
-    "..bBBBBb..",
-    "..bBkBkb..",
-    "..bBBnBb..",
-    ".bbBBBBbb.",
-    "tbBBBBBBb.",
-    "ttBBBBBBb.",
-    "tbBBBBBBb.",
-    ".bBBBBBBb.",
-    "..bb..bb..",
+    "...oooo...",
+    "..oBBBBo..",
+    "..oBkBko..",
+    "..oLBnBLo.",
+    ".ooBBBBoo.",
+    "toBBBBBBo.",
+    "ttBBBBBBo.",
+    "toBBBBBBo.",
+    ".oBBBBBBo.",
+    "..oo..oo..",
     "..dd..dd.."
   ];
   var BEAVER_B = [
-    "...bbbb...",
-    "..bBBBBb..",
-    "..bBkBkb..",
-    "..bBBnBb..",
-    ".bbBBBBbb.",
-    "tbBBBBBBb.",
-    "ttBBBBBBb.",
-    "tbBBBBBBb.",
-    ".bBBBBBBb.",
-    "...bbbb...",
+    "...oooo...",
+    "..oBBBBo..",
+    "..oBkBko..",
+    "..oLBnBLo.",
+    ".ooBBBBoo.",
+    "toBBBBBBo.",
+    "ttBBBBBBo.",
+    "toBBBBBBo.",
+    ".oBBBBBBo.",
+    "...oooo...",
     "..dd..dd.."
   ];
-  var BEAVER_PAL = { b: "#4E3421", B: "#8A6240", k: "#1C1310", n: "#3A2718", t: "#4A3320", d: "#3A2718" };
+  var BEAVER_PAL = {
+    o: "#3A2614", B: "#9A6E43", L: "#C29464", k: "#140D08",
+    n: "#4A3018", t: "#54381F", d: "#2E1E10"
+  };
 
-  // Cozywolf, zusammengerollt aus der 3/4-Draufsicht: Ohren und geschlossene
-  // Augen oben links, Schwanz legt sich um den Körper nach unten rechts
+  // Cozywolf, zusammengerollt aus der 3/4-Draufsicht
   var WOLF = [
     "...D.......D..............",
     "..DFD.....DFD.............",
-    "..DFFD...DFFD.............",
-    ".DFFFFDDDFFFFD............",
-    ".DFFFFFFFFFFFFD.DDDDDD....",
-    "DFFccFFFFFccFFDDFFFFFFFDD.",
+    "..DFHD...DFHD.............",
+    ".DFHHFDDDFHHFD............",
+    ".DFHHFFFFFHHFFD.DDDDDD....",
+    "DFHccFFFFFccFFDDFFFFFFFDD.",
     "DFFFFFFFFFFFFFDFFFFFFFFFFD",
     "DFFFsssFFFFFFFFFFFFFFFFFFD",
     ".DFFFFFFOOOOOOOOOFFFFFFFFD",
     ".DDFFFFOOOOoOOOOOOFFFFFFFD",
-    "..DDFFFOOOOOOOOOOOFFFFFFTD",
+    "..DDFFFOoOOOOOOOOOFFFFFFTD",
     "...DFFFOOOOOOOOOOOFFFFTffT",
-    "...DFFFFOOOOOOOOOFFFFTffff",
-    "..DFFFFFFOOOOOOOFFFFTfffff",
-    "..DFFFFFFFFFFFFFFFTffffffT",
-    "...DFFFFFFFFFFFFDTffffffT.",
-    "....DDFFFFFFFFDDTffffTT...",
+    "...DFFFFOOOOOOOOOFFFFTfhff",
+    "..DFFFFFFOOOOOOOFFFFTfhhff",
+    "..DDFFFFFFFFFFFFFFTffhhffT",
+    "...DDFFFFFFFFFFDDTffffffT.",
+    "....DDDFFFFFFDDDTTffffTT..",
     "......DDDDDDDDDDTTTT......"
   ];
   var WOLF_PAL = {
-    F: "#EE6A9E", D: "#A8305F", K: "#1B2233", c: "#1B2233", s: "#C44577",
-    f: "#FF9CC0", T: "#C44577", O: "#2F8F96", o: "#E8B04A"
+    F: "#EE6A9E", H: "#FF97BE", D: "#8E2450", c: "#1B2233", s: "#B03C6C",
+    f: "#FF9CC0", h: "#FFC4DA", T: "#B03C6C", O: "#2F8F96", o: "#F0BC58"
   };
 
   var CRITTERS = {
@@ -922,7 +932,7 @@
         "..oBBBBo....",
         "...oo.oo...."
       ],
-      pal: { o: "#5A3A1E", B: "#C4783A", L: "#EFCBA0", k: "#1C1310", n: "#3A2718", T: "#5A3A1E", t: "#D89A55" },
+      pal: { o: "#4A2F16", B: "#C4783A", L: "#EFCBA0", k: "#140D08", n: "#3A2718", T: "#4A2F16", t: "#DFA560" },
       w: 12, h: 12
     },
     axolotl: {
@@ -936,7 +946,7 @@
         "...PPppppPP.P",
         ".....PPPP...."
       ],
-      pal: { p: "#EFA6BE", P: "#C97694", g: "#F7C8D8", k: "#3A1E28" },
+      pal: { p: "#F2AEC4", P: "#B85F80", g: "#FBD2DF", k: "#2E1520" },
       w: 13, h: 8
     },
     biene: {
@@ -950,7 +960,7 @@
         "..KYYKYYK..",
         "...KKKKK..."
       ],
-      pal: { Y: "#F2C14E", K: "#2A2118", w: "#CFE2EA" },
+      pal: { Y: "#FBCB55", K: "#1F190F", w: "#D9EAF2" },
       w: 11, h: 8
     },
     maulwurf: {
@@ -965,153 +975,201 @@
         ".cmMMMMMMmc.",
         ".cc.mmmm.cc."
       ],
-      pal: { m: "#413740", M: "#6A5C62", k: "#1C1310", n: "#E39AA6", c: "#D9CFC2" },
+      pal: { m: "#332B33", M: "#6F6067", k: "#140D08", n: "#E9A2AE", c: "#DED4C6" },
       w: 12, h: 9
     }
   };
 
   /* ------------------------------------------------------------------ *
-   * Bauwerke in 3/4-Draufsicht
+   * Bauwerke – jedes mit Schlagschatten, Umriss und Lichtkante
    * ------------------------------------------------------------------ */
   function drawCrate(ctx, x, y) {
-    px(ctx, "#63472C", x, y, 7, 7);
-    px(ctx, "#B08350", x + 1, y + 1, 5, 5);
-    px(ctx, "#8A6440", x + 1, y + 3, 5, 1);
-    px(ctx, "#8A6440", x + 3, y + 1, 1, 5);
-    px(ctx, "#E0B45C", x + 2, y + 1, 3, 1);
+    px(ctx, WOOD_OUT, x, y, 8, 8);
+    px(ctx, WOOD, x + 1, y + 1, 6, 6);
+    px(ctx, WOOD_LT, x + 1, y + 1, 6, 1);
+    px(ctx, WOOD_LT, x + 1, y + 1, 1, 6);
+    px(ctx, WOOD_DK, x + 1, y + 6, 6, 1);
+    px(ctx, WOOD_DK, x + 6, y + 1, 1, 6);
+    px(ctx, WOOD_DK, x + 1, y + 3, 6, 1);
+    px(ctx, BERRY, x + 3, y + 2, 2, 1);
+    px(ctx, BERRY_HI, x + 3, y + 2, 1, 1);
   }
 
-  // Verladestation: Plattform mit Deckfläche, Frontschürze und Kistenplätzen
+  // Verladestation: Plattform mit Deckfläche, Schürze und Kistenplätzen
   function drawStation(ctx, x, baseY, opts) {
     var slots = opts.slots || 2;
     var crates = opts.crates || 0;
-    var w = 6 + slots * 9;
+    var w = 8 + slots * 10;
+
+    shadow(ctx, x + w / 2 + 3, baseY, w / 2 + 3, 5);
 
     if (opts.roof) {
-      // Vordach über vier Pfosten
-      px(ctx, WOOD_DK, x + 2, baseY - 24, 2, 14);
-      px(ctx, WOOD_DK, x + w - 4, baseY - 24, 2, 14);
-      for (var r = 0; r < 6; r++) {
-        px(ctx, r < 2 ? ROOF_LT : ROOF, x - 2 + r, baseY - 32 + r, w + 4 - r * 2, 1);
+      px(ctx, WOOD_OUT, x + 2, baseY - 26, 3, 16);
+      px(ctx, WOOD, x + 2, baseY - 26, 2, 16);
+      px(ctx, WOOD_OUT, x + w - 5, baseY - 26, 3, 16);
+      px(ctx, WOOD, x + w - 5, baseY - 26, 2, 16);
+      for (var r = 0; r < 7; r++) {
+        var rw = w + 6 - r * 2;
+        px(ctx, ROOF_OUT, x - 3 + r, baseY - 34 + r, rw, 1);
+        px(ctx, (r === 0) ? ROOF_HI : ((r % 3 === 2) ? ROOF_DK : ROOF), x - 3 + r, baseY - 34 + r, rw - 1, 1);
       }
-      px(ctx, ROOF_DK, x - 2, baseY - 26, w + 4, 1);
-      px(ctx, LAMP, x + Math.floor(w / 2) - 1, baseY - 25, 2, 2);
+      px(ctx, ROOF_OUT, x - 3, baseY - 27, w + 6, 1);
+      px(ctx, LAMP, x + Math.floor(w / 2) - 1, baseY - 26, 2, 2);
     } else {
-      // Rückengeländer
-      px(ctx, WOOD_DK, x + 1, baseY - 19, w - 2, 2);
-      px(ctx, WOOD_DK, x + 2, baseY - 19, 2, 9);
-      px(ctx, WOOD_DK, x + w - 4, baseY - 19, 2, 9);
+      px(ctx, WOOD_OUT, x + 1, baseY - 21, w - 2, 3);
+      px(ctx, WOOD_LT, x + 2, baseY - 21, w - 4, 1);
+      px(ctx, WOOD_OUT, x + 2, baseY - 21, 3, 10);
+      px(ctx, WOOD, x + 2, baseY - 21, 2, 10);
+      px(ctx, WOOD_OUT, x + w - 5, baseY - 21, 3, 10);
+      px(ctx, WOOD, x + w - 5, baseY - 21, 2, 10);
     }
 
-    // Deckfläche (von schräg oben) und Frontschürze
-    px(ctx, WOOD_LT, x, baseY - 11, w, 6);
-    px(ctx, WOOD, x, baseY - 11, w, 1);
-    px(ctx, WOOD_DK, x, baseY - 5, w, 5);
-    for (var p = 0; p < w; p += 5) {
-      px(ctx, WOOD, x + p, baseY - 5, 1, 5);
-    }
-    px(ctx, "#3C2A1A", x, baseY - 1, w, 1);
+    // Deckfläche von schräg oben
+    px(ctx, WOOD_OUT, x - 1, baseY - 13, w + 2, 8);
+    px(ctx, WOOD_LT, x, baseY - 12, w, 6);
+    px(ctx, WOOD_HI, x, baseY - 12, w, 1);
+    for (var g = 4; g < w; g += 5) px(ctx, WOOD, x + g, baseY - 11, 1, 5);
+    px(ctx, WOOD_DK, x, baseY - 6, w, 1);
 
-    for (var c = 0; c < crates && c < slots; c++) {
-      drawCrate(ctx, x + 3 + c * 9, baseY - 14);
-    }
+    // Frontschürze
+    px(ctx, WOOD_OUT, x - 1, baseY - 6, w + 2, 7);
+    px(ctx, WOOD, x, baseY - 5, w, 5);
+    for (var p = 3; p < w; p += 6) px(ctx, WOOD_DK, x + p, baseY - 5, 1, 5);
+    px(ctx, WOOD_DK, x, baseY - 1, w, 1);
+
+    for (var c = 0; c < crates && c < slots; c++) drawCrate(ctx, x + 4 + c * 10, baseY - 20);
     for (var f = crates; f < slots; f++) {
-      px(ctx, WOOD, x + 3 + f * 9, baseY - 8, 7, 1);
+      px(ctx, WOOD_DK, x + 4 + f * 10, baseY - 12, 8, 1);
+      px(ctx, WOOD_HI, x + 4 + f * 10, baseY - 13, 8, 1);
     }
     return w;
   }
 
-  // Vorratshaus: Frontwand mit Tür und Fenstern, darüber ein Ziegeldach
+  // Vorratshaus: Fundament, Fachwerkwand, Ziegeldach mit Schindelreihen
   function drawStorehouse(ctx, x, baseY, t) {
-    var w = 50, wallH = 18, top = baseY - wallH;
+    var w = 52, wallH = 19, top = baseY - wallH;
 
-    // Dach von der Traufe nach oben verjüngt
-    for (var i = 0; i < 15; i++) {
-      var rw = (w + 8) - i * 3;
-      if (rw < 6) break;
-      var rx = x - 4 + Math.round(i * 1.5);
-      px(ctx, (i % 3 === 2) ? ROOF_DK : ((i < 2) ? ROOF_LT : ROOF), rx, top - i, rw, 1);
+    shadow(ctx, x + w / 2 + 4, baseY, w / 2 + 4, 6);
+
+    // Dach: jede Schindelreihe zwei Pixel, oben hell, unten dunkel
+    for (var i = 0; i < 16; i++) {
+      var rw = (w + 10) - i * 3;
+      if (rw < 7) break;
+      var rx = x - 5 + Math.round(i * 1.5);
+      px(ctx, ROOF_OUT, rx, top - i, rw, 1);
+      px(ctx, (i % 2 === 0) ? ROOF : ROOF_DK, rx, top - i, rw - 1, 1);
+      if (i % 4 === 0) px(ctx, ROOF_HI, rx + 1, top - i, rw - 3, 1);
     }
-    px(ctx, ROOF_DK, x - 5, top, w + 10, 1);
-    px(ctx, ROOF_LT, x + 18, top - 14, 14, 1);
+    px(ctx, ROOF_OUT, x - 6, top, w + 12, 2);
+    px(ctx, ROOF_HI, x - 5, top - 1, w + 10, 1);
+    px(ctx, ROOF_HI, x + 19, top - 15, 13, 1);
 
-    // Schornstein mit Rauch
-    px(ctx, STONE_DK, x + 34, top - 20, 6, 8);
-    px(ctx, STONE, x + 35, top - 19, 4, 7);
+    // Schornstein
+    px(ctx, STONE_OUT, x + 34, top - 22, 8, 10);
+    px(ctx, STONE, x + 35, top - 21, 6, 9);
+    px(ctx, STONE_HI, x + 35, top - 21, 6, 1);
+    px(ctx, STONE_DK, x + 39, top - 20, 2, 8);
     if (t !== undefined) {
       for (var s = 0; s < 3; s++) {
-        var ph = (t * 0.55 + s * 0.33) % 1;
-        px(ctx, "rgba(210,220,215," + (0.30 - ph * 0.26).toFixed(2) + ")",
-          x + 36 + Math.round(Math.sin(ph * 5 + s) * 2), top - 22 - Math.round(ph * 14), 2, 2);
+        var ph = (t * 0.5 + s * 0.33) % 1;
+        px(ctx, "rgba(206,218,212," + (0.32 - ph * 0.28).toFixed(2) + ")",
+          x + 37 + Math.round(Math.sin(ph * 5 + s) * 2), top - 24 - Math.round(ph * 15), 2, 2);
       }
     }
 
-    // Wand
-    px(ctx, STONE_DK, x, top, w, wallH);
-    px(ctx, STONE, x + 1, top + 1, w - 2, wallH - 2);
-    px(ctx, WOOD_DK, x + 1, top + 7, w - 2, 1);
-    px(ctx, WOOD_DK, x + 12, top + 1, 1, wallH - 2);
-    px(ctx, WOOD_DK, x + 37, top + 1, 1, wallH - 2);
+    // Wand mit Umriss und Lichtkante
+    px(ctx, STONE_OUT, x - 1, top, w + 2, wallH + 1);
+    px(ctx, STONE, x, top + 1, w, wallH - 1);
+    px(ctx, STONE_HI, x, top + 1, w, 1);
+    px(ctx, STONE_DK, x + w - 2, top + 1, 2, wallH - 1);
+    px(ctx, WOOD_DK, x + 1, top + 8, w - 2, 1);
+    px(ctx, WOOD_DK, x + 13, top + 1, 1, wallH - 2);
+    px(ctx, WOOD_DK, x + 38, top + 1, 1, wallH - 2);
+    // Fundament
+    px(ctx, STONE_DK, x, baseY - 3, w, 3);
+    for (var fs = 0; fs < w; fs += 6) px(ctx, STONE_OUT, x + fs, baseY - 3, 1, 3);
 
-    // Tür
-    px(ctx, WOOD_DK, x + 20, baseY - 13, 11, 13);
-    px(ctx, WOOD, x + 21, baseY - 12, 9, 12);
-    px(ctx, "#3C2A1A", x + 21, baseY - 12, 9, 1);
-    px(ctx, BERRY, x + 28, baseY - 7, 1, 1);
+    // Tür mit Rahmen und Griff
+    px(ctx, WOOD_OUT, x + 20, baseY - 15, 13, 15);
+    px(ctx, WOOD, x + 21, baseY - 14, 11, 14);
+    px(ctx, WOOD_DK, x + 26, baseY - 14, 1, 14);
+    px(ctx, WOOD_LT, x + 21, baseY - 14, 11, 1);
+    px(ctx, BERRY, x + 30, baseY - 8, 1, 1);
 
-    // Beleuchtete Fenster
-    px(ctx, WOOD_DK, x + 4, top + 9, 7, 6);
-    px(ctx, LAMP, x + 5, top + 10, 5, 4);
-    px(ctx, WOOD_DK, x + 40, top + 9, 7, 6);
-    px(ctx, LAMP, x + 41, top + 10, 5, 4);
+    // Beleuchtete Fenster mit Lichtaustritt
+    [[5, 0], [41, 1]].forEach(function (wnd) {
+      var wx = x + wnd[0];
+      px(ctx, WOOD_OUT, wx, top + 10, 8, 7);
+      px(ctx, LAMP, wx + 1, top + 11, 6, 5);
+      px(ctx, "#FFF0C4", wx + 1, top + 11, 6, 2);
+      px(ctx, WOOD_DK, wx + 4, top + 11, 1, 5);
+    });
     return w;
   }
 
-  // Wurzelwagen, fährt waagerecht auf der Schiene
   function drawCart(ctx, x, baseY, load) {
-    px(ctx, WOOD_DK, x, baseY - 11, 18, 8);
-    px(ctx, WOOD, x + 1, baseY - 10, 16, 6);
-    px(ctx, WOOD_LT, x + 1, baseY - 10, 16, 1);
-    px(ctx, "#4E3A22", x + 4, baseY - 9, 1, 4);
-    px(ctx, "#4E3A22", x + 9, baseY - 9, 1, 4);
-    px(ctx, "#4E3A22", x + 14, baseY - 9, 1, 4);
-    px(ctx, "#33261A", x + 2, baseY - 3, 4, 4);
-    px(ctx, "#33261A", x + 12, baseY - 3, 4, 4);
-    px(ctx, "#5C4A36", x + 3, baseY - 2, 2, 2);
-    px(ctx, "#5C4A36", x + 13, baseY - 2, 2, 2);
-    for (var i = 0; i < load; i++) {
-      drawCrate(ctx, x + 2 + i * 8, baseY - 18);
-    }
+    shadow(ctx, x + 9, baseY + 1, 11, 4, 0.30);
+    px(ctx, WOOD_OUT, x - 1, baseY - 12, 20, 10);
+    px(ctx, WOOD, x, baseY - 11, 18, 8);
+    px(ctx, WOOD_HI, x, baseY - 11, 18, 1);
+    px(ctx, WOOD_DK, x, baseY - 5, 18, 2);
+    px(ctx, WOOD_DK, x + 4, baseY - 10, 1, 5);
+    px(ctx, WOOD_DK, x + 9, baseY - 10, 1, 5);
+    px(ctx, WOOD_DK, x + 14, baseY - 10, 1, 5);
+    px(ctx, "#1E160E", x + 2, baseY - 4, 5, 5);
+    px(ctx, "#4A3A28", x + 3, baseY - 3, 3, 3);
+    px(ctx, "#1E160E", x + 12, baseY - 4, 5, 5);
+    px(ctx, "#4A3A28", x + 13, baseY - 3, 3, 3);
+    for (var i = 0; i < load; i++) drawCrate(ctx, x + 1 + i * 9, baseY - 19);
   }
 
-  // Baum in 3/4: Stamm plus runde Krone
+  // Baum: geschichtete Kronenklumpen, Umriss, Licht von oben links
   function drawTree(ctx, cx, baseY, size) {
-    px(ctx, "#4A3520", cx - 1, baseY - size - 2, 3, size + 2);
-    ellipse(ctx, LEAF_DK, cx, baseY - size - 7, size + 3, size + 1);
-    ellipse(ctx, LEAF, cx, baseY - size - 8, size + 1, size - 1);
-    ellipse(ctx, "#5EA265", cx - 2, baseY - size - 10, Math.floor(size / 2), Math.floor(size / 3));
+    var r = size + 3;
+    shadow(ctx, cx + 4, baseY, r + 3, Math.max(2, Math.round(r * 0.5)));
+    px(ctx, "#241708", cx - 3, baseY - r - 4, 6, r + 4);
+    px(ctx, TRUNK_DK, cx - 2, baseY - r - 4, 4, r + 4);
+    px(ctx, TRUNK, cx - 2, baseY - r - 4, 2, r + 4);
+
+    var cy = baseY - r - 8;
+    var blobs = [[0, 1, r], [-r + 2, 3, r - 3], [r - 2, 3, r - 3], [-3, -r + 4, r - 3], [4, -r + 5, r - 4]];
+    var i;
+    for (i = 0; i < blobs.length; i++) {
+      ellipse(ctx, LEAF_OUT, cx + blobs[i][0], cy + blobs[i][1], blobs[i][2] + 1, blobs[i][2] * 0.85 + 1);
+    }
+    for (i = 0; i < blobs.length; i++) {
+      ellipse(ctx, LEAF_DK, cx + blobs[i][0], cy + blobs[i][1], blobs[i][2], blobs[i][2] * 0.85);
+    }
+    for (i = 0; i < blobs.length; i++) {
+      ellipse(ctx, LEAF, cx + blobs[i][0] - 1, cy + blobs[i][1] - 1, blobs[i][2] - 1, blobs[i][2] * 0.85 - 1);
+    }
+    ellipse(ctx, LEAF_HI, cx - 3, cy - Math.round(r * 0.55), Math.round(r * 0.55), Math.round(r * 0.4));
   }
 
   function drawBlossom(ctx, x, y, glow) {
-    px(ctx, "#D9C88A", x + 1, y, 2, 1);
+    px(ctx, "#8A7A3C", x, y, 4, 4);
     px(ctx, "#F5E9C0", x, y + 1, 4, 2);
-    px(ctx, "#D9C88A", x + 1, y + 3, 2, 1);
-    px(ctx, glow ? "#FFF6D8" : BERRY, x + 1, y + 1, 2, 1);
+    px(ctx, "#F5E9C0", x + 1, y, 2, 4);
+    px(ctx, glow ? "#FFF8E0" : BERRY, x + 1, y + 1, 2, 2);
   }
 
   /* ------------------------------------------------------------------ *
-   * Kleine Bewohner-Icons
+   * Bewohner-Icons
    * ------------------------------------------------------------------ */
   document.querySelectorAll("canvas[data-critter]").forEach(function (cv) {
     var def = CRITTERS[cv.getAttribute("data-critter")];
     if (!def) return;
-    var W = 16, H = 14;
+    var W = 16, H = 15;
     var ctx = fit(cv, W, H, 3);
-    ctx.fillStyle = "#25382C";
+    ctx.fillStyle = "#22382A";
     ctx.fillRect(0, 0, W, H);
-    px(ctx, GRASS_DK, 0, H - 4, W, 4);
-    px(ctx, GRASS, 0, H - 4, W, 1);
-    drawSprite(ctx, def.rows, def.pal, Math.floor((W - def.w) / 2), H - 3 - def.h);
+    px(ctx, GRASS_DK, 0, H - 5, W, 5);
+    px(ctx, GRASS, 0, H - 5, W, 1);
+    px(ctx, GRASS_HI, 2, H - 4, 2, 1);
+    px(ctx, GRASS_HI, 11, H - 3, 2, 1);
+    var ox = Math.floor((W - def.w) / 2);
+    shadow(ctx, W / 2 + 1, H - 3, def.w / 2 + 1, 2, 0.32);
+    drawSprite(ctx, def.rows, def.pal, ox, H - 4 - def.h);
   });
 
   /* ------------------------------------------------------------------ *
@@ -1119,25 +1177,25 @@
    * ------------------------------------------------------------------ */
   document.querySelectorAll("canvas[data-station]").forEach(function (cv) {
     var up = cv.getAttribute("data-station") === "upgraded";
-    var W = 60, H = 46;
+    var W = 66, H = 50;
     var ctx = fit(cv, W, H, 4);
-    ctx.fillStyle = "#25382C";
+    ctx.fillStyle = "#22382A";
     ctx.fillRect(0, 0, W, H);
-    px(ctx, GRASS, 0, 10, W, H - 10);
-    px(ctx, GRASS_LT, 0, 10, W, 1);
-    for (var d = 0; d < 26; d++) {
-      px(ctx, (d % 2) ? GRASS_DK : GRASS_LT, (d * 17) % W, 12 + (d * 7) % (H - 14), 1, 1);
+    px(ctx, GRASS, 0, 8, W, H - 8);
+    px(ctx, GRASS_LT, 0, 8, W, 1);
+    for (var d = 0; d < 22; d++) {
+      var gx = (d * 19) % W, gy = 12 + (d * 11) % (H - 16);
+      px(ctx, (d % 3) ? GRASS_DK : GRASS_HI, gx, gy, 2, 1);
+      px(ctx, (d % 3) ? GRASS_DK : GRASS_HI, gx + 1, gy - 1, 1, 1);
     }
     var slots = up ? 4 : 2;
-    var w = 6 + slots * 9;
-    drawStation(ctx, Math.floor((W - w) / 2), H - 5, { slots: slots, crates: slots, roof: up });
+    var w = 8 + slots * 10;
+    drawStation(ctx, Math.floor((W - w) / 2), H - 6, { slots: slots, crates: slots, roof: up });
   });
 
   /* ------------------------------------------------------------------ *
-   * Das Diorama – 3/4-Draufsicht
+   * Das Diorama
    * ------------------------------------------------------------------ */
-  // Die Komposition ist 208 Pixel breit; die Leinwand wächst darüber hinaus,
-  // damit die Parzelle den Rahmen immer ganz ausfüllt statt zu letterboxen.
   var BASE_W = 208, H = 128;
   var canvas = document.getElementById("scene");
   var W = BASE_W, OX = 0, scale = 4, ctx;
@@ -1151,8 +1209,7 @@
     scale = s;
     W = Math.max(BASE_W, Math.floor(avail / s));
     OX = Math.floor((W - BASE_W) / 2);
-    canvas.width = W * s;
-    canvas.height = H * s;
+    canvas.width = W * s; canvas.height = H * s;
     canvas.style.width = (W * s) + "px";
     canvas.style.height = (H * s) + "px";
     ctx = canvas.getContext("2d");
@@ -1162,52 +1219,49 @@
   fitScene();
 
   var BEET = { cx: 38, cy: 46, rx: 20, ry: 9, base: 56 };
-  var STATION_X = 72, STATION_Y = 70, STATION_SLOTS = 2;
-  var STATION_W = 6 + STATION_SLOTS * 9;
-  var STORE_X = 148, STORE_Y = 76;
-  var RAIL_Y = 82, RAIL_A = 94, RAIL_B = 182;
-  var CART_HOME = 96, CART_DOCK = 158;
-  var NEST = { cx: 104, cy: 104, rx: 17, ry: 11 };
-  var POND = { cx: 28, cy: 108, rx: 21, ry: 11 };
-  var LAMP_X = 66, LAMP_Y = 74;
+  var STATION_X = 70, STATION_Y = 70, STATION_SLOTS = 2;
+  var STATION_W = 8 + STATION_SLOTS * 10;
+  var STORE_X = 146, STORE_Y = 76;
+  var RAIL_Y = 84, RAIL_A = 94, RAIL_B = 180;
+  var CART_HOME = 96, CART_DOCK = 156;
+  var NEST = { cx: 104, cy: 106, rx: 18, ry: 11 };
+  var POND = { cx: 28, cy: 110, rx: 21, ry: 11 };
+  var LAMP_X = 64, LAMP_Y = 74;
+  var PATH_A = { x: 44, y: 56 }, PATH_B = { x: 78, y: 76 };
 
-  // Brambles Weg: vom Beet zur Verladestation
-  var PATH_A = { x: 44, y: 56 };
-  var PATH_B = { x: 80, y: 76 };
-
-  var speckles = [], flowers = [], trees = [], pathDots = [];
+  var tufts = [], flowers = [], trees = [], pathDots = [];
   (function () {
     var seed = 11;
     function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 
-    var SPREAD = BASE_W + 200, LEFT = -100;
-    for (var i = 0; i < 420; i++) {
-      speckles.push({
+    var LEFT = -110, SPREAD = BASE_W + 220;
+    // Grasbüschel statt Rauschen: kleine Halmklumpen in drei Helligkeiten
+    for (var i = 0; i < 330; i++) {
+      var v = rnd();
+      tufts.push({
         x: LEFT + Math.floor(rnd() * SPREAD),
-        y: 20 + Math.floor(rnd() * (H - 20)),
-        c: rnd() > 0.5 ? GRASS_LT : GRASS_DK
+        y: 22 + Math.floor(rnd() * (H - 22)),
+        c: v > 0.78 ? GRASS_HI : (v > 0.42 ? GRASS_DK : GRASS_LT),
+        w: 2 + Math.floor(rnd() * 2)
       });
     }
-    for (var f = 0; f < 42; f++) {
+    for (var f = 0; f < 48; f++) {
       flowers.push({
         x: LEFT + Math.floor(rnd() * SPREAD),
         y: 26 + Math.floor(rnd() * (H - 30)),
-        c: ["#E8A0C0", "#F2E2A0", "#C0A8E0"][Math.floor(rnd() * 3)]
+        c: ["#EDA8C6", "#F7E8AE", "#C6B0E6"][Math.floor(rnd() * 3)]
       });
     }
-    // Bäume am Rand – rahmen die Parzelle, ohne Gebäude zu verdecken
-    var spots = [[10, 34, 5], [62, 28, 4], [128, 26, 5], [200, 44, 4],
-                 [190, 122, 5], [64, 122, 4], [8, 74, 4], [204, 92, 4]];
-    for (var s = 0; s < spots.length; s++) {
-      trees.push({ x: spots[s][0], y: spots[s][1], size: spots[s][2] });
-    }
-    // Trampelpfad als Punktespur zwischen Beet und Station
-    for (var p = 0; p <= 22; p++) {
-      var q = p / 22;
+    var spots = [[10, 34, 5], [60, 27, 4], [128, 25, 5], [202, 42, 4],
+                 [192, 124, 5], [62, 124, 4], [6, 76, 4], [206, 94, 4]];
+    for (var s = 0; s < spots.length; s++) trees.push({ x: spots[s][0], y: spots[s][1], size: spots[s][2] });
+
+    for (var p = 0; p <= 24; p++) {
+      var q = p / 24;
       pathDots.push({
         x: PATH_A.x + (PATH_B.x - PATH_A.x) * q,
         y: PATH_A.y + (PATH_B.y - PATH_A.y) * q,
-        r: 2 + Math.round(rnd())
+        r: 3 + Math.round(rnd())
       });
     }
   })();
@@ -1217,9 +1271,7 @@
     beaver: { p: 1, phase: "go", timer: 0, carrying: false },
     crates: 0,
     cart: { x: CART_HOME, phase: "idle", load: 0, timer: 0 },
-    stock: 0,
-    react: 0,
-    zzz: 0,
+    stock: 0, react: 0, zzz: 0,
     status: "Bramble macht sich auf den Weg zum Glühbeerenbeet"
   };
 
@@ -1261,12 +1313,8 @@
       b.timer -= dt;
       state.status = "Bramble legt die Kiste an der Verladestation ab";
       if (b.timer <= 0) {
-        if (state.crates < STATION_SLOTS) {
-          state.crates++; b.carrying = false; b.phase = "go";
-        } else {
-          state.status = "Verladestation voll – Bramble wartet auf den Wurzelwagen";
-          b.timer = 0.4;
-        }
+        if (state.crates < STATION_SLOTS) { state.crates++; b.carrying = false; b.phase = "go"; }
+        else { state.status = "Verladestation voll – Bramble wartet auf den Wurzelwagen"; b.timer = 0.4; }
       }
     }
 
@@ -1279,10 +1327,7 @@
     } else if (c.phase === "unload") {
       c.timer -= dt;
       state.status = "Ankunft – Kisten werden eingelagert";
-      if (c.timer <= 0) {
-        state.stock += c.load * 6;      // Bestand steigt erst hier
-        c.load = 0; c.phase = "home"; state.react = 1.7;
-      }
+      if (c.timer <= 0) { state.stock += c.load * 6; c.load = 0; c.phase = "home"; state.react = 1.7; }
     } else if (c.phase === "home") {
       c.x -= 34 * dt;
       state.status = "Wurzelwagen kehrt zur Verladestation zurück";
@@ -1301,157 +1346,179 @@
   function render() {
     var t = state.t;
     var pulse = (Math.sin(t * 2.2) + 1) / 2;
-
-    /* --- Boden --- */
     var L = -OX, R = W - OX;
-    px(ctx, FOREST_DK, L, 0, W, 22);
-    for (var fx = L - 4; fx < R + 8; fx += 11) {
-      ellipse(ctx, FOREST, fx, 18, 8, 6);
-      ellipse(ctx, FOREST_DK, fx + 5, 15, 6, 5);
+
+    /* --- Waldrand und Boden --- */
+    px(ctx, FOREST_DK, L, 0, W, 24);
+    for (var fx = L - 6; fx < R + 10; fx += 9) {
+      ellipse(ctx, FOREST, fx, 19, 7, 6);
+      ellipse(ctx, FOREST_DK, fx + 4, 15, 6, 5);
     }
-    px(ctx, GRASS, L, 20, W, H - 20);
-    px(ctx, GRASS_LT, L, 20, W, 1);
-    for (var k = 0; k < speckles.length; k++) {
-      px(ctx, speckles[k].c, speckles[k].x, speckles[k].y, 1, 1);
+    px(ctx, GRASS_SH, L, 21, W, 3);
+    px(ctx, GRASS, L, 24, W, H - 24);
+    px(ctx, GRASS_LT, L, 24, W, 1);
+
+    for (var k = 0; k < tufts.length; k++) {
+      var tu = tufts[k];
+      px(ctx, tu.c, tu.x, tu.y, tu.w, 1);
+      px(ctx, tu.c, tu.x + 1, tu.y - 1, 1, 1);
     }
     for (var fl = 0; fl < flowers.length; fl++) {
-      px(ctx, flowers[fl].c, flowers[fl].x, flowers[fl].y, 1, 1);
+      var fo = flowers[fl];
+      px(ctx, fo.c, fo.x, fo.y, 2, 1);
+      px(ctx, fo.c, fo.x, fo.y - 1, 1, 1);
+      px(ctx, "#F7EFC8", fo.x, fo.y, 1, 1);
     }
 
     /* --- Teich --- */
-    ellipse(ctx, "#2A4A3A", POND.cx, POND.cy, POND.rx + 2, POND.ry + 1);
-    ellipse(ctx, WATER, POND.cx, POND.cy, POND.rx, POND.ry);
-    ellipse(ctx, WATER_LT, POND.cx - 3, POND.cy - 3, POND.rx - 8, POND.ry - 6);
-    for (var wv = 0; wv < 4; wv++) {
+    ellipse(ctx, GRASS_SH, POND.cx, POND.cy, POND.rx + 3, POND.ry + 2);
+    ellipse(ctx, WATER_DK, POND.cx, POND.cy, POND.rx, POND.ry);
+    ellipse(ctx, WATER, POND.cx, POND.cy - 1, POND.rx - 2, POND.ry - 1);
+    ellipse(ctx, WATER_LT, POND.cx - 3, POND.cy - 3, POND.rx - 9, POND.ry - 6);
+    for (var wv = 0; wv < 5; wv++) {
       var wo = Math.sin(t * 1.1 + wv * 1.7) * 4;
-      px(ctx, "#7FB6CE", POND.cx - 10 + wv * 7 + wo, POND.cy - 4 + wv * 3, 3, 1);
+      px(ctx, WATER_HI, POND.cx - 12 + wv * 6 + wo, POND.cy - 5 + wv * 3, 3, 1);
     }
 
-    /* --- Weg und Schienen liegen flach auf dem Boden --- */
+    /* --- Weg und Schienen liegen flach --- */
     for (var d = 0; d < pathDots.length; d++) {
       var pd = pathDots[d];
-      ellipse(ctx, PATH_DK, pd.x, pd.y, pd.r + 1, pd.r);
-      ellipse(ctx, PATH_C, pd.x, pd.y - 1, pd.r, pd.r - 1);
+      ellipse(ctx, PATH_DK, pd.x, pd.y, pd.r + 1, pd.r * 0.7 + 1);
+      ellipse(ctx, PATH_C, pd.x, pd.y, pd.r, pd.r * 0.7);
+      ellipse(ctx, PATH_HI, pd.x - 1, pd.y - 1, pd.r - 2, pd.r * 0.5);
     }
-    px(ctx, "#2F4A38", RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 9);
-    for (var rx = RAIL_A; rx < RAIL_B; rx += 5) {
-      px(ctx, TIE, rx, RAIL_Y - 3, 3, 7);
+    px(ctx, GRASS_SH, RAIL_A - 4, RAIL_Y - 6, RAIL_B - RAIL_A + 8, 13);
+    px(ctx, BALLAST, RAIL_A - 3, RAIL_Y - 5, RAIL_B - RAIL_A + 6, 11);
+    for (var rx = RAIL_A; rx < RAIL_B; rx += 6) {
+      px(ctx, "#3A2C1C", rx, RAIL_Y - 4, 4, 9);
+      px(ctx, TIE, rx, RAIL_Y - 4, 4, 8);
+      px(ctx, "#6E5638", rx, RAIL_Y - 4, 4, 1);
     }
-    px(ctx, RAIL, RAIL_A - 2, RAIL_Y - 3, RAIL_B - RAIL_A + 4, 1);
-    px(ctx, RAIL, RAIL_A - 2, RAIL_Y + 3, RAIL_B - RAIL_A + 4, 1);
-    px(ctx, WOOD_DK, RAIL_B, RAIL_Y - 6, 3, 13);
-    px(ctx, WOOD, RAIL_B, RAIL_Y - 5, 3, 2);
+    px(ctx, "#3A2C1C", RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL, RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL_HI, RAIL_A - 3, RAIL_Y - 5, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, "#3A2C1C", RAIL_A - 3, RAIL_Y + 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL, RAIL_A - 3, RAIL_Y + 3, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, WOOD_OUT, RAIL_B, RAIL_Y - 8, 4, 15);
+    px(ctx, WOOD, RAIL_B, RAIL_Y - 7, 3, 13);
 
     /* --- Warme Lichtinseln --- */
-    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2 > 0 ? 0.16 : 0.12;
+    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2 > 0 ? 0.17 : 0.13;
     function pool(cx, cy, rx, ry, a) {
-      ellipse(ctx, "rgba(255,206,120," + (a * 0.35).toFixed(3) + ")", cx, cy, rx, ry);
-      ellipse(ctx, "rgba(255,206,120," + (a * 0.6).toFixed(3) + ")", cx, cy, rx * 0.68, ry * 0.68);
-      ellipse(ctx, "rgba(255,214,150," + a.toFixed(3) + ")", cx, cy, rx * 0.36, ry * 0.36);
+      ellipse(ctx, "rgba(255,206,120," + (a * 0.3).toFixed(3) + ")", cx, cy, rx, ry);
+      ellipse(ctx, "rgba(255,208,128," + (a * 0.55).toFixed(3) + ")", cx, cy, rx * 0.66, ry * 0.66);
+      ellipse(ctx, "rgba(255,218,150," + a.toFixed(3) + ")", cx, cy, rx * 0.34, ry * 0.34);
     }
-    pool(LAMP_X, LAMP_Y + 1, 15, 8, flick);
-    pool(STORE_X + 25, STORE_Y + 3, 26, 11, 0.13);
+    pool(LAMP_X, LAMP_Y + 1, 16, 8, flick);
+    pool(STORE_X + 26, STORE_Y + 4, 28, 12, 0.14);
 
     /* --- Alles Stehende nach Fußpunkt sortiert --- */
     var bp = beaverPos();
     var items = [];
 
     for (var tr = 0; tr < trees.length; tr++) {
-      (function (o) {
-        items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size); } });
-      })(trees[tr]);
+      (function (o) { items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size); } }); })(trees[tr]);
     }
 
-    // Glühbeerenbeet
     items.push({ y: BEET.base, draw: function () {
-      ellipse(ctx, GRASS_DK, BEET.cx, BEET.cy, BEET.rx + 3, BEET.ry + 2);
-      ellipse(ctx, "#5C7A4E", BEET.cx, BEET.cy, BEET.rx + 1, BEET.ry + 1);
+      shadow(ctx, BEET.cx + 3, BEET.cy + BEET.ry - 1, BEET.rx, 4, 0.22);
+      ellipse(ctx, GRASS_SH, BEET.cx, BEET.cy, BEET.rx + 3, BEET.ry + 2);
+      ellipse(ctx, GRASS_DK, BEET.cx, BEET.cy - 1, BEET.rx + 2, BEET.ry + 1);
       ellipse(ctx, SOIL_DK, BEET.cx, BEET.cy, BEET.rx, BEET.ry);
       ellipse(ctx, SOIL, BEET.cx, BEET.cy - 1, BEET.rx - 2, BEET.ry - 2);
-      for (var row = -1; row <= 1; row++) {
-        px(ctx, SOIL_DK, BEET.cx - 14, BEET.cy + row * 4, 28, 1);
-      }
-      var bush = [[-13, 2], [-4, 5], [5, 2], [12, 5], [-8, -3], [3, -4]];
+      ellipse(ctx, SOIL_HI, BEET.cx - 2, BEET.cy - 3, BEET.rx - 7, BEET.ry - 6);
+      for (var row = -1; row <= 1; row++) px(ctx, SOIL_DK, BEET.cx - 14, BEET.cy + row * 4, 28, 1);
+
+      var bush = [[-13, 3], [-4, 6], [5, 3], [12, 6], [-8, -2], [3, -3]];
       for (var i = 0; i < bush.length; i++) {
         var bx = BEET.cx + bush[i][0], by = BEET.cy + bush[i][1];
-        ellipse(ctx, LEAF_DK, bx, by - 3, 5, 4);
-        ellipse(ctx, LEAF, bx, by - 4, 4, 3);
+        shadow(ctx, bx + 2, by, 5, 2, 0.28);
+        ellipse(ctx, LEAF_OUT, bx, by - 4, 6, 5);
+        ellipse(ctx, LEAF_DK, bx, by - 4, 5, 4);
+        ellipse(ctx, LEAF, bx - 1, by - 5, 4, 3);
+        ellipse(ctx, LEAF_HI, bx - 2, by - 6, 2, 1);
         var lit = (Math.sin(t * 2.2 + i) + 1) / 2;
-        px(ctx, lit > 0.55 ? "#FFE9A8" : BERRY, bx - 2, by - 4, 1, 1);
-        px(ctx, lit > 0.3 ? BERRY : "#D9A93C", bx + 1, by - 5, 1, 1);
-        px(ctx, lit > 0.75 ? "#FFE9A8" : BERRY, bx + 2, by - 2, 1, 1);
+        px(ctx, lit > 0.55 ? BERRY_HI : BERRY, bx - 3, by - 4, 1, 1);
+        px(ctx, lit > 0.3 ? BERRY : "#D9A93C", bx + 1, by - 6, 1, 1);
+        px(ctx, lit > 0.75 ? BERRY_HI : BERRY, bx + 3, by - 3, 1, 1);
       }
     }});
 
-    // Laterne
     items.push({ y: LAMP_Y, draw: function () {
-      px(ctx, WOOD_DK, LAMP_X - 1, LAMP_Y - 16, 2, 16);
-      px(ctx, WOOD_DK, LAMP_X - 3, LAMP_Y - 21, 6, 6);
-      px(ctx, flick > 0.11 ? LAMP : "#E6BC6A", LAMP_X - 2, LAMP_Y - 20, 4, 4);
+      shadow(ctx, LAMP_X + 2, LAMP_Y, 4, 2, 0.30);
+      px(ctx, "#241708", LAMP_X - 2, LAMP_Y - 17, 4, 17);
+      px(ctx, WOOD_DK, LAMP_X - 2, LAMP_Y - 17, 3, 17);
+      px(ctx, WOOD, LAMP_X - 2, LAMP_Y - 17, 1, 17);
+      px(ctx, "#241708", LAMP_X - 4, LAMP_Y - 23, 8, 7);
+      px(ctx, flick > 0.15 ? LAMP : "#E8BE6C", LAMP_X - 3, LAMP_Y - 22, 6, 5);
+      px(ctx, "#FFF3CE", LAMP_X - 3, LAMP_Y - 22, 6, 2);
     }});
 
     items.push({ y: STATION_Y, draw: function () {
       drawStation(ctx, STATION_X, STATION_Y, { slots: STATION_SLOTS, crates: state.crates });
     }});
-
     items.push({ y: STORE_Y, draw: function () { drawStorehouse(ctx, STORE_X, STORE_Y, t); } });
+    items.push({ y: RAIL_Y + 2, draw: function () { drawCart(ctx, state.cart.x, RAIL_Y + 4, state.cart.load); } });
 
-    items.push({ y: RAIL_Y + 1, draw: function () {
-      drawCart(ctx, state.cart.x, RAIL_Y + 4, state.cart.load);
-    }});
-
-    // Bramble
     items.push({ y: bp.y, draw: function () {
       var b = state.beaver;
       var moving = (b.phase === "go" || b.phase === "back");
       var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
       var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
+      shadow(ctx, bp.x + 1, bp.y, 6, 2, 0.32);
       drawSprite(ctx, frame, BEAVER_PAL, bp.x - 5, bp.y - 11 + bob);
-      if (b.carrying) drawCrate(ctx, bp.x + 3, bp.y - 12);
+      if (b.carrying) drawCrate(ctx, bp.x + 3, bp.y - 13);
     }});
 
-    // Nest mit Cozywolf
     items.push({ y: NEST.cy + NEST.ry, draw: function () {
-      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx, NEST.ry);
-      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy, NEST.rx - 2, NEST.ry - 2);
-      for (var w = 0; w < 6; w++) {
-        px(ctx, "#7A6740", NEST.cx - 13 + w * 5, NEST.cy - 6 + (w % 3) * 5, 3, 1);
-      }
+      shadow(ctx, NEST.cx + 4, NEST.cy + NEST.ry - 2, NEST.rx, 5, 0.26);
+      ellipse(ctx, "#20361F", NEST.cx, NEST.cy, NEST.rx, NEST.ry);
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx - 1, NEST.ry - 1);
+      ellipse(ctx, "#4B7444", NEST.cx - 1, NEST.cy - 1, NEST.rx - 3, NEST.ry - 3);
+      for (var w = 0; w < 6; w++) px(ctx, "#8A7448", NEST.cx - 13 + w * 5, NEST.cy - 6 + (w % 3) * 5, 3, 1);
+
       var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
       var lift = state.react > 0 ? -1 : 0;
       drawSprite(ctx, WOLF, WOLF_PAL, NEST.cx - 13, NEST.cy - 12 + breath + lift);
-      // vorderer Nestrand liegt über dem Wolf – er liegt sichtbar darin
-      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx, NEST.ry, NEST.ry - 3, NEST.ry);
-      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy, NEST.rx - 2, NEST.ry - 2, NEST.ry - 4, NEST.ry);
 
-      // Herzknospe am Nestrand
-      px(ctx, "#3E6440", NEST.cx + NEST.rx - 3, NEST.cy - 6, 1, 7);
-      drawBlossom(ctx, NEST.cx + NEST.rx - 4, NEST.cy - 10, pulse > 0.5);
+      ellipse(ctx, "#20361F", NEST.cx, NEST.cy, NEST.rx, NEST.ry, NEST.ry - 3, NEST.ry);
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx - 1, NEST.ry - 1, NEST.ry - 4, NEST.ry);
+      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy - 1, NEST.rx - 3, NEST.ry - 3, NEST.ry - 5, NEST.ry);
+
+      px(ctx, "#3E6440", NEST.cx + NEST.rx - 4, NEST.cy - 7, 1, 8);
+      drawBlossom(ctx, NEST.cx + NEST.rx - 5, NEST.cy - 11, pulse > 0.5);
 
       if (state.react <= 0 && state.zzz < 2) {
-        var zy = NEST.cy - 16 - Math.floor(state.zzz * 3);
-        px(ctx, "#CBD8E0", NEST.cx - 10, zy, 3, 1);
-        px(ctx, "#CBD8E0", NEST.cx - 9, zy + 1, 1, 1);
-        px(ctx, "#CBD8E0", NEST.cx - 10, zy + 2, 3, 1);
+        var zy = NEST.cy - 17 - Math.floor(state.zzz * 3);
+        px(ctx, "#D5E2EA", NEST.cx - 11, zy, 3, 1);
+        px(ctx, "#D5E2EA", NEST.cx - 10, zy + 1, 1, 1);
+        px(ctx, "#D5E2EA", NEST.cx - 11, zy + 2, 3, 1);
       }
       if (state.react > 0) {
-        var hy = NEST.cy - 17 - Math.floor((1.7 - state.react) * 3);
-        px(ctx, "#FF9CC0", NEST.cx - 10, hy, 1, 1);
-        px(ctx, "#FF9CC0", NEST.cx - 8, hy, 1, 1);
-        px(ctx, "#FF9CC0", NEST.cx - 11, hy + 1, 5, 1);
-        px(ctx, "#FF9CC0", NEST.cx - 10, hy + 2, 3, 1);
-        px(ctx, "#FF9CC0", NEST.cx - 9, hy + 3, 1, 1);
+        var hy = NEST.cy - 18 - Math.floor((1.7 - state.react) * 3);
+        px(ctx, "#FF9CC0", NEST.cx - 11, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 9, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 12, hy + 1, 5, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 11, hy + 2, 3, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 10, hy + 3, 1, 1);
       }
     }});
 
     items.sort(function (a, b) { return a.y - b.y; });
     for (var it = 0; it < items.length; it++) items[it].draw();
 
-    // Glühwürmchen als letzte Ebene
-    for (var g = 0; g < 7; g++) {
-      var gx = L + 20 + ((g * 31 + t * 6) % (W - 40));
-      var gy = 40 + Math.sin(t * 0.8 + g * 2) * 12 + g * 8;
-      px(ctx, (Math.sin(t * 3 + g) > 0) ? "#FFF0B0" : "#D8C070", gx, gy, 1, 1);
+    for (var g = 0; g < 8; g++) {
+      var gx = L + 16 + ((g * 37 + t * 6) % (W - 32));
+      var gy = 40 + Math.sin(t * 0.8 + g * 2) * 12 + g * 7;
+      px(ctx, (Math.sin(t * 3 + g) > 0) ? "#FFF6C0" : "#D8C070", gx, gy, 1, 1);
+    }
+
+    // Gestufte Randabdunklung – bündelt den Blick auf die Parzelle
+    for (var v = 0; v < 9; v++) {
+      var a = ((9 - v) * 0.022).toFixed(3);
+      px(ctx, "rgba(8,18,14," + a + ")", L + v * 3, 0, 3, H);
+      px(ctx, "rgba(8,18,14," + a + ")", R - 3 - v * 3, 0, 3, H);
+      if (v < 5) px(ctx, "rgba(8,18,14," + a + ")", L, H - 3 - v * 3, W, 3);
     }
   }
 
@@ -1459,27 +1526,18 @@
   function frame(now) {
     var dt = last ? Math.min((now - last) / 1000, 0.05) : 0.016;
     last = now;
-    update(dt);
-    render();
+    update(dt); render();
     requestAnimationFrame(frame);
   }
 
-  window.addEventListener("resize", function () {
-    fitScene();
-    if (reduce) render();
-  });
+  window.addEventListener("resize", function () { fitScene(); if (reduce) render(); });
 
   if (reduce) {
     state.crates = 1;
     state.cart.x = (CART_HOME + CART_DOCK) / 2;
-    state.cart.phase = "out";
-    state.cart.load = 2;
-    state.stock = 18;
-    state.beaver.p = 0.45;
-    state.beaver.carrying = true;
-    setHud("crates", "1");
-    setHud("cart", "2");
-    setHud("stock", "18");
+    state.cart.phase = "out"; state.cart.load = 2; state.stock = 18;
+    state.beaver.p = 0.45; state.beaver.carrying = true;
+    setHud("crates", "1"); setHud("cart", "2"); setHud("stock", "18");
     setHud("status", "Wurzelwagen fährt zum Vorratshaus");
     render();
   } else {
