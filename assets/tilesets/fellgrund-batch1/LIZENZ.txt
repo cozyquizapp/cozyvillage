@@ -1,0 +1,8 @@
+Fellgrund Pixel Asset Paket - Stilprobe Batch 1
+
+Lizenz: CC0 1.0 Universal. Soweit urheberrechtlich möglich, werden die speziell für dieses Projekt erstellten Bestandteile der Gemeinfreiheit gewidmet.
+Kommerzielle Nutzung: erlaubt.
+Namensnennung: nicht erforderlich.
+Fremdquellen: keine Pixelgrafiken oder Tiles aus fremden Asset-Paketen wurden übernommen.
+Entwurfsreferenz: Die Stimmungsvorlage diente nur für Wärme, Familienähnlichkeit und Motivsprache; keine Pixel wurden übernommen oder herunterskaliert.
+Zusätzliche Farben: keine; ausschließlich die im Auftrag definierte Palette.

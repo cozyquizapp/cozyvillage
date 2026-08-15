@@ -12,5 +12,8 @@ dist/
 .env.local
 *.log
 
+# Gespiegelte Tilesets (Quelle liegt in assets/)
+public/assets/
+
 # Prüfberichte
 pruefbericht.txt

@@ -164,11 +164,21 @@ export default class GladeScene extends Phaser.Scene {
       gesperrt: true
     }));
 
-    // Atmen
-    this.tweens.add({
-      targets: this.wolf, y: this.wolf.y - 1, duration: 1400,
-      yoyo: true, repeat: -1, ease: "Sine.easeInOut"
-    });
+    // Atmen: entweder über gelieferte Bilder oder als leichte Bewegung
+    if (this.textures.exists("wolf-sleep-1")) {
+      this.time.addEvent({
+        delay: 700, loop: true,
+        callback: () => {
+          const i = Math.floor(this.time.now / 700) % 4;
+          this.wolf.setTexture(`wolf-sleep-${i}`);
+        }
+      });
+    } else {
+      this.tweens.add({
+        targets: this.wolf, y: this.wolf.y - 1, duration: 1400,
+        yoyo: true, repeat: -1, ease: "Sine.easeInOut"
+      });
+    }
   }
 
   baueWagen() {
@@ -376,13 +386,16 @@ export default class GladeScene extends Phaser.Scene {
     const y = PATH.from.y + (PATH.to.y - PATH.from.y) * b.fortschritt;
     const laeuft = b.phase === "hin" || b.phase === "zurueck";
     const wippen = b.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 : 0;
-    this.brambleBild.setTexture(
-      laeuft && Math.floor(this.time.now / 140) % 2 === 0 ? "beaver-1" : "beaver-0"
-    );
+    // Laufzyklus über vier Bilder; beim Tragen die zweite Zeile des Blattes
+    const bild = laeuft ? Math.floor(this.time.now / 150) % 4 : 0;
+    const reihe = b.traegt ? "beaver-carry-" : "beaver-";
+    const schluessel = this.textures.exists(reihe + bild) ? reihe + bild : "beaver-0";
+    this.brambleBild.setTexture(schluessel);
     this.brambleBild.setPosition(x, y + wippen);
     this.brambleBild.setDepth(10 + y);
-    this.brambleKiste.setVisible(b.traegt);
-    if (b.traegt) {
+    const kisteImSprite = this.textures.exists("beaver-carry-0");
+    this.brambleKiste.setVisible(b.traegt && !kisteImSprite);
+    if (this.brambleKiste.visible) {
       this.brambleKiste.setPosition(x + 6, y - 4).setDepth(11 + y);
     }
   }

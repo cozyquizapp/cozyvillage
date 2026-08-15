@@ -1,0 +1,9 @@
+OK boden.png: 288x16, Alpha nur 0/255, Palette eingehalten
+OK natur_32x48.png: 160x48, Alpha nur 0/255, Palette eingehalten
+OK gebaeude_32.png: 32x32, Alpha nur 0/255, Palette eingehalten
+OK gueter_32x16.png: 128x16, Alpha nur 0/255, Palette eingehalten
+OK bewegt.png: 64x16, Alpha nur 0/255, Palette eingehalten
+OK bewohner_biber.png: 128x64, Alpha nur 0/255, Palette eingehalten
+OK cozywolf.png: 128x64, Alpha nur 0/255, Palette eingehalten
+OK bewohner_biber.png: höchstens 5 Farben je Figurenzelle
+OK cozywolf.png: höchstens 12 Farben im Spritesheet
