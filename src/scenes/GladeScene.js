@@ -24,9 +24,7 @@ export default class GladeScene extends Phaser.Scene {
 
   create() {
     this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
-
-    this.tiefe = this.add.container(0, 0);
-    this.baueWaldkranz();
+    this.baueWald();
     this.baueParzellen();
     this.baueStreuobjekte();
     this.baueBeet();
@@ -66,6 +64,20 @@ export default class GladeScene extends Phaser.Scene {
   tiefeSetzen(obj, y) {
     obj.setDepth(10 + y);   // Figuren werden nach Fußpunkt sortiert
     return obj;
+  }
+
+  /**
+   * Der Waldrahmen liegt in zwei Ebenen: hinten hinter allem, vorn über den
+   * Figuren – nur so kann ein Tier hinter einem Baum verschwinden.
+   * Ohne Lieferung fällt der prozedurale Baumkranz ein.
+   */
+  baueWald() {
+    if (this.textures.exists("wald-hinten")) {
+      this.add.image(0, 0, "wald-hinten").setOrigin(0, 0).setDepth(2);
+      this.add.image(0, 0, "wald-vorn").setOrigin(0, 0).setDepth(8000);
+      return;
+    }
+    this.baueWaldkranz();
   }
 
   baueWaldkranz() {
@@ -153,6 +165,12 @@ export default class GladeScene extends Phaser.Scene {
     this.bluete = this.add.image(n.x + 20 * K, n.y - 6 * K, "blossom").setOrigin(0.5, 1);
     this.tiefeSetzen(this.bluete, n.y);
     this.bluete.setVisible(state.ausbauten.wagenlager);
+    if (this.textures.exists("blossom-1")) {
+      this.time.addEvent({
+        delay: 260, loop: true,
+        callback: () => this.bluete.setTexture(`blossom-${Math.floor(this.time.now / 260) % 4}`)
+      });
+    }
 
     this.wolf.setInteractive({ useHandCursor: true });
     this.wolf.on("pointerup", () => bus.emit("oeffne", {
@@ -206,7 +224,14 @@ export default class GladeScene extends Phaser.Scene {
 
   baueLaterne() {
     const x = PLACES.station.x - 30 * K, y = PLACES.station.y - 4 * K;
-    this.tiefeSetzen(this.add.image(x, y, "lamp").setOrigin(0.5, 1), y);
+    const laterne = this.tiefeSetzen(this.add.image(x, y, "lamp").setOrigin(0.5, 1), y);
+    if (this.textures.exists("lamp-1")) {
+      const stufen = [0, 1, 2, 1];
+      this.time.addEvent({
+        delay: 220, loop: true,
+        callback: () => laterne.setTexture(`lamp-${stufen[Math.floor(this.time.now / 220) % 4]}`)
+      });
+    }
     const schein = this.add.ellipse(x, y - 1 * K, 44 * K, 22 * K, 0xffce78, 0.13).setDepth(6);
     this.tweens.add({
       targets: schein, alpha: 0.2, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
@@ -226,12 +251,12 @@ export default class GladeScene extends Phaser.Scene {
   aktualisiereStation() {
     const plaetze = kistenPlaetze();
     const s = PLACES.station;
-    const breite = (8 + plaetze * 10) * K;
-    const links = s.x - breite / 2 + 8 * K;
+    const breite = plaetze * 24;
+    const links = s.x - breite / 2 + 12;
     while (this.stationKisten.length > state.kisten) this.stationKisten.pop().destroy();
     while (this.stationKisten.length < state.kisten) {
       const i = this.stationKisten.length;
-      const kiste = this.add.image(links + i * 10 * K, s.y - 14 * K, "crate").setOrigin(0.5, 1);
+      const kiste = this.add.image(links + i * 24, s.y - 34, "crate").setOrigin(0.5, 1);
       this.tiefeSetzen(kiste, s.y + 1);
       this.stationKisten.push(kiste);
       // Die Kiste landet mit einem kurzen Stauchen, statt zu erscheinen.
@@ -247,8 +272,8 @@ export default class GladeScene extends Phaser.Scene {
     while (this.regalKisten.length < anzahl) {
       const i = this.regalKisten.length;
       const reihe = Math.floor(i / 4), spalte = i % 4;
-      const x = s.x - 20 * K + spalte * 10 * K;
-      const y = s.y - 28 * K + reihe * 10 * K;
+      const x = s.x - 40 + spalte * 24;
+      const y = s.y - 22 - reihe * 20;
       const kiste = this.add.image(x, y, "crate").setOrigin(0.5, 1);
       this.tiefeSetzen(kiste, s.y + 1 + reihe);
       this.regalKisten.push(kiste);
@@ -271,8 +296,8 @@ export default class GladeScene extends Phaser.Scene {
   setzeWagenKisten() {
     const x = this.wagenBild.x;
     this.wagenKisten.forEach((k, i) => {
-      k.x = x - 7 * K + (i % 2) * 9 * K;
-      k.y = RAIL.y - 7 * K - Math.floor(i / 2) * 8 * K;
+      k.x = x - 12 + (i % 2) * 20;
+      k.y = RAIL.y - 14 - Math.floor(i / 2) * 16;
     });
   }
 
@@ -387,10 +412,17 @@ export default class GladeScene extends Phaser.Scene {
     const y = PATH.from.y + (PATH.to.y - PATH.from.y) * b.fortschritt;
     const laeuft = b.phase === "hin" || b.phase === "zurueck";
     const wippen = b.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 * K : 0;
-    // Laufzyklus über vier Bilder; beim Tragen die zweite Zeile des Blattes
-    const bild = laeuft ? Math.floor(this.time.now / 150) % 4 : 0;
-    const reihe = b.traegt ? "beaver-carry-" : "beaver-";
-    const schluessel = this.textures.exists(reihe + bild) ? reihe + bild : "beaver-0";
+    // Reihe nach Tätigkeit und Richtung wählen
+    const bild = (laeuft || b.phase === "ernten") ? Math.floor(this.time.now / 150) % 4 : 0;
+    let reihe;
+    if (b.phase === "ernten") reihe = "beaver-arbeit-";
+    else if (b.traegt) reihe = "beaver-carry-";
+    else if (b.phase === "hin") reihe = "beaver-hinten-";     // läuft nach oben links
+    else reihe = "beaver-rechts-";                            // läuft nach unten rechts
+    let schluessel = reihe + bild;
+    if (!this.textures.exists(schluessel)) {
+      schluessel = this.textures.exists(`beaver-${bild}`) ? `beaver-${bild}` : "beaver-0";
+    }
     this.brambleBild.setTexture(schluessel);
     this.brambleBild.setPosition(x, y + wippen);
     this.brambleBild.setDepth(10 + y);

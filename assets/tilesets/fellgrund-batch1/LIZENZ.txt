@@ -1,8 +1,17 @@
-Fellgrund Pixel Asset Paket - Stilprobe Batch 1
+Fellgrund Pixel Asset Paket – Stilprobe Batch 1, 640×360-Neufassung
 
-Lizenz: CC0 1.0 Universal. Soweit urheberrechtlich möglich, werden die speziell für dieses Projekt erstellten Bestandteile der Gemeinfreiheit gewidmet.
+Lizenz: CC0 1.0 Universal.
 Kommerzielle Nutzung: erlaubt.
 Namensnennung: nicht erforderlich.
-Fremdquellen: keine Pixelgrafiken oder Tiles aus fremden Asset-Paketen wurden übernommen.
-Entwurfsreferenz: Die Stimmungsvorlage diente nur für Wärme, Familienähnlichkeit und Motivsprache; keine Pixel wurden übernommen oder herunterskaliert.
-Zusätzliche Farben: keine; ausschließlich die im Auftrag definierte Palette.
+Fremdquellen: keine Pixelgrafiken übernommen.
+
+Die Waldrahmen wurden speziell für Fellgrund mit OpenAI-Bildgenerierung entworfen
+und anschließend lokal auf Zielmaß, Projektpalette, harte Deckkraft und getrennte
+Spielebenen verarbeitet. Die übrigen Motive wurden aus der für Fellgrund erzeugten
+und freigegebenen Stilvorlage in die technischen Zielzellen überführt.
+Die Batch-2-Objekte und Brambles ergänzende Bewegungszeilen wurden ebenfalls
+speziell für Fellgrund mit OpenAI-Bildgenerierung entworfen und anschließend
+lokal auf Zielmaß, feste Palette, harte Deckkraft und eindeutige Rasterzellen
+verarbeitet.
+
+Zusätzliche Farben: keine; ausschließlich die Palette aus assets/AUFTRAG-TILESET.md.

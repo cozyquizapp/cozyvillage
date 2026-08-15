@@ -103,131 +103,125 @@ function kacheleBoden(ctx, scene, s) {
   const t = scene && scene.textures.get("blatt-boden");
   if (!t || t.key === "__MISSING") return false;
   const bild = t.getSourceImage();
-  const kw = bild.width / 18;          // 18 Kacheln in einer Reihe
   const kh = bild.height;
-  const zeichen = kw / K;              // Kachelbreite im Entwurfsmaß
+  const anzahl = Math.floor(bild.width / kh);
+  const zeichen = kh / K;
   const rnd = makeRandom(53);
 
-  const W = VIEW.width / K, H = VIEW.height / K;
-  for (let y = s(GLADE.top) - zeichen; y <= s(GLADE.bottom) + zeichen; y += zeichen) {
-    for (let x = 0; x < W; x += zeichen) {
-      if (!insideGlade((x + zeichen / 2) * K, (y + zeichen / 2) * K)) continue;
-      // Kachel 0 ist reines Gras, 1–4 tragen Blumen und Steinchen
-      const wahl = rnd() > 0.72 ? 1 + Math.floor(rnd() * 4) : 0;
-      ctx.drawImage(bild, wahl * kw, 0, kw, kh, x, y, zeichen, zeichen);
+  const W = VIEW.width / K;
+  for (let y = s(GLADE.top) - zeichen * 2; y <= s(GLADE.bottom) + zeichen * 2; y += zeichen) {
+    for (let x = -zeichen; x < W + zeichen; x += zeichen) {
+      const wahl = Math.floor(rnd() * anzahl);
+      ctx.drawImage(bild, wahl * kh, 0, kh, kh, x, y, zeichen, zeichen);
     }
   }
   return true;
 }
 
+/** Stempelt die Wegflecken entlang der tatsächlichen Route. */
+function stempleWeg(ctx, scene, s) {
+  const t = scene && scene.textures.get("blatt-wege");
+  if (!t || t.key === "__MISSING") return false;
+  const bild = t.getSourceImage();
+  const h = bild.height;
+  // Blattaufbau: 4 runde à 32, 3 längliche à 64, 3 Trittsteine à 16
+  const flecken = [];
+  let x = 0;
+  for (const [anzahl, br] of [[4, 32], [3, 64], [3, 16]]) {
+    for (let n = 0; n < anzahl; n++) { flecken.push({ x, br }); x += br; }
+  }
+  const rnd = makeRandom(71);
+  const schritte = 34;
+  for (let i = 0; i <= schritte; i++) {
+    const q = i / schritte;
+    const px_ = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
+    const py_ = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
+    const f = flecken[Math.floor(rnd() * 7)];        // nur runde und längliche
+    ctx.drawImage(bild, f.x, 0, f.br, h,
+      px_ - f.br / (2 * K), py_ - h / (2 * K), f.br / K, h / K);
+  }
+  // ein paar Trittsteine obenauf
+  for (let i = 2; i < schritte; i += 7) {
+    const q = i / schritte;
+    const px_ = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
+    const py_ = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
+    const f = flecken[7 + Math.floor(rnd() * 3)];
+    ctx.drawImage(bild, f.x, 0, f.br, h, px_ - 8 / K, py_ - 8 / K, f.br / K, h / K);
+  }
+  return true;
+}
+
 function drawBackground(ctx, scene) {
-  const s = (v) => v / K;   // Weltmaß → Entwurfsmaß
+  const s = (v) => v / K;
   const rnd = makeRandom(31);
   const W = VIEW.width / K, H = VIEW.height / K;
 
-  rect(ctx, "#0D1811", 0, 0, W, H);
-  for (let i = 0; i < 900; i++) {
-    const x = Math.floor(rnd() * W);
-    const y = Math.floor(rnd() * H);
-    if (insideGlade(x * K, y * K)) continue;
-    const r = 4 + Math.floor(rnd() * 5);
-    const bright = rnd() > 0.45;
-    ellipse(ctx, bright ? "#152B1C" : "#101F15", x, y, r, r * 0.8);
-    ellipse(ctx, bright ? "#1D3A26" : "#16301F", x - 1, y - 1, r - 2, r * 0.55);
-  }
-
-  for (let y = s(GLADE.top) - 2; y <= s(GLADE.bottom) + 2; y++) {
-    const hw = s(gladeHalf(Math.min(GLADE.bottom, Math.max(GLADE.top, y * K))));
-    if (hw > 0) rect(ctx, "#21391F", s(GLADE.cx) - hw - 2, y, hw * 2 + 4, 1);
-  }
-  for (let y = s(GLADE.top); y <= s(GLADE.bottom); y++) {
-    const hw = s(gladeHalf(y * K));
-    if (hw <= 0) continue;
-    rect(ctx, PAL.grassSh, s(GLADE.cx) - hw, y, hw * 2, 1);
-    rect(ctx, y < s(GLADE.top) + 2 ? PAL.grassLt : PAL.grass, s(GLADE.cx) - hw + 2, y, hw * 2 - 4, 1);
-  }
-
-  // Gelieferte Kacheln legen sich über die einfarbige Fläche
+  // Grundfläche. Der Waldrahmen liegt später als eigene Ebene darüber.
+  rect(ctx, PAL.grass, 0, 0, W, H);
   const gekachelt = kacheleBoden(ctx, scene, s);
 
-  // Grasbüschel nur, solange keine Kacheln geliefert sind
-  for (let i = 0; gekachelt ? false : i < 620; i++) {
-    const x = Math.floor(rnd() * W);
-    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
-    if (!insideGlade(x * K, y * K)) continue;
-    const v = rnd();
-    const c = v > 0.78 ? PAL.grassHi : v > 0.42 ? PAL.grassDk : PAL.grassLt;
-    rect(ctx, c, x, y, 2 + Math.floor(rnd() * 2), 1);
-    rect(ctx, c, x + 1, y - 1, 1, 1);
-  }
-  for (let i = 0; gekachelt ? false : i < 60; i++) {
-    const x = Math.floor(rnd() * W);
-    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
-    if (!insideGlade(x * K, y * K)) continue;
-    const c = ["#EDA8C6", "#F7E8AE", "#C6B0E6"][Math.floor(rnd() * 3)];
-    rect(ctx, c, x, y, 2, 1);
-    rect(ctx, c, x, y - 1, 1, 1);
-    rect(ctx, "#F7EFC8", x, y, 1, 1);
-  }
-  // Erdflecken brechen die gleichmäßige Wiese auf
-  for (let i = 0; i < 12; i++) {
-    const x = Math.floor(rnd() * W);
-    const y = s(GLADE.top) + Math.floor(rnd() * s(GLADE.bottom - GLADE.top));
-    if (!insideGlade(x * K, y * K)) continue;
-    const rx = 6 + Math.floor(rnd() * 8);
-    const ry = 3 + Math.floor(rnd() * 3);
-    ellipse(ctx, PAL.grassDk, x, y, rx, ry);
-    ellipse(ctx, "#5A6B45", x, y, rx - 2, ry - 1);
-    ellipse(ctx, "#6B7A50", x - 1, y - 1, rx - 4, ry - 2);
+  if (!gekachelt) {
+    for (let i = 0; i < 620; i++) {
+      const x = Math.floor(rnd() * W);
+      const y = Math.floor(rnd() * H);
+      const v = rnd();
+      const c = v > 0.78 ? PAL.grassHi : v > 0.42 ? PAL.grassDk : PAL.grassLt;
+      rect(ctx, c, x, y, 2, 1);
+      rect(ctx, c, x + 1, y - 1, 1, 1);
+    }
   }
 
   // Teich
   const pond = { x: s(PLACES.pond.x), y: s(PLACES.pond.y) };
-  ellipse(ctx, PAL.grassSh, pond.x, pond.y, 27, 14);
-  ellipse(ctx, PAL.waterDk, pond.x, pond.y, 24, 12);
-  ellipse(ctx, PAL.water, pond.x, pond.y - 1, 22, 11);
-  ellipse(ctx, PAL.waterLt, pond.x - 4, pond.y - 4, 13, 5);
+  const wasser = scene && scene.textures.get("wasser-0");
+  if (wasser && wasser.key !== "__MISSING") {
+    const wb = wasser.getSourceImage();
+    const kachel = wb.height / K;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(pond.x, pond.y, 27, 14, 0, 0, Math.PI * 2);
+    ctx.clip();
+    for (let y = pond.y - 16; y < pond.y + 16; y += kachel) {
+      for (let x = pond.x - 30; x < pond.x + 30; x += kachel) {
+        ctx.drawImage(wb, 0, 0, wb.height, wb.height, x, y, kachel, kachel);
+      }
+    }
+    ctx.restore();
+    ellipse(ctx, PAL.grassSh, pond.x, pond.y, 28, 15, -15, -13);
+  } else {
+    ellipse(ctx, PAL.grassSh, pond.x, pond.y, 27, 14);
+    ellipse(ctx, PAL.waterDk, pond.x, pond.y, 24, 12);
+    ellipse(ctx, PAL.water, pond.x, pond.y - 1, 22, 11);
+    ellipse(ctx, PAL.waterLt, pond.x - 4, pond.y - 4, 13, 5);
+  }
 
-  // Trampelpfad – aus Erdkacheln, sonst gezeichnet
-  const bodenT = scene && scene.textures.get("blatt-boden");
-  if (gekachelt && bodenT) {
-    const bild = bodenT.getSourceImage();
-    const kw = bild.width / 18, kh = bild.height, zeichen = kw / K;
-    for (let i = 0; i <= 40; i++) {
-      const q = i / 40;
+  // Weg
+  if (!stempleWeg(ctx, scene, s)) {
+    for (let i = 0; i <= 26; i++) {
+      const q = i / 26;
       const x = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
       const y = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
-      const wahl = 9 + Math.floor(rnd() * 4);   // Erdkacheln liegen hinten im Blatt
-      ctx.drawImage(bild, wahl * kw, 0, kw, kh,
-        Math.round(x / zeichen) * zeichen, Math.round(y / zeichen) * zeichen, zeichen, zeichen);
+      const r = 3 + Math.round(rnd());
+      ellipse(ctx, PAL.pathDk, x, y, r + 1, r * 0.7 + 1);
+      ellipse(ctx, PAL.path, x, y, r, r * 0.7);
     }
-  }
-  for (let i = 0; gekachelt ? false : i <= 26; i++) {
-    const q = i / 26;
-    const x = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
-    const y = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
-    const r = 3 + Math.round(rnd());
-    ellipse(ctx, PAL.pathDk, x, y, r + 1, r * 0.7 + 1);
-    ellipse(ctx, PAL.path, x, y, r, r * 0.7);
-    ellipse(ctx, PAL.pathHi, x - 1, y - 1, r - 2, r * 0.5);
   }
 
   // Schienenstrecke
   const rf = s(RAIL.from), rt = s(RAIL.to), rY = s(RAIL.y);
-  rect(ctx, PAL.grassSh, rf - 5, rY - 7, rt - rf + 10, 15);
-  rect(ctx, PAL.ballast, rf - 4, rY - 6, rt - rf + 8, 13);
-  for (let x = rf; x < rt; x += 6) {
-    rect(ctx, "#3A2C1C", x, rY - 5, 4, 10);
-    rect(ctx, PAL.tie, x, rY - 5, 4, 9);
-    rect(ctx, "#6E5638", x, rY - 5, 4, 1);
+  const schiene = scene && scene.textures.get("schiene");
+  if (schiene && schiene.key !== "__MISSING") {
+    const sb = schiene.getSourceImage();
+    const br = sb.width / K, ho = sb.height / K;
+    for (let x = rf; x < rt; x += br) {
+      ctx.drawImage(sb, 0, 0, sb.width, sb.height, x, rY - ho / 2, br, ho);
+    }
+  } else {
+    rect(ctx, PAL.ballast, rf - 4, rY - 6, rt - rf + 8, 13);
+    for (let x = rf; x < rt; x += 6) rect(ctx, PAL.tie, x, rY - 5, 4, 9);
+    rect(ctx, PAL.rail, rf - 4, rY - 5, rt - rf + 8, 1);
+    rect(ctx, PAL.rail, rf - 4, rY + 4, rt - rf + 8, 1);
   }
-  rect(ctx, "#3A2C1C", rf - 4, rY - 5, rt - rf + 8, 1);
-  rect(ctx, PAL.rail, rf - 4, rY - 5, rt - rf + 8, 1);
-  rect(ctx, PAL.railHi, rf - 4, rY - 6, rt - rf + 8, 1);
-  rect(ctx, PAL.rail, rf - 4, rY + 4, rt - rf + 8, 1);
-  rect(ctx, "#3A2C1C", rf - 4, rY + 5, rt - rf + 8, 1);
-  rect(ctx, PAL.ink, rt, rY - 9, 4, 17);
-  rect(ctx, PAL.wood, rt, rY - 8, 3, 15);
 }
 
 /* --------------------------------------------------------------- *

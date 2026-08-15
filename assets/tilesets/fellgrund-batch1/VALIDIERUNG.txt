@@ -1,9 +1,18 @@
-OK boden.png: 288x16, Alpha nur 0/255, Palette eingehalten
-OK natur_32x48.png: 160x48, Alpha nur 0/255, Palette eingehalten
-OK gebaeude_32.png: 32x32, Alpha nur 0/255, Palette eingehalten
-OK gueter_32x16.png: 128x16, Alpha nur 0/255, Palette eingehalten
-OK bewegt.png: 64x16, Alpha nur 0/255, Palette eingehalten
-OK bewohner_biber.png: 128x64, Alpha nur 0/255, Palette eingehalten
-OK cozywolf.png: 128x64, Alpha nur 0/255, Palette eingehalten
-OK bewohner_biber.png: höchstens 5 Farben je Figurenzelle
-OK cozywolf.png: höchstens 12 Farben im Spritesheet
+OK boden.png: 96x32, drei selbstkachelnde Grasvarianten, kein Rand
+OK wege.png: 368x32, vier runde und drei längliche Flecken, drei Trittsteine
+OK waldrahmen_1_hinten.png: 640x360, Mitte transparent, Außenwald hinten
+OK waldrahmen_1_vorn.png: 640x360, unterste Waldreihe als Vordergrund
+OK natur_64x96.png: 320x96, Alpha 0/255, Palette eingehalten
+OK gebaeude_96x80.png: 96x80, Alpha 0/255, Palette eingehalten
+OK gueter_64x32.png: 256x32, Alpha 0/255, Palette eingehalten
+OK bewegt.png: 128x32, Alpha 0/255, Palette eingehalten
+OK bewohner_biber.png: 256x320, fünf Zeilen im 64px-Raster, höchstens zehn Farben je Figurenzelle
+OK wasser_ufer_32.png: 1152x32, 9 Positionen × 4 Bilder, Alpha 0/255
+OK vorratsstand_1_128x96.png: 128x96, drei Regalbretter leer
+OK nest_80x48.png + nest_rand_vorn_80x48.png: getrennte Ebenen
+OK laterne_32x64.png: 96x64, drei Flackerstufen
+OK herzknospe_32.png: 128x32, vier Bilder
+OK parzelle_80x48.png: 80x48
+OK natur_batch2_32.png: 192x32, sechs Varianten
+OK verladestation_2_96x80.png: 96x80, Vordach und vier Plätze
+OK cozywolf.png: 256x128, höchstens zehn Farben je Figurenzelle

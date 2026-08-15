@@ -1,10 +1,23 @@
-# Fellgrund – Stilprobe Batch 1
+# Fellgrund – Batch 2: kompletter erster Bildschirm
 
-- `boden.png`: 18 Zellen à 16×16; 3×3 Gras- und 3×3 Erdweg-Übergangsset.
-- `natur_32x48.png`: 5 Zellen à 32×48; heller Baum, dunkler Baum, Beerenbusch Stufe 1–3.
-- `gebaeude_32.png`: Verladestation Stufe 1, 32×32.
-- `gueter_32x16.png`: 4 Zellen à 32×16; Kiste 8×8, Schiene 16×16, Wurzelwagen Radstellung A/B.
-- `bewegt.png`: vier Wasser-Mittenbilder à 16×16.
-- `bewohner_biber.png`: 4×2 Zellen à 32×32; oben Gehen vorn, unten Tragen vorn.
-- `cozywolf.png`: 4×2 Zellen à 32×32; oben Schlafen A-B-A-B, unten Gehen vorn.
-- `vorschau.png`: unskalierter Größen- und Perspektivtest bei 320×180.
+- `boden.png`: drei nahtlos selbstkachelnde Grasvarianten à 32×32; ohne Rand oder Weg.
+- `wege.png`: vier runde 32×32-Wegflecken, drei längliche 64×32-Wegflecken und drei 16×16-Trittsteine. Flecken werden überlappend gestempelt.
+- `waldrahmen_1_hinten.png`: 640×360; Wald oben, links und rechts, transparente organische Lichtung.
+- `waldrahmen_1_vorn.png`: 640×360; ausschließlich die unterste Baum- und Buschreihe für die Verdeckung von Figuren.
+- `hintergrund-vorschau.png`: Ebenennachweis Boden → Wege → Wald hinten → Figur → Wald vorn.
+- `natur_64x96.png`: fünf 64×96-Zellen; zwei verschiedene Bäume, danach drei 32×32-Beerenstufen unten zentriert.
+- `gebaeude_96x80.png`: offene Verladestation Stufe 1 mit genau zwei Kistenplätzen.
+- `gueter_64x32.png`: vier 64×32-Zellen; Kiste 16×16, Schiene 32×32, Wagen A/B 48×32.
+- `bewegt.png`: vier Wasserbilder à 32×32.
+- `wasser_ufer_32.png`: neun Uferpositionen; je vier 32×32-Bilder direkt hintereinander, Reihenfolge oben-links bis unten-rechts.
+- `vorratsstand_1_128x96.png`: offener Vorratsstand mit drei leeren Regalbrettern.
+- `nest_80x48.png` und `nest_rand_vorn_80x48.png`: Nestmulde und separat darüber gerenderter Vorderbogen.
+- `laterne_32x64.png`: drei 32×64-Flackerstufen, hell → mittel → gedimmt.
+- `herzknospe_32.png`: vier 32×32-Funkelbilder.
+- `parzelle_80x48.png`: Moosparzelle mit Markiersteinen und erstem Trieb.
+- `natur_batch2_32.png`: sechs 32×32-Zellen; Busch A/B, Findling A/B, Baumstumpf A/B.
+- `verladestation_2_96x80.png`: Stufe 2 mit Vordach und genau vier leeren Kistenplätzen.
+- `bewohner_biber.png`: 4×5 Zellen à 64×64; Gehen vorn, Tragen, Gehen rechts, Gehen hinten, Arbeiten.
+- `cozywolf.png`: 4×2 Zellen à 64×64; Schlafen A-B-A-B und Gehen vorn.
+- `vorschau.png`: Übersicht der übrigen Batch-1-Teile in Zielgröße.
+- `batch2-vorschau.png`: Übersicht der neuen Batch-2-Teile in Zielgröße.

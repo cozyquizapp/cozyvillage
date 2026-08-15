@@ -1,25 +1,49 @@
 /**
- * Setzt ein geliefertes Tileset auf die Texturschlüssel des Spiels.
+ * Setzt das gelieferte Tileset auf die Texturschlüssel des Spiels.
  *
  * Die Spiellogik kennt nur Schlüssel wie "tree-0" oder "beaver-1". Hier
- * werden die Zellen aus den gelieferten Blättern ausgeschnitten und unter
- * genau diesen Schlüsseln abgelegt – der Rest des Spiels merkt nichts davon.
+ * werden die Zellen aus den Blättern ausgeschnitten und unter genau diesen
+ * Schlüsseln abgelegt – der Rest des Spiels merkt nichts davon.
  *
- * Aufbau der Blätter nach assets/tilesets/fellgrund-batch1/BATCH1-INDEX.md.
+ * Blattaufbau nach assets/tilesets/fellgrund-batch1/BATCH1-INDEX.md.
  */
 
 export const TILESET_PFAD = "assets/tilesets/fellgrund-batch1";
 
-/** Lädt die Blätter. Wird in BootScene.preload() aufgerufen. */
+const BLAETTER = {
+  "blatt-boden": "boden.png",
+  "blatt-wege": "wege.png",
+  "blatt-natur": "natur_64x96.png",
+  "blatt-natur2": "natur_batch2_32.png",
+  "blatt-station1": "gebaeude_96x80.png",
+  "blatt-station2": "verladestation_2_96x80.png",
+  "blatt-vorratsstand": "vorratsstand_1_128x96.png",
+  "blatt-nest": "nest_80x48.png",
+  "blatt-nestrand": "nest_rand_vorn_80x48.png",
+  "blatt-laterne": "laterne_32x64.png",
+  "blatt-herzknospe": "herzknospe_32.png",
+  "blatt-parzelle": "parzelle_80x48.png",
+  "blatt-gueter": "gueter_64x32.png",
+  "blatt-bewegt": "bewegt.png",
+  "blatt-ufer": "wasser_ufer_32.png",
+  "blatt-biber": "bewohner_biber.png",
+  "blatt-wolf": "cozywolf.png",
+  "wald-hinten": "waldrahmen_1_hinten.png",
+  "wald-vorn": "waldrahmen_1_vorn.png"
+};
+
 export function ladeTileset(scene) {
-  const p = TILESET_PFAD;
-  scene.load.image("blatt-boden", `${p}/boden.png`);
-  scene.load.image("blatt-natur", `${p}/natur_32x48.png`);
-  scene.load.image("blatt-gebaeude", `${p}/gebaeude_32.png`);
-  scene.load.image("blatt-gueter", `${p}/gueter_32x16.png`);
-  scene.load.image("blatt-bewegt", `${p}/bewegt.png`);
-  scene.load.image("blatt-biber", `${p}/bewohner_biber.png`);
-  scene.load.image("blatt-wolf", `${p}/cozywolf.png`);
+  for (const [key, datei] of Object.entries(BLAETTER)) {
+    scene.load.image(key, `${TILESET_PFAD}/${datei}`);
+  }
+}
+
+/** Maße eines Blattes, oder null wenn es fehlt. */
+export function masse(scene, blatt) {
+  const t = scene.textures.get(blatt);
+  if (!t || t.key === "__MISSING") return null;
+  const bild = t.getSourceImage();
+  return { w: bild.width, h: bild.height, bild };
 }
 
 /**
@@ -28,16 +52,15 @@ export function ladeTileset(scene) {
  * die Tiefensortierung hängt daran.
  */
 function zelle(scene, blatt, key, sx, sy, sw, sh, { trimmen = true } = {}) {
-  const quelle = scene.textures.get(blatt);
-  if (!quelle || quelle.key === "__MISSING") return false;
-  const bild = quelle.getSourceImage();
+  const m = masse(scene, blatt);
+  if (!m) return false;
 
   const mess = document.createElement("canvas");
   mess.width = sw;
   mess.height = sh;
   const mctx = mess.getContext("2d", { willReadFrequently: true });
   mctx.imageSmoothingEnabled = false;
-  mctx.drawImage(bild, sx, sy, sw, sh, 0, 0, sw, sh);
+  mctx.drawImage(m.bild, sx, sy, sw, sh, 0, 0, sw, sh);
 
   let x0 = 0, y0 = 0, x1 = sw, y1 = sh;
   if (trimmen) {
@@ -52,7 +75,7 @@ function zelle(scene, blatt, key, sx, sy, sw, sh, { trimmen = true } = {}) {
         if (y >= y1) y1 = y + 1;
       }
     }
-    if (x1 <= x0 || y1 <= y0) return false;   // Zelle ist leer
+    if (x1 <= x0 || y1 <= y0) return false;
   }
 
   const bw = x1 - x0, bh = y1 - y0;
@@ -60,50 +83,68 @@ function zelle(scene, blatt, key, sx, sy, sw, sh, { trimmen = true } = {}) {
   const ziel = scene.textures.createCanvas(key, bw, bh);
   const zctx = ziel.getContext();
   zctx.imageSmoothingEnabled = false;
-  zctx.drawImage(bild, sx + x0, sy + y0, bw, bh, 0, 0, bw, bh);
+  zctx.drawImage(m.bild, sx + x0, sy + y0, bw, bh, 0, 0, bw, bh);
   ziel.refresh();
   return true;
 }
 
-/** Maße eines Blattes, oder null wenn es fehlt. */
-function masse(scene, blatt) {
-  const t = scene.textures.get(blatt);
-  if (!t || t.key === "__MISSING") return null;
-  const bild = t.getSourceImage();
-  return { w: bild.width, h: bild.height };
-}
-
-/**
- * Ersetzt die Platzhaltertexturen durch die gelieferten.
- *
- * Die Zellgrößen werden aus den Blattmaßen abgeleitet, nicht fest verdrahtet –
- * dadurch passt dieselbe Verdrahtung für 32er- und 64er-Figuren.
- */
 export function setzeTileset(scene) {
   const ersetzt = [];
   const nimm = (blatt, key, sx, sy, sw, sh, opt) => {
     if (zelle(scene, blatt, key, sx, sy, sw, sh, opt)) ersetzt.push(key);
   };
+  const ganz = (blatt, key) => {
+    const m = masse(scene, blatt);
+    if (m) nimm(blatt, key, 0, 0, m.w, m.h);
+  };
 
-  // natur – 5 Zellen nebeneinander: heller Baum, dunkler Baum, Busch 1–3
+  // natur_64x96 – zwei Bäume, dann drei Beerenstufen
   const natur = masse(scene, "blatt-natur");
   if (natur) {
     const zw = natur.w / 5, zh = natur.h;
     nimm("blatt-natur", "tree-0", 0, 0, zw, zh);
     nimm("blatt-natur", "tree-0-d", zw, 0, zw, zh);
-    nimm("blatt-natur", "bush-0", zw * 2, 0, zw, zh);
-    nimm("blatt-natur", "bush-1", zw * 3, 0, zw, zh);
-    nimm("blatt-natur", "bush-2", zw * 4, 0, zw, zh);
-    // Der Waldkranz nutzt drei Varianten; solange nur zwei geliefert sind, doppeln.
+    for (let i = 0; i < 3; i++) nimm("blatt-natur", `bush-${i}`, (2 + i) * zw, 0, zw, zh);
     for (const k of ["tree-1", "tree-2"]) nimm("blatt-natur", k, 0, 0, zw, zh);
     for (const k of ["tree-1-d", "tree-2-d"]) nimm("blatt-natur", k, zw, 0, zw, zh);
   }
 
-  // gebaeude – Verladestation Stufe 1 füllt das ganze Blatt
-  const geb = masse(scene, "blatt-gebaeude");
-  if (geb) nimm("blatt-gebaeude", "station-1", 0, 0, geb.w, geb.h);
+  // natur_batch2_32 – Busch A/B, Findling A/B, Baumstumpf A/B
+  const n2 = masse(scene, "blatt-natur2");
+  if (n2) {
+    const zw = n2.w / 6, zh = n2.h;
+    nimm("blatt-natur2", "shrub", 0, 0, zw, zh);
+    nimm("blatt-natur2", "shrub-d", zw, 0, zw, zh);
+    nimm("blatt-natur2", "rock", zw * 2, 0, zw, zh);
+    nimm("blatt-natur2", "rock-b", zw * 3, 0, zw, zh);
+    nimm("blatt-natur2", "stumpf", zw * 4, 0, zw, zh);
+    nimm("blatt-natur2", "stumpf-b", zw * 5, 0, zw, zh);
+  }
 
-  // gueter – 4 Zellen: Kiste, Schiene, Wagen A, Wagen B
+  ganz("blatt-station1", "station-1");
+  ganz("blatt-station2", "station-2");
+  ganz("blatt-vorratsstand", "store");
+  ganz("blatt-nest", "nest");
+  ganz("blatt-nestrand", "nest-rim");
+  ganz("blatt-parzelle", "parcel");
+
+  // Laterne – drei Flackerstufen
+  const lat = masse(scene, "blatt-laterne");
+  if (lat) {
+    const zw = lat.w / 3;
+    for (let i = 0; i < 3; i++) nimm("blatt-laterne", `lamp-${i}`, i * zw, 0, zw, lat.h);
+    nimm("blatt-laterne", "lamp", 0, 0, zw, lat.h);
+  }
+
+  // Herzknospe – vier Funkelbilder
+  const hk = masse(scene, "blatt-herzknospe");
+  if (hk) {
+    const zw = hk.w / 4;
+    for (let i = 0; i < 4; i++) nimm("blatt-herzknospe", `blossom-${i}`, i * zw, 0, zw, hk.h);
+    nimm("blatt-herzknospe", "blossom", 0, 0, zw, hk.h);
+  }
+
+  // gueter_64x32 – Kiste, Schiene, Wagen A, Wagen B
   const gue = masse(scene, "blatt-gueter");
   if (gue) {
     const zw = gue.w / 4;
@@ -113,7 +154,7 @@ export function setzeTileset(scene) {
     nimm("blatt-gueter", "cart-b", zw * 3, 0, zw, gue.h);
   }
 
-  // bewegt – vier Wasserbilder, ohne Trimmen weil Kacheln randlos sind
+  // Wasser – vier Bilder
   const beweg = masse(scene, "blatt-bewegt");
   if (beweg) {
     const zw = beweg.w / 4;
@@ -122,26 +163,38 @@ export function setzeTileset(scene) {
     }
   }
 
-  // boden – 18 Kacheln in einer Reihe
+  // Bodenkacheln
   const boden = masse(scene, "blatt-boden");
   if (boden) {
-    const zw = boden.w / 18;
-    for (let i = 0; i < 18; i++) {
+    const zw = boden.h;
+    for (let i = 0; i < Math.floor(boden.w / zw); i++) {
       nimm("blatt-boden", `boden-${i}`, i * zw, 0, zw, boden.h, { trimmen: false });
     }
   }
 
-  // bewohner_biber – 4×2 Zellen: oben Gehen, unten Tragen
-  const biber = masse(scene, "blatt-biber");
-  if (biber) {
-    const zw = biber.w / 4, zh = biber.h / 2;
-    for (let i = 0; i < 4; i++) {
-      nimm("blatt-biber", `beaver-${i}`, i * zw, 0, zw, zh);
-      nimm("blatt-biber", `beaver-carry-${i}`, i * zw, zh, zw, zh);
+  // Wegflecken – vier runde, drei längliche, drei Trittsteine
+  const wege = masse(scene, "blatt-wege");
+  if (wege) {
+    let x = 0, i = 0;
+    for (const [anzahl, br] of [[4, 32], [3, 64], [3, 16]]) {
+      for (let n = 0; n < anzahl; n++) {
+        nimm("blatt-wege", `weg-${i++}`, x, 0, br, wege.h);
+        x += br;
+      }
     }
   }
 
-  // cozywolf – oben Schlafen, unten Gehen
+  // Bramble – 4×5: Gehen vorn, Tragen, Gehen rechts, Gehen hinten, Arbeiten
+  const biber = masse(scene, "blatt-biber");
+  if (biber) {
+    const zw = biber.w / 4, zh = 64;
+    const reihen = ["beaver", "beaver-carry", "beaver-rechts", "beaver-hinten", "beaver-arbeit"];
+    reihen.forEach((name, r) => {
+      for (let i = 0; i < 4; i++) nimm("blatt-biber", `${name}-${i}`, i * zw, r * zh, zw, zh);
+    });
+  }
+
+  // Cozywolf – Schlafen, Gehen
   const wolf = masse(scene, "blatt-wolf");
   if (wolf) {
     const zw = wolf.w / 4, zh = wolf.h / 2;

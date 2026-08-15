@@ -181,8 +181,11 @@ function pruefe(datei) {
   if (art === "figur" && h < 128) {
     fehler.push(`Blatthöhe ${h} px – Zellen sind kleiner als 64. Auf den neuen Maßstab bringen`);
   }
-  if (art === "figur" && h >= 256) {
-    fehler.push(`Figurenhöhe ${h} px – zu groß. Direkt in 64 px zeichnen, nicht herunterrechnen`);
+  // Ein Blatt mit vielen Zeilen ist völlig in Ordnung – entscheidend ist,
+  // dass die Zellen 64 hoch sind. Hochskalierte Zeichnungen fallen bereits
+  // über Farbanzahl und halbtransparente Ränder auf.
+  if (art === "figur" && h % 64 !== 0) {
+    fehler.push(`Blatthöhe ${h} px ist kein Vielfaches von 64 – Zellenraster stimmt nicht`);
   }
 
   return { datei, w, h, farben: farben.size, halbtransparent, fremd, fehler, warnungen };
