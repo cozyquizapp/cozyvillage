@@ -342,6 +342,29 @@
   }
   .resident p { font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); margin-top: 0.35rem; }
 
+  /* ---------- Spritesheet ---------- */
+  .sheet {
+    border: 2px solid var(--line-hard);
+    background: #141C33;
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .sheet canvas { image-rendering: pixelated; margin-inline: auto; max-width: 100%; }
+  .sheet figcaption {
+    margin: 0;
+    border-top: 2px solid var(--line-hard);
+    background: var(--panel);
+    padding: 0.6rem 0.8rem;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    max-width: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.6rem;
+  }
+
   /* ---------- Upgrade compare ---------- */
   .compare {
     display: grid;
@@ -688,6 +711,38 @@
         <strong>Kingdom</strong> steuert die Stimmung bei, nicht die Kamera: ruhige Nacht, warme
         Lichtinseln, die zeigen wo etwas passiert, und ein dunkler Waldrand, der die Parzelle rahmt.
         Fellgrund ist Stardews Aufbau mit Kingdoms Licht.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Charakterproduktion</p>
+      <h2>Vom Key-Art zum Sprite</h2>
+    </div>
+    <p class="soft">Das ausgearbeitete Charakterbild wird nicht verkleinert – es wird als Vorlage neu
+      gezeichnet. Verkleinern zerstört weiche Kanten und Verläufe zu Matsch; neu zeichnen behält genau
+      die Merkmale, die auf 32 Pixel Höhe noch tragen. Das ist derselbe Cozywolf, nur in der Auflösung,
+      in der er tatsächlich im Dorf steht.</p>
+    <figure class="sheet">
+      <canvas id="sheet" width="1" height="1"></canvas>
+      <figcaption>
+        <span>Stehend</span><span>Laufen 1</span><span>Laufen 2</span><span>Schlafend</span>
+        <span>26 × 32 Pixel</span>
+      </figcaption>
+    </figure>
+    <p class="soft">Was den Sprung überlebt hat, ist genau das, was Cozywolf ausmacht:</p>
+    <ul class="marks is-glow">
+      <li>Pinkes Fell in drei Werten, petrolfarbene Latzhose mit zwei Goldknöpfen.</li>
+      <li>Dunkelblaue Nase, geschlossene Augen als Bögen, ein ω-Lächeln aus fünf Pixeln.</li>
+      <li>Spitze Ohren mit dunklerem Innenohr – die Silhouette, an der man ihn als Wolf erkennt.</li>
+      <li>Der buschige Schwanz als eigene Form neben dem Körper, nicht als Anhängsel.</li>
+    </ul>
+    <div class="rule">
+      <span class="rule-tag">Regeln fürs Zeichnen</span>
+      <p>Feste Palette statt Verläufe. Harte Kanten statt Weichzeichnung. Ein dunkler Umriss, der die
+        Figur vom Boden trennt. Licht immer von oben links. Jede Pose entsteht aus derselben gespiegelten
+        Hälfte, damit die Figur über alle Frames identisch bleibt – nur Beine, Schwanz und Ohren bewegen
+        sich. Das Key-Art bleibt parallel bestehen und wird im Intro, im Dorfbuch und in Dialogen gezeigt.</p>
     </div>
   </section>
 
@@ -1124,7 +1179,7 @@
   }
 
   // Baum: geschichtete Kronenklumpen, Umriss, Licht von oben links
-  function drawTree(ctx, cx, baseY, size) {
+  function drawTree(ctx, cx, baseY, size, variant) {
     var r = size + 3;
     shadow(ctx, cx + 4, baseY, r + 3, Math.max(2, Math.round(r * 0.5)));
     px(ctx, "#241708", cx - 3, baseY - r - 4, 6, r + 4);
@@ -1132,7 +1187,12 @@
     px(ctx, TRUNK, cx - 2, baseY - r - 4, 2, r + 4);
 
     var cy = baseY - r - 8;
-    var blobs = [[0, 1, r], [-r + 2, 3, r - 3], [r - 2, 3, r - 3], [-3, -r + 4, r - 3], [4, -r + 5, r - 4]];
+    var VARIANTS = [
+      [[0, 1, r], [-r + 2, 3, r - 3], [r - 2, 3, r - 3], [-3, -r + 4, r - 3], [4, -r + 5, r - 4]],
+      [[1, 2, r - 1], [-r + 1, 1, r - 2], [r - 3, 4, r - 4], [-1, -r + 3, r - 2], [5, -r + 2, r - 5]],
+      [[-1, 0, r - 1], [-r + 3, 4, r - 3], [r - 1, 1, r - 3], [2, -r + 5, r - 2], [-5, -r + 3, r - 4]]
+    ];
+    var blobs = VARIANTS[(variant || 0) % 3];
     var i;
     for (i = 0; i < blobs.length; i++) {
       ellipse(ctx, LEAF_OUT, cx + blobs[i][0], cy + blobs[i][1], blobs[i][2] + 1, blobs[i][2] * 0.85 + 1);
@@ -1146,11 +1206,112 @@
     ellipse(ctx, LEAF_HI, cx - 3, cy - Math.round(r * 0.55), Math.round(r * 0.55), Math.round(r * 0.4));
   }
 
+  // Streuobjekte, damit der Boden nicht überall gleich aussieht
+  function drawRock(ctx, cx, baseY, w) {
+    shadow(ctx, cx + 2, baseY, w, Math.max(2, w * 0.5), 0.28);
+    ellipse(ctx, "#3B4038", cx, baseY - w * 0.5, w, w * 0.6);
+    ellipse(ctx, "#5E6459", cx, baseY - w * 0.5 - 1, w - 1, w * 0.6 - 1);
+    ellipse(ctx, "#7C8377", cx - 1, baseY - w * 0.6 - 2, w * 0.5, w * 0.3);
+  }
+  function drawStump(ctx, cx, baseY) {
+    shadow(ctx, cx + 2, baseY, 6, 3, 0.28);
+    px(ctx, "#241708", cx - 5, baseY - 7, 10, 7);
+    px(ctx, TRUNK_DK, cx - 4, baseY - 6, 8, 6);
+    px(ctx, TRUNK, cx - 4, baseY - 6, 3, 6);
+    ellipse(ctx, "#241708", cx, baseY - 7, 5, 3);
+    ellipse(ctx, "#8A6440", cx, baseY - 7, 4, 2);
+    px(ctx, LEAF_DK, cx - 5, baseY - 8, 4, 2);
+    px(ctx, LEAF, cx - 5, baseY - 8, 3, 1);
+  }
+  function drawShrub(ctx, cx, baseY, w) {
+    shadow(ctx, cx + 2, baseY, w + 1, Math.max(2, w * 0.5), 0.26);
+    ellipse(ctx, LEAF_OUT, cx, baseY - w * 0.7, w + 1, w * 0.8 + 1);
+    ellipse(ctx, LEAF_DK, cx, baseY - w * 0.7, w, w * 0.8);
+    ellipse(ctx, LEAF, cx - 1, baseY - w * 0.8 - 1, w - 2, w * 0.6);
+    ellipse(ctx, LEAF_HI, cx - 2, baseY - w - 1, w * 0.4, w * 0.3);
+  }
+
   function drawBlossom(ctx, x, y, glow) {
     px(ctx, "#8A7A3C", x, y, 4, 4);
     px(ctx, "#F5E9C0", x, y + 1, 4, 2);
     px(ctx, "#F5E9C0", x + 1, y, 2, 4);
     px(ctx, glow ? "#FFF8E0" : BERRY, x + 1, y + 1, 2, 2);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Cozywolf, stehend – aus dem Key-Art abgeleitet.
+   * Nur die linke Hälfte ist gezeichnet und wird gespiegelt, damit die
+   * Figur über alle Frames exakt identisch bleibt.
+   * ------------------------------------------------------------------ */
+  var CW_HALF = [
+    "...oo......", "..oiio.....", "..oiiFo....", ".oiiFFFo...", "ooiiFFFFo..",
+    "oiFFFFFFFo.", "oFFFFFFFFFo", "oFFFFFFFFFF", "oFFFFFFFFFF", "oFFeeeeFFFF",
+    "oFeFFFFeFFF", "oFFFFFFFFFF", "oFFFFFFLLLL", "oFFFFFLLLnn", "oFFFFFLLLnn",
+    ".oFFFFLLLLm", ".oFFFFLLmmL", "..oFFFFmLLL", "..ooFFFFFFF", "...oooFFFFF",
+    "..oAAoTTTTT", ".oAAAoTTTTT", ".oAAAoTbTTT", ".oAAAoTTTTT", ".oAAAoTTTTT",
+    ".oAAAoTTTTT", "..oAAoTTTTT", "...oooDDDDD", "....oDDDDDD", "..oPPPoDDDD",
+    "..oPPPPoDDD", "..oooooooDD"
+  ];
+  var CW_LIGHT = [
+    "...........", "...........", "...........", "...........", "...........",
+    ".H.........", "HH.........", "HH.........", "H..........", "...........",
+    "...........", "...........", "...........", "...........", "...........",
+    "...........", "...........", "...........", "...........", "...........",
+    "...........", ".q.........", ".q.........", "...........", "...........",
+    "...........", "...........", "...........", "...........", "...........",
+    "...........", "..........."
+  ];
+  var CW_TAIL = [
+    "...ooo..", "..offfo.", ".offfffo", ".ffFFffo", ".fFFFffo",
+    ".fFFFfo.", "..fFffo.", "..offo..", "...oo..."
+  ];
+  var CW_PAL = {
+    o: "#6E1039", F: "#F2609E", L: "#FF95C0", H: "#FFC2DC", q: "#4ABCC2",
+    i: "#C43C74", e: "#2A1A2E", n: "#161E38", m: "#8E1C4E",
+    T: "#2E8792", D: "#1D5E68", b: "#F0A93C", A: "#EE5896", P: "#FF95C0", f: "#FFAECB"
+  };
+
+  function putMirror(ctx, rows, pal, ox, oy, span) {
+    for (var y = 0; y < rows.length; y++) {
+      var r = rows[y];
+      for (var x = 0; x < r.length; x++) {
+        var c = r[x];
+        if (c === ".") continue;
+        var col = pal[c];
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(ox + x, oy + y, 1, 1);
+        if (span) ctx.fillRect(ox + span - 1 - x, oy + y, 1, 1);
+      }
+    }
+  }
+
+  // frame 0 = stehend, 1/2 = Laufzyklus
+  function drawCozywolf(ctx, x, y, frame) {
+    var lift = frame ? -1 : 0;
+    var swing = frame === 1 ? 2 : (frame === 2 ? -2 : 0);
+    putMirror(ctx, CW_TAIL, CW_PAL, x + 18 + swing, y + 17 + lift, 0);
+    putMirror(ctx, CW_HALF.slice(0, 29), CW_PAL, x + 1, y + lift, 22);
+    // Füße laufen versetzt
+    putMirror(ctx, CW_HALF.slice(29), CW_PAL, x + 1 + swing, y + 29 + lift, 22);
+    putMirror(ctx, CW_LIGHT, CW_PAL, x + 1, y + lift, 22);
+  }
+
+  var sheet = document.getElementById("sheet");
+  if (sheet) {
+    var SW = 128, SH = 40;
+    var sctx = fit(sheet, SW, SH, 4);
+    sctx.fillStyle = "#141C33";
+    sctx.fillRect(0, 0, SW, SH);
+    for (var sg = 0; sg < 30; sg++) {
+      px(sctx, "#1B2540", (sg * 29) % SW, 2 + (sg * 13) % (SH - 4), 1, 1);
+    }
+    [0, 1, 2].forEach(function (fr, idx) {
+      shadow(sctx, idx * 30 + 15, SH - 5, 7, 2, 0.26);
+      drawCozywolf(sctx, idx * 30 + 2, SH - 36, fr);
+    });
+    shadow(sctx, 108, SH - 8, 12, 3, 0.26);
+    drawSprite(sctx, WOLF, WOLF_PAL, 94, SH - 28);
   }
 
   /* ------------------------------------------------------------------ *
@@ -1229,7 +1390,7 @@
   var LAMP_X = 64, LAMP_Y = 74;
   var PATH_A = { x: 44, y: 56 }, PATH_B = { x: 78, y: 76 };
 
-  var tufts = [], flowers = [], trees = [], pathDots = [];
+  var tufts = [], flowers = [], trees = [], pathDots = [], props = [], patches = [], pebbles = [];
   (function () {
     var seed = 11;
     function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
@@ -1252,9 +1413,28 @@
         c: ["#EDA8C6", "#F7E8AE", "#C6B0E6"][Math.floor(rnd() * 3)]
       });
     }
-    var spots = [[10, 34, 5], [60, 27, 4], [128, 25, 5], [202, 42, 4],
-                 [192, 124, 5], [62, 124, 4], [6, 76, 4], [206, 94, 4]];
-    for (var s = 0; s < spots.length; s++) trees.push({ x: spots[s][0], y: spots[s][1], size: spots[s][2] });
+    var spots = [[10, 34, 6, 0], [58, 27, 5, 1], [128, 25, 6, 2], [202, 42, 5, 1],
+                 [192, 126, 6, 0], [60, 126, 5, 2], [4, 78, 5, 1], [208, 96, 5, 0]];
+    for (var s = 0; s < spots.length; s++) {
+      trees.push({ x: spots[s][0], y: spots[s][1], size: spots[s][2], v: spots[s][3] });
+    }
+    props.push({ y: 40, kind: "rock", x: 88, w: 4 });
+    props.push({ y: 96, kind: "rock", x: 60, w: 3 });
+    props.push({ y: 118, kind: "rock", x: 148, w: 5 });
+    props.push({ y: 64, kind: "stump", x: 122 });
+    props.push({ y: 112, kind: "shrub", x: 72, w: 5 });
+    props.push({ y: 36, kind: "shrub", x: 168, w: 4 });
+    props.push({ y: 100, kind: "shrub", x: 190, w: 5 });
+    props.push({ y: 92, kind: "rock", x: 18, w: 3 });
+    for (var dp = 0; dp < 9; dp++) {
+      patches.push({
+        x: LEFT + Math.floor(rnd() * SPREAD), y: 30 + Math.floor(rnd() * (H - 40)),
+        rx: 5 + Math.floor(rnd() * 7), ry: 3 + Math.floor(rnd() * 3)
+      });
+    }
+    for (var pb = 0; pb < 40; pb++) {
+      pebbles.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: 26 + Math.floor(rnd() * (H - 30)) });
+    }
 
     for (var p = 0; p <= 24; p++) {
       var q = p / 24;
@@ -1363,10 +1543,21 @@
       px(ctx, tu.c, tu.x, tu.y, tu.w, 1);
       px(ctx, tu.c, tu.x + 1, tu.y - 1, 1, 1);
     }
+    for (var pa = 0; pa < patches.length; pa++) {
+      var pt = patches[pa];
+      ellipse(ctx, GRASS_DK, pt.x, pt.y, pt.rx, pt.ry);
+      ellipse(ctx, "#5A6B45", pt.x, pt.y, pt.rx - 2, pt.ry - 1);
+      ellipse(ctx, "#6B7A50", pt.x - 1, pt.y - 1, pt.rx - 4, pt.ry - 2);
+    }
+    for (var pbi = 0; pbi < pebbles.length; pbi++) {
+      px(ctx, "#59614F", pebbles[pbi].x, pebbles[pbi].y, 2, 1);
+      px(ctx, "#7C8377", pebbles[pbi].x, pebbles[pbi].y, 1, 1);
+    }
     for (var fl = 0; fl < flowers.length; fl++) {
       var fo = flowers[fl];
       px(ctx, fo.c, fo.x, fo.y, 2, 1);
       px(ctx, fo.c, fo.x, fo.y - 1, 1, 1);
+      px(ctx, fo.c, fo.x + 2, fo.y - 1, 1, 1);
       px(ctx, "#F7EFC8", fo.x, fo.y, 1, 1);
     }
 
@@ -1417,7 +1608,18 @@
     var items = [];
 
     for (var tr = 0; tr < trees.length; tr++) {
-      (function (o) { items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size); } }); })(trees[tr]);
+      (function (o) {
+        items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size, o.v); } });
+      })(trees[tr]);
+    }
+    for (var pr = 0; pr < props.length; pr++) {
+      (function (o) {
+        items.push({ y: o.y, draw: function () {
+          if (o.kind === "rock") drawRock(ctx, o.x, o.y, o.w);
+          else if (o.kind === "stump") drawStump(ctx, o.x, o.y);
+          else drawShrub(ctx, o.x, o.y, o.w);
+        }});
+      })(props[pr]);
     }
 
     items.push({ y: BEET.base, draw: function () {
