@@ -163,6 +163,17 @@ export function setzeTileset(scene) {
     }
   }
 
+  // wasser_ufer_32 – neun Positionen, je vier Bilder hintereinander
+  const ufer = masse(scene, "blatt-ufer");
+  if (ufer) {
+    const k = ufer.h;
+    for (let pos = 0; pos < 9; pos++) {
+      for (let f = 0; f < 4; f++) {
+        nimm("blatt-ufer", `ufer-${pos}-${f}`, (pos * 4 + f) * k, 0, k, k, { trimmen: false });
+      }
+    }
+  }
+
   // Bodenkacheln
   const boden = masse(scene, "blatt-boden");
   if (boden) {

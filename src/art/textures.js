@@ -171,30 +171,6 @@ function drawBackground(ctx, scene) {
     }
   }
 
-  // Teich
-  const pond = { x: s(PLACES.pond.x), y: s(PLACES.pond.y) };
-  const wasser = scene && scene.textures.get("wasser-0");
-  if (wasser && wasser.key !== "__MISSING") {
-    const wb = wasser.getSourceImage();
-    const kachel = wb.height / K;
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(pond.x, pond.y, 27, 14, 0, 0, Math.PI * 2);
-    ctx.clip();
-    for (let y = pond.y - 16; y < pond.y + 16; y += kachel) {
-      for (let x = pond.x - 30; x < pond.x + 30; x += kachel) {
-        ctx.drawImage(wb, 0, 0, wb.height, wb.height, x, y, kachel, kachel);
-      }
-    }
-    ctx.restore();
-    ellipse(ctx, PAL.grassSh, pond.x, pond.y, 28, 15, -15, -13);
-  } else {
-    ellipse(ctx, PAL.grassSh, pond.x, pond.y, 27, 14);
-    ellipse(ctx, PAL.waterDk, pond.x, pond.y, 24, 12);
-    ellipse(ctx, PAL.water, pond.x, pond.y - 1, 22, 11);
-    ellipse(ctx, PAL.waterLt, pond.x - 4, pond.y - 4, 13, 5);
-  }
-
   // Weg
   if (!stempleWeg(ctx, scene, s)) {
     for (let i = 0; i <= 26; i++) {

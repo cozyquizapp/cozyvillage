@@ -26,6 +26,7 @@ export default class GladeScene extends Phaser.Scene {
     this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
     this.baueWald();
     this.baueParzellen();
+    this.baueTeich();
     this.baueStreuobjekte();
     this.baueBeet();
     this.baueStation();
@@ -110,6 +111,70 @@ export default class GladeScene extends Phaser.Scene {
         gesperrt: true
       }));
     }
+  }
+
+  /**
+   * Der Teich.
+   *
+   * Der gelieferte 9er-Ufersatz kann nur rechteckige Becken erzeugen – seine
+   * Uferkante ist nur zwei Pixel breit. Bis ein organischer Satz vorliegt,
+   * werden die animierten Wasserkacheln durch eine elliptische Maske
+   * beschnitten und bekommen einen eigenen Uferring. Das Wasser bewegt sich
+   * dabei wirklich, statt gemalt zu sein.
+   */
+  baueTeich() {
+    const p = PLACES.pond;
+    if (!this.textures.exists("wasser-0")) return;
+    const rx = 78, ry = 40;
+
+    // Uferring unter dem Wasser
+    const ufer = this.add.graphics().setDepth(2.6);
+    ufer.fillStyle(0x2c4a34, 1).fillEllipse(p.x, p.y, rx * 2 + 10, ry * 2 + 8);
+    ufer.fillStyle(0x4a3b26, 1).fillEllipse(p.x, p.y, rx * 2 + 4, ry * 2 + 3);
+
+    const wasser = this.add.container(0, 0).setDepth(2.8);
+    const kachel = 32;
+    this.wasserKacheln = [];
+    for (let y = p.y - ry - kachel; y < p.y + ry + kachel; y += kachel) {
+      for (let x = p.x - rx - kachel; x < p.x + rx + kachel; x += kachel) {
+        const k = this.add.image(x, y, "wasser-0").setOrigin(0, 0);
+        wasser.add(k);
+        this.wasserKacheln.push(k);
+      }
+    }
+    const form = this.make.graphics({ x: 0, y: 0, add: false });
+    form.fillStyle(0xffffff).fillEllipse(p.x, p.y, rx * 2, ry * 2);
+    wasser.setMask(form.createGeometryMask());
+
+    this.time.addEvent({
+      delay: 280, loop: true,
+      callback: () => {
+        const f = Math.floor(this.time.now / 280) % 4;
+        for (const k of this.wasserKacheln) k.setTexture(`wasser-${f}`);
+      }
+    });
+
+    // Glanzlichter auf der Oberfläche
+    for (let i = 0; i < 3; i++) {
+      const glanz = this.add.rectangle(
+        p.x - 30 + i * 26, p.y - 12 + i * 9, 10, 2, 0x93cfe0, 0.7
+      ).setDepth(2.9);
+      this.tweens.add({
+        targets: glanz, x: glanz.x + 12, alpha: 0.25,
+        duration: 1800 + i * 400, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
+      });
+    }
+
+    const flaeche = this.add.rectangle(p.x, p.y, rx * 2, ry * 2, 0x000000, 0)
+      .setDepth(3).setInteractive({ useHandCursor: true });
+    flaeche.on("pointerup", () => bus.emit("oeffne", {
+      titel: PLACES.pond.label,
+      zeilen: [
+        "Ein stilles Becken am Rand der Lichtung.",
+        "Es wird gebraucht, sobald der Axolotl einzieht."
+      ],
+      gesperrt: true
+    }));
   }
 
   baueStreuobjekte() {
@@ -232,15 +297,17 @@ export default class GladeScene extends Phaser.Scene {
         callback: () => laterne.setTexture(`lamp-${stufen[Math.floor(this.time.now / 220) % 4]}`)
       });
     }
-    const schein = this.add.ellipse(x, y - 1 * K, 44 * K, 22 * K, 0xffce78, 0.13).setDepth(6);
+    // Additiv gemischt, sonst liegt eine flache graue Scheibe auf der Wiese
+    const schein = this.add.ellipse(x, y - 1 * K, 40 * K, 20 * K, 0xffb85c, 0.10)
+      .setDepth(6).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({
-      targets: schein, alpha: 0.2, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
+      targets: schein, alpha: 0.16, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
     });
     const standSchein = this.add.ellipse(
-      PLACES.store.x, PLACES.store.y - 2 * K, 62 * K, 26 * K, 0xffce78, 0.12
-    ).setDepth(6);
+      PLACES.store.x, PLACES.store.y - 2 * K, 58 * K, 24 * K, 0xffb85c, 0.09
+    ).setDepth(6).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({
-      targets: standSchein, alpha: 0.17, duration: 1500, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
+      targets: standSchein, alpha: 0.14, duration: 1500, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
     });
   }
 

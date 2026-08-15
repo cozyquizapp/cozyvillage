@@ -50,6 +50,17 @@ Kistenplätzen, Wagen in 3/4-Draufsicht ohne Deichsel.
 Ohne diesen Teil passt nichts zusammen — die Größen aus Batch 1 sind halb
 so groß wie der Rest.
 
+> **Korrektur zum Wasser (nach Batch 2).** Der gelieferte 9er-Ufersatz kann
+> nur **rechteckige** Becken erzeugen — seine Uferkante ist nur zwei Pixel
+> breit, und neun Kacheln ergeben immer ein Rechteck. Fellgrunds Teich ist
+> aber organisch geformt.
+>
+> Bitte für Wasser **dieselbe Technik wie beim Weg**: **Uferflecken** mit
+> unregelmäßiger, ausgefranster Kante, die sich beim Überlappen zu einem
+> Becken beliebiger Form verbinden. Vier runde à 64 × 64, drei längliche à
+> 96 × 64, dazu drei Schilf- und zwei Seerosenflecken. Das Wasser selbst
+> bleibt die vorhandene Kachelfolge mit vier Bildern.
+
 **B · Der Rahmen**
 
 | Teil | Datei / Größe | Anzahl |
