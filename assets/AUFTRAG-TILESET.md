@@ -35,6 +35,48 @@ Erst nach Freigabe der Stilprobe folgt der Rest.
 
 ---
 
+## 0.5 · Stilrichtung
+
+Der Ton ist **freundlich, warm, nächtlich**. Gesucht wird kein realistischer
+Wald, sondern ein Ort, an dem man gerne wäre.
+
+Drei Dinge sind ausdrücklich erwünscht:
+
+1. **Die Besetzung wirkt wie eine Familie.** Alle Tiere teilen Kopfgröße,
+   Umrissstärke und Freundlichkeit. Was sie unterscheidet, ist Silhouette
+   und Grundfarbe.
+2. **Jedes Tier hält sein Werkzeug in der Hand.** Der Biber ein Holzscheit,
+   der Maulwurf Schaufel und Grubenhelm, die Biene eine Blüte, die Eule ihr
+   Buch. Die Aufgabe muss ohne ein Wort Text erkennbar sein.
+3. **Warmes Licht in dunkler Umgebung.** Laternen glühen, Fenster leuchten,
+   Beeren schimmern. Das Licht zeigt, wo etwas passiert.
+
+### Zwei Fehler, die aussehen wie richtig
+
+Beide sind auf den ersten Blick nicht zu erkennen und machen ein Paket
+trotzdem unbrauchbar.
+
+**Fehler 1 — gemischte Perspektive.** Es passiert leicht, dass Figuren
+frontal, Bodenkacheln flach von oben und Fahrzeuge oder Gebäude
+*isometrisch* gezeichnet werden. Ein isometrischer Wagen lässt sich in einer
+3/4-Draufsicht nicht platzieren.
+
+> **Prüfregel:** Hat ein Objekt eine sichtbare Ecke, an der zwei Wände im
+> gleichen Winkel wegkippen, ist es isometrisch und damit falsch. In der
+> 3/4-Draufsicht sieht man die Vorderseite und etwas vom Dach — nie eine
+> Seitenwand im 45-Grad-Winkel. Ein Kreis am Boden ist eine flache Ellipse,
+> keine Raute.
+
+**Fehler 2 — hochaufgelöste Zeichnung mit Pixel-Optik.** Bilder mit vielen
+Zwischentönen und weichen Rändern sehen aus wie Pixel-Art, sind aber keine.
+Auf 32 Pixel Figurenhöhe wird daraus Matsch.
+
+> **Prüfregel:** Beim Hineinzoomen auf einen Rand darf **kein** weicher
+> Übergang zwischen zwei Farben sichtbar sein — nur eine harte Kante.
+> Bitte direkt in der Zielauflösung zeichnen, nicht herunterrechnen.
+
+---
+
 ## 1 · Technische Vorgaben — bitte exakt einhalten
 
 | Punkt | Vorgabe |
