@@ -33,7 +33,61 @@ Schienenstück · Biber mit den Zeilen „Gehen nach vorn" und „Tragen" ·
 Wasser-Mitte mit vier Bildern · Cozywolf mit den Zeilen „Schlafen" und
 „Gehen nach vorn".
 
-Erst nach Freigabe der Stilprobe folgt der Rest.
+### Batch 2 — der komplette erste Bildschirm
+
+**Grundsatz:** Alles, was das Spiel heute anzeigt, kommt aus einer Hand.
+Nichts, wofür es im Spiel noch keinen Ort gibt. Erst wenn ein Bildschirm
+vollständig aus einem Guss ist, lässt sich der Look ehrlich beurteilen —
+Grafik ohne Verwendung ist Lager, kein Fortschritt.
+
+**A · Batch 1 neu im doppelten Maßstab** (Reihenfolge: zuerst dieses)
+
+Alle fünfzehn Teile aus der Stilprobe, mit den Korrekturen: unterschiedliche
+Baumsilhouetten, Beinbewegung im Laufzyklus, abgesetzte Kiste beim Tragen,
+Cozywolfs Nase, eingerollte Schlafhaltung, Verladestation mit **zwei**
+Kistenplätzen, Wagen in 3/4-Draufsicht ohne Deichsel.
+
+Ohne diesen Teil passt nichts zusammen — die Größen aus Batch 1 sind halb
+so groß wie der Rest.
+
+**B · Der Rahmen**
+
+| Teil | Datei / Größe | Anzahl |
+|---|---|---|
+| Waldrahmen, hintere Ebene | `waldrahmen_1_hinten.png`, 640 × 360 | 1 |
+| Waldrahmen, vordere Ebene | `waldrahmen_1_vorn.png`, 640 × 360 | 1 |
+| Wegflecken rund / länglich / Trittstein | 32 × 32 · 64 × 32 · 16 × 16 | 4 · 3 · 3 |
+| Wasser-Ufer, ganzes Übergangsset | 32 × 32, je 4 Bilder | 9 Kacheln |
+
+**C · Die fehlenden Objekte auf dem Bildschirm**
+
+| Teil | Größe | Anmerkung |
+|---|---|---|
+| Vorratsstand Stufe 1 | 128 × 96 | offener Unterstand, drei **leere** Regalbretter |
+| Nest der Hauptfigur | 80 × 48 | plus **vorderer Rand** als eigene Datei |
+| Laterne auf Pfosten | 32 × 64 | 3 Flackerstufen |
+| Herzknospe am Nest | 32 × 32 | 4 Bilder, sanftes Funkeln |
+| Parzellenmarkierung | 80 × 48 | Moosfläche mit Markiersteinen und erstem Trieb |
+| Busch, Findling, Baumstumpf | 32 × 32 | je 2 Varianten |
+
+**D · Der Ausbau**
+
+Verladestation **Stufe 2** mit Vordach und vier Kistenplätzen, 96 × 80.
+Sie ist im Spiel bereits kaufbar — zurzeit wechselt sie beim Kauf auf einen
+Platzhalter, das Bild wird durch den Ausbau also schlechter statt besser.
+
+**E · Bramble vervollständigen**
+
+Die Zeilen **Gehen nach rechts**, **Gehen nach hinten** und **Arbeiten**.
+Bramble läuft im Spiel schräg über die Lichtung und erntet sichtbar am Beet;
+zurzeit zeigt er dabei immer nach vorn.
+
+**Ausdrücklich nicht in Batch 2:** Werkstatt, Küche, Kristallquelle,
+Ausbaustufe 3, Fass, Sack, Korb, Zaun, Torbogen, Wegweiser, die übrigen
+Bewohner. Für all das gibt es im Spiel noch keinen Ort. Sie kommen, sobald
+die zugehörige Kette gebaut ist.
+
+
 
 ---
 
