@@ -1492,17 +1492,6 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Erdreich und Kammern – die Palette des aufgeschnittenen Hügels
-   * ------------------------------------------------------------------ */
-  var SKY1 = "#141E33", SKY2 = "#1B2740", SKY3 = "#24314B";
-  var TOPSOIL = "#4A3320", EARTH = "#5C3F27", EARTH_LT = "#6E4C2F", EARTH_DK = "#3E2A19";
-  var EARTH_DEEP = "#33231４".replace("４", "4");
-  var ROCK = "#4E4A44", ROCK_LT = "#666158";
-  var ROOT_C = "#7A5A34", ROOT_LT = "#96703F";
-  var CAVE = "#33251A", CAVE_WALL = "#241A11";
-  var BEAM = "#8A6440", BEAM_DK = "#5A3F26", BEAM_LT = "#AD8253";
-
-  /* ------------------------------------------------------------------ *
    * Bewohner-Icons
    * ------------------------------------------------------------------ */
   document.querySelectorAll("canvas[data-critter]").forEach(function (cv) {
@@ -1516,146 +1505,36 @@
     px(ctx, GRASS, 0, H - 5, W, 1);
     px(ctx, GRASS_HI, 2, H - 4, 2, 1);
     px(ctx, GRASS_HI, 11, H - 3, 2, 1);
+    var ox = Math.floor((W - def.w) / 2);
     shadow(ctx, W / 2 + 1, H - 3, def.w / 2 + 1, 2, 0.32);
-    drawSprite(ctx, def.rows, def.pal, Math.floor((W - def.w) / 2), H - 4 - def.h);
+    drawSprite(ctx, def.rows, def.pal, ox, H - 4 - def.h);
   });
-
-  /* ------------------------------------------------------------------ *
-   * Bauwerke im Querschnitt
-   * ------------------------------------------------------------------ */
-  function drawCrate(ctx, x, y) {
-    px(ctx, "#181016", x, y, 8, 8);
-    px(ctx, "#A87A48", x + 1, y + 1, 6, 6);
-    px(ctx, "#C99A5E", x + 1, y + 1, 6, 1);
-    px(ctx, "#7A5530", x + 1, y + 6, 6, 1);
-    px(ctx, "#7A5530", x + 1, y + 3, 6, 1);
-    px(ctx, "#7A5530", x + 3, y + 1, 1, 6);
-    px(ctx, BERRY, x + 4, y + 2, 2, 1);
-    px(ctx, BERRY_HI, x + 4, y + 2, 1, 1);
-  }
-
-  // Verladestation: Werkbank an der Kammerwand, Kisten obenauf
-  function drawStation(ctx, x, baseY, opts) {
-    var slots = opts.slots || 2;
-    var crates = opts.crates || 0;
-    var w = 6 + slots * 10;
-    px(ctx, "#181016", x - 1, baseY - 12, w + 2, 13);
-    px(ctx, BEAM_DK, x, baseY - 11, w, 11);
-    px(ctx, BEAM, x, baseY - 11, w, 4);
-    px(ctx, BEAM_LT, x, baseY - 11, w, 1);
-    for (var g = 5; g < w; g += 6) px(ctx, BEAM_DK, x + g, baseY - 7, 1, 7);
-    px(ctx, "#181016", x + 1, baseY - 7, 2, 7);
-    px(ctx, "#181016", x + w - 3, baseY - 7, 2, 7);
-    for (var c = 0; c < crates && c < slots; c++) drawCrate(ctx, x + 3 + c * 10, baseY - 19);
-    for (var f = crates; f < slots; f++) px(ctx, BEAM_DK, x + 3 + f * 10, baseY - 12, 8, 1);
-    return w;
-  }
-
-  // Vorratshaus: offene Regale. Der Bestand ist die Anzahl sichtbarer Kisten.
-  function drawShelves(ctx, x, baseY, w, crates) {
-    var rows = 3, perRow = Math.floor((w - 4) / 10);
-    px(ctx, "#181016", x - 1, baseY - 25, w + 2, 26);
-    px(ctx, BEAM_DK, x, baseY - 24, w, 24);
-    px(ctx, "#3A2A1B", x + 1, baseY - 23, w - 2, 22);
-    for (var r = 0; r < rows; r++) {
-      var by = baseY - 2 - r * 8;
-      px(ctx, BEAM, x + 1, by, w - 2, 2);
-      px(ctx, BEAM_LT, x + 1, by, w - 2, 1);
-      for (var c = 0; c < perRow; c++) {
-        if (r * perRow + c >= crates) break;
-        drawCrate(ctx, x + 3 + c * 10, by - 8);
-      }
-    }
-    px(ctx, BEAM_DK, x, baseY - 24, 2, 24);
-    px(ctx, BEAM_DK, x + w - 2, baseY - 24, 2, 24);
-    return w;
-  }
-
-  function drawCart(ctx, x, baseY, load) {
-    shadow(ctx, x + 9, baseY + 1, 10, 2, 0.30);
-    px(ctx, "#181016", x - 1, baseY - 12, 20, 13);
-    px(ctx, BEAM, x, baseY - 11, 18, 8);
-    px(ctx, BEAM_LT, x, baseY - 11, 18, 1);
-    px(ctx, BEAM_DK, x, baseY - 5, 18, 2);
-    px(ctx, "#5C4326", x + 4, baseY - 10, 1, 5);
-    px(ctx, "#5C4326", x + 9, baseY - 10, 1, 5);
-    px(ctx, "#5C4326", x + 14, baseY - 10, 1, 5);
-    px(ctx, "#181016", x + 2, baseY - 4, 5, 5);
-    px(ctx, "#6E5232", x + 3, baseY - 3, 3, 3);
-    px(ctx, "#181016", x + 12, baseY - 4, 5, 5);
-    px(ctx, "#6E5232", x + 13, baseY - 3, 3, 3);
-    for (var i = 0; i < load; i++) drawCrate(ctx, x + 1 + i * 9, baseY - 20);
-  }
-
-  // Baum in Seitenansicht
-  function drawTree(ctx, cx, baseY, size, variant, dark) {
-    var r = size + 3;
-    var cOut = dark ? "#0F2417" : LEAF_OUT;
-    var cDk = dark ? "#1B3C25" : LEAF_DK;
-    var cMid = dark ? "#265232" : LEAF;
-    var cHi = dark ? "#31663D" : LEAF_HI;
-    px(ctx, "#181016", cx - 3, baseY - r - 5, 6, r + 5);
-    px(ctx, TRUNK_DK, cx - 2, baseY - r - 5, 4, r + 5);
-    px(ctx, TRUNK, cx - 2, baseY - r - 5, 2, r + 5);
-    var cy = baseY - r - 9;
-    var V = [
-      [[0, 1, r], [-r + 2, 3, r - 3], [r - 2, 3, r - 3], [-3, -r + 4, r - 3], [4, -r + 5, r - 4]],
-      [[1, 2, r - 1], [-r + 1, 1, r - 2], [r - 3, 4, r - 4], [-1, -r + 3, r - 2], [5, -r + 2, r - 5]],
-      [[-1, 0, r - 1], [-r + 3, 4, r - 3], [r - 1, 1, r - 3], [2, -r + 5, r - 2], [-5, -r + 3, r - 4]]
-    ];
-    var blobs = V[(variant || 0) % 3], i;
-    for (i = 0; i < blobs.length; i++) ellipse(ctx, cOut, cx + blobs[i][0], cy + blobs[i][1], blobs[i][2] + 1, blobs[i][2] * 0.85 + 1);
-    for (i = 0; i < blobs.length; i++) ellipse(ctx, cDk, cx + blobs[i][0], cy + blobs[i][1], blobs[i][2], blobs[i][2] * 0.85);
-    for (i = 0; i < blobs.length; i++) ellipse(ctx, cMid, cx + blobs[i][0] - 1, cy + blobs[i][1] - 1, blobs[i][2] - 1, blobs[i][2] * 0.85 - 1);
-    ellipse(ctx, cHi, cx - 3, cy - Math.round(r * 0.55), Math.round(r * 0.55), Math.round(r * 0.4));
-  }
-
-  function drawBush(ctx, cx, baseY, w, t, seed) {
-    px(ctx, "#181016", cx - w - 1, baseY - w - 4, w * 2 + 2, w + 5);
-    ellipse(ctx, LEAF_DK, cx, baseY - w - 1, w, w * 0.9);
-    ellipse(ctx, LEAF, cx - 1, baseY - w - 2, w - 1, w * 0.7);
-    ellipse(ctx, LEAF_HI, cx - 2, baseY - w - 3, w * 0.4, w * 0.3);
-    for (var b = 0; b < 3; b++) {
-      var lit = (Math.sin(t * 2.2 + seed + b) + 1) / 2;
-      px(ctx, lit > 0.5 ? BERRY_HI : BERRY, cx - 3 + b * 3, baseY - w - 2 + (b % 2) * 3, 1, 1);
-    }
-  }
-
-  function drawBlossom(ctx, x, y, glow) {
-    px(ctx, "#181016", x - 1, y - 1, 6, 6);
-    px(ctx, "#D9C88A", x + 1, y, 2, 1);
-    px(ctx, "#F5E9C0", x, y + 1, 4, 2);
-    px(ctx, "#D9C88A", x + 1, y + 3, 2, 1);
-    px(ctx, glow ? "#FFF6D8" : BERRY, x + 1, y + 1, 2, 1);
-  }
 
   /* ------------------------------------------------------------------ *
    * Vorher / Nachher der Verladestation
    * ------------------------------------------------------------------ */
   document.querySelectorAll("canvas[data-station]").forEach(function (cv) {
     var up = cv.getAttribute("data-station") === "upgraded";
-    var W = 62, H = 44;
+    var W = 66, H = 50;
     var ctx = fit(cv, W, H, 4);
-    ctx.fillStyle = CAVE;
+    ctx.fillStyle = "#22382A";
     ctx.fillRect(0, 0, W, H);
-    px(ctx, CAVE_WALL, 0, 0, W, 6);
-    px(ctx, EARTH_DK, 0, H - 6, W, 6);
-    px(ctx, EARTH, 0, H - 6, W, 2);
-    px(ctx, "rgba(255,210,130,0.10)", 4, 4, W - 8, H - 10);
-    var slots = up ? 4 : 2;
-    var w = 6 + slots * 10;
-    if (up) {
-      px(ctx, BEAM_DK, 2, 4, W - 4, 3);
-      px(ctx, BEAM_LT, 2, 4, W - 4, 1);
-      px(ctx, LAMP, Math.floor(W / 2) - 1, 8, 2, 3);
+    px(ctx, GRASS, 0, 8, W, H - 8);
+    px(ctx, GRASS_LT, 0, 8, W, 1);
+    for (var d = 0; d < 22; d++) {
+      var gx = (d * 19) % W, gy = 12 + (d * 11) % (H - 16);
+      px(ctx, (d % 3) ? GRASS_DK : GRASS_HI, gx, gy, 2, 1);
+      px(ctx, (d % 3) ? GRASS_DK : GRASS_HI, gx + 1, gy - 1, 1, 1);
     }
-    drawStation(ctx, Math.floor((W - w) / 2), H - 6, { slots: slots, crates: slots });
+    var slots = up ? 4 : 2;
+    var w = 8 + slots * 10;
+    drawStation(ctx, Math.floor((W - w) / 2), H - 6, { slots: slots, crates: slots, roof: up });
   });
 
   /* ------------------------------------------------------------------ *
-   * Das Diorama – Fellgrund im Querschnitt
+   * Das Diorama
    * ------------------------------------------------------------------ */
-  var BASE_W = 208, H = 104;
+  var BASE_W = 208, H = 128;
   var canvas = document.getElementById("scene");
   var W = BASE_W, OX = 0, scale = 4, ctx;
 
@@ -1677,40 +1556,121 @@
   }
   fitScene();
 
-  var SURF = 38;              // Grasnarbe / Oberkante Erdreich
-  var LVL_A = 74;             // Boden der ersten Ebene
-  var SHAFT_X = 78, SHAFT_W = 14;
-  var LIFT_TOP = 30, LIFT_BOT = LVL_A - 12;
-  var BEET_X = 32, BEET_W = 30;
-  var PATH_A = 40, PATH_B = SHAFT_X - 4;
-  var STATION_X = 64, STATION_SLOTS = 2;
-  var CART_HOME = 100, CART_DOCK = 158;
-  var SHELF_X = 154, SHELF_W = 46;
-  var NEST_X = 26;
+  var BEET = { cx: 38, cy: 46, rx: 20, ry: 9, base: 56 };
+  var STATION_X = 70, STATION_Y = 70, STATION_SLOTS = 2;
+  var STATION_W = 8 + STATION_SLOTS * 10;
+  var STORE_X = 146, STORE_Y = 76;
+  var RAIL_Y = 84, RAIL_A = 94, RAIL_B = 180;
+  var CART_HOME = 96, CART_DOCK = 156;
+  var NEST = { cx: 104, cy: 106, rx: 18, ry: 11 };
+  var POND = { cx: 34, cy: 106, rx: 20, ry: 10 };
+  var LAMP_X = 64, LAMP_Y = 74;
+  var PATH_A = { x: 44, y: 56 }, PATH_B = { x: 78, y: 76 };
 
-  var stars = [], grains = [], stones = [], roots = [], surfTrees = [];
+  // Fellgrund ist eine feste Bühne: eine Lichtung mit klarer Kante,
+  // rundum von Wald geschlossen. Der Rahmen wächst nie – die Lichtung füllt sich.
+  var GLADE_CX = 104, GLADE_TOP = 22, GLADE_BOT = 127, GLADE_R = 22, GLADE_HW = 103;
+  function gladeHalf(y) {
+    if (y < GLADE_TOP || y > GLADE_BOT) return 0;
+    var inset = 0, d;
+    if (y < GLADE_TOP + GLADE_R) {
+      d = (GLADE_TOP + GLADE_R - y) / GLADE_R;
+      inset = GLADE_R * (1 - Math.sqrt(Math.max(0, 1 - d * d)));
+    } else if (y > GLADE_BOT - GLADE_R) {
+      d = (y - (GLADE_BOT - GLADE_R)) / GLADE_R;
+      inset = GLADE_R * (1 - Math.sqrt(Math.max(0, 1 - d * d)));
+    }
+    return GLADE_HW - inset + Math.sin(y * 0.55) * 3 + Math.sin(y * 0.17) * 2;
+  }
+  function insideGlade(x, y) {
+    var hw = gladeHalf(y);
+    return hw > 0 && Math.abs(x - GLADE_CX) < hw;
+  }
+
+  var tufts = [], flowers = [], trees = [], pathDots = [], props = [], patches = [], pebbles = [];
+  var canopy = [], parcels = [];
   (function () {
-    var seed = 23;
+    var seed = 11;
     function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
     var LEFT = -110, SPREAD = BASE_W + 220;
-    for (var i = 0; i < 26; i++) stars.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: Math.floor(rnd() * 26), p: rnd() * 6 });
-    for (var g = 0; g < 620; g++) {
-      grains.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: SURF + Math.floor(rnd() * (H - SURF)), l: rnd() > 0.5 });
+    // Grasbüschel statt Rauschen: kleine Halmklumpen in drei Helligkeiten
+    for (var i = 0; i < 330; i++) {
+      var v = rnd();
+      tufts.push({
+        x: LEFT + Math.floor(rnd() * SPREAD),
+        y: 22 + Math.floor(rnd() * (H - 22)),
+        c: v > 0.78 ? GRASS_HI : (v > 0.42 ? GRASS_DK : GRASS_LT),
+        w: 2 + Math.floor(rnd() * 2)
+      });
     }
-    for (var st = 0; st < 46; st++) {
-      stones.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: SURF + 6 + Math.floor(rnd() * (H - SURF - 8)), w: 2 + Math.floor(rnd() * 3) });
+    for (var f = 0; f < 48; f++) {
+      flowers.push({
+        x: LEFT + Math.floor(rnd() * SPREAD),
+        y: 26 + Math.floor(rnd() * (H - 30)),
+        c: ["#EDA8C6", "#F7E8AE", "#C6B0E6"][Math.floor(rnd() * 3)]
+      });
     }
-    for (var r = 0; r < 26; r++) {
-      roots.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: SURF + Math.floor(rnd() * 40), len: 6 + Math.floor(rnd() * 14), dir: rnd() > 0.5 ? 1 : -1 });
+    // Baumkranz auf der Lichtungskante – dunkel, damit der Ort selbst der helle Punkt bleibt
+    var vi = 0;
+    for (var ty = GLADE_TOP + 4; ty <= GLADE_BOT - 2; ty += 7) {
+      var hw = gladeHalf(ty);
+      if (hw <= 4) continue;
+      var jit = Math.floor(rnd() * 4) - 2;
+      trees.push({ x: GLADE_CX - hw - 4 + jit, y: ty, size: 4 + Math.floor(rnd() * 3), v: (vi++) % 3, dark: 1 });
+      trees.push({ x: GLADE_CX + hw + 4 - jit, y: ty, size: 4 + Math.floor(rnd() * 3), v: (vi++) % 3, dark: 1 });
     }
-    var tspots = [[8, 5, 0], [20, 4, 2], [64, 5, 1], [104, 4, 2], [122, 5, 0], [146, 4, 1], [172, 5, 2], [196, 4, 0]];
-    for (var t2 = 0; t2 < tspots.length; t2++) surfTrees.push({ x: tspots[t2][0], size: tspots[t2][1], v: tspots[t2][2] });
+    for (var tx = 8; tx <= 200; tx += 11) {
+      trees.push({
+        x: tx + Math.floor(rnd() * 6) - 3, y: GLADE_TOP + 1 + Math.floor(rnd() * 4),
+        size: 4 + Math.floor(rnd() * 3), v: (vi++) % 3, dark: 1
+      });
+    }
+    // Unterholz oben und unten: schließt die Lichtung, ohne etwas zu verdecken
+    for (var ux = 2; ux <= 206; ux += 8) {
+      props.push({ y: GLADE_BOT + 1, kind: "shrub", x: ux + Math.floor(rnd() * 4) - 2, w: 4 + Math.floor(rnd() * 2), dark: 1 });
+    }
+    for (var ux2 = 0; ux2 <= 208; ux2 += 7) {
+      props.push({ y: GLADE_TOP + 6 + Math.floor(rnd() * 3), kind: "shrub", x: ux2 + Math.floor(rnd() * 4) - 2, w: 3 + Math.floor(rnd() * 2), dark: 1 });
+    }
+    for (var cb = 0; cb < 460; cb++) {
+      var bx = LEFT + Math.floor(rnd() * SPREAD), by = Math.floor(rnd() * (H + 14)) - 7;
+      if (insideGlade(bx, by)) continue;
+      canopy.push({ x: bx, y: by, r: 4 + Math.floor(rnd() * 5), d: rnd() > 0.45 });
+    }
+    parcels.push({ x: 44, y: 88, rx: 13, ry: 7 });
+    parcels.push({ x: 158, y: 114, rx: 14, ry: 7 });
+    props.push({ y: 40, kind: "rock", x: 88, w: 4 });
+    props.push({ y: 96, kind: "rock", x: 60, w: 3 });
+    props.push({ y: 106, kind: "rock", x: 132, w: 5 });
+    props.push({ y: 64, kind: "stump", x: 122 });
+    props.push({ y: 112, kind: "shrub", x: 72, w: 5 });
+    props.push({ y: 40, kind: "shrub", x: 168, w: 4 });
+    props.push({ y: 100, kind: "shrub", x: 190, w: 5 });
+    props.push({ y: 92, kind: "rock", x: 24, w: 3 });
+    for (var dp = 0; dp < 9; dp++) {
+      patches.push({
+        x: LEFT + Math.floor(rnd() * SPREAD), y: 30 + Math.floor(rnd() * (H - 40)),
+        rx: 5 + Math.floor(rnd() * 7), ry: 3 + Math.floor(rnd() * 3)
+      });
+    }
+    for (var pb = 0; pb < 40; pb++) {
+      pebbles.push({ x: LEFT + Math.floor(rnd() * SPREAD), y: 26 + Math.floor(rnd() * (H - 30)) });
+    }
+
+    for (var p = 0; p <= 24; p++) {
+      var q = p / 24;
+      pathDots.push({
+        x: PATH_A.x + (PATH_B.x - PATH_A.x) * q,
+        y: PATH_A.y + (PATH_B.y - PATH_A.y) * q,
+        r: 3 + Math.round(rnd())
+      });
+    }
   })();
 
   var state = {
     t: 0,
-    beaver: { x: PATH_B, phase: "go", timer: 0, carrying: false },
-    lift: { y: LIFT_TOP, phase: "idle", timer: 0, crate: false },
+    beaver: { p: 1, phase: "go", timer: 0, carrying: false },
     crates: 0,
     cart: { x: CART_HOME, phase: "idle", load: 0, timer: 0 },
     stock: 0, react: 0, zzz: 0,
@@ -1730,58 +1690,48 @@
     hud[key].textContent = value;
   }
 
+  function beaverPos() {
+    var q = state.beaver.p;
+    return { x: PATH_A.x + (PATH_B.x - PATH_A.x) * q, y: PATH_A.y + (PATH_B.y - PATH_A.y) * q };
+  }
+
   function update(dt) {
     state.t += dt;
-    var b = state.beaver, li = state.lift, c = state.cart;
+    var b = state.beaver, c = state.cart;
 
     if (b.phase === "go") {
-      b.x -= 22 * dt;
+      b.p -= 0.42 * dt;
       state.status = "Bramble geht zum Glühbeerenbeet";
-      if (b.x <= PATH_A) { b.x = PATH_A; b.phase = "harvest"; b.timer = 1.0; }
+      if (b.p <= 0) { b.p = 0; b.phase = "harvest"; b.timer = 1.0; }
     } else if (b.phase === "harvest") {
       b.timer -= dt;
       state.status = "Bramble erntet Glühbeeren";
       if (b.timer <= 0) { b.phase = "back"; b.carrying = true; }
     } else if (b.phase === "back") {
-      b.x += 22 * dt;
-      state.status = "Bramble trägt die Kiste zum Wurzelaufzug";
-      if (b.x >= PATH_B) { b.x = PATH_B; b.phase = "drop"; b.timer = 0.5; }
+      b.p += 0.42 * dt;
+      state.status = "Bramble trägt eine Kiste zur Verladestation";
+      if (b.p >= 1) { b.p = 1; b.phase = "drop"; b.timer = 0.5; }
     } else if (b.phase === "drop") {
       b.timer -= dt;
-      state.status = "Bramble setzt die Kiste auf den Aufzug";
-      if (b.timer <= 0 && li.phase === "idle" && !li.crate) {
-        li.crate = true; li.phase = "down"; b.carrying = false; b.phase = "go";
+      state.status = "Bramble legt die Kiste an der Verladestation ab";
+      if (b.timer <= 0) {
+        if (state.crates < STATION_SLOTS) { state.crates++; b.carrying = false; b.phase = "go"; }
+        else { state.status = "Verladestation voll – Bramble wartet auf den Wurzelwagen"; b.timer = 0.4; }
       }
-    }
-
-    if (li.phase === "down") {
-      li.y += 20 * dt;
-      state.status = "Der Wurzelaufzug bringt die Kiste hinunter";
-      if (li.y >= LIFT_BOT) { li.y = LIFT_BOT; li.phase = "unload"; li.timer = 0.6; }
-    } else if (li.phase === "unload") {
-      li.timer -= dt;
-      state.status = "Kiste kommt auf der ersten Ebene an";
-      if (li.timer <= 0) {
-        if (state.crates < STATION_SLOTS) { state.crates++; li.crate = false; li.phase = "up"; }
-        else { state.status = "Verladestation voll – der Aufzug wartet"; li.timer = 0.4; }
-      }
-    } else if (li.phase === "up") {
-      li.y -= 20 * dt;
-      if (li.y <= LIFT_TOP) { li.y = LIFT_TOP; li.phase = "idle"; }
     }
 
     if (c.phase === "idle") {
       if (state.crates >= STATION_SLOTS) { c.load = state.crates; state.crates = 0; c.phase = "out"; }
     } else if (c.phase === "out") {
-      c.x += 32 * dt;
-      state.status = "Wurzelwagen fährt durch den Stollen";
+      c.x += 34 * dt;
+      state.status = "Wurzelwagen fährt zum Vorratshaus";
       if (c.x >= CART_DOCK) { c.x = CART_DOCK; c.phase = "unload"; c.timer = 1.1; }
     } else if (c.phase === "unload") {
       c.timer -= dt;
-      state.status = "Ankunft – die Kisten wandern ins Regal";
+      state.status = "Ankunft – Kisten werden eingelagert";
       if (c.timer <= 0) { state.stock += c.load * 6; c.load = 0; c.phase = "home"; state.react = 1.7; }
     } else if (c.phase === "home") {
-      c.x -= 32 * dt;
+      c.x -= 34 * dt;
       state.status = "Wurzelwagen kehrt zur Verladestation zurück";
       if (c.x <= CART_HOME) { c.x = CART_HOME; c.phase = "idle"; }
     }
@@ -1795,220 +1745,232 @@
     setHud("status", state.status);
   }
 
-  // Kammer ausheben: Hohlraum mit Erdwand, Boden und Stützbalken
-  function cave(ctx, x, y, w, h, lit) {
-    px(ctx, "#100A06", x - 1, y - 1, w + 2, h + 2);
-    px(ctx, CAVE_WALL, x, y, w, h);
-    px(ctx, CAVE, x + 1, y + 1, w - 2, h - 2);
-    px(ctx, "#241A10", x, y, w, 2);
-    if (lit) px(ctx, "rgba(255,206,120,0.16)", x + 1, y + 1, w - 2, h - 2);
-    if (lit) px(ctx, "rgba(255,214,150,0.10)", x + 3, y + 3, w - 6, h - 8);
-  }
-  function beamFrame(ctx, x, y, w, h) {
-    px(ctx, "#181016", x, y, 3, h);
-    px(ctx, BEAM_DK, x, y, 2, h);
-    px(ctx, "#181016", x + w - 3, y, 3, h);
-    px(ctx, BEAM_DK, x + w - 3, y, 2, h);
-    px(ctx, "#181016", x, y, w, 3);
-    px(ctx, BEAM_DK, x, y, w, 2);
-    px(ctx, BEAM_LT, x + 1, y, w - 2, 1);
-  }
-  function lantern(ctx, x, y, t) {
-    var fl = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2 > 0;
-    px(ctx, "rgba(255,210,130,0.13)", x - 8, y - 5, 18, 18);
-    px(ctx, "rgba(255,214,150,0.11)", x - 5, y - 3, 12, 13);
-    px(ctx, "#181016", x - 1, y - 4, 4, 4);
-    px(ctx, "#181016", x, y, 2, 6);
-    px(ctx, fl ? LAMP : "#E8BE6C", x, y, 2, 5);
-    px(ctx, "#FFF3CE", x, y, 2, 2);
-  }
-
   function render() {
     var t = state.t;
     var pulse = (Math.sin(t * 2.2) + 1) / 2;
     var L = -OX, R = W - OX;
 
-    /* --- Nachthimmel --- */
-    px(ctx, SKY1, L, 0, W, 12);
-    px(ctx, SKY2, L, 12, W, 10);
-    px(ctx, SKY3, L, 22, W, 10);
-    for (var s = 0; s < stars.length; s++) {
-      var st = stars[s];
-      var tw = (Math.sin(t * 1.6 + st.p) + 1) / 2;
-      px(ctx, tw > 0.55 ? "#DCE6E0" : "#7C9089", st.x, st.y, 1, 1);
+    /* --- Geschlossener Wald, Lichtung ausgestanzt --- */
+    px(ctx, "#0D1811", L, 0, W, H);
+    for (var cb = 0; cb < canopy.length; cb++) {
+      var cn = canopy[cb];
+      ellipse(ctx, cn.d ? "#152B1C" : "#101F15", cn.x, cn.y, cn.r, cn.r * 0.8);
+      ellipse(ctx, cn.d ? "#1D3A26" : "#16301F", cn.x - 1, cn.y - 1, cn.r - 2, cn.r * 0.55);
     }
-    px(ctx, "#EDF2E4", 176, 7, 8, 8);
-    px(ctx, SKY1, 173, 5, 6, 8);
+    for (var gy = GLADE_TOP - 2; gy <= GLADE_BOT + 2; gy++) {
+      var hwo = gladeHalf(Math.min(GLADE_BOT, Math.max(GLADE_TOP, gy)));
+      if (hwo <= 0) continue;
+      px(ctx, "#21391F", GLADE_CX - hwo - 2, gy, hwo * 2 + 4, 1);
+    }
+    for (var gy2 = GLADE_TOP; gy2 <= GLADE_BOT; gy2++) {
+      var hw2 = gladeHalf(gy2);
+      if (hw2 <= 0) continue;
+      px(ctx, GRASS_SH, GLADE_CX - hw2, gy2, hw2 * 2, 1);
+      px(ctx, gy2 < GLADE_TOP + 2 ? GRASS_LT : GRASS, GLADE_CX - hw2 + 2, gy2, hw2 * 2 - 4, 1);
+    }
 
-    /* --- Erdreich --- */
-    px(ctx, TOPSOIL, L, SURF - 2, W, 8);
-    px(ctx, EARTH, L, SURF + 6, W, 30);
-    px(ctx, EARTH_DK, L, SURF + 36, W, H - SURF - 36);
-    for (var ly = 0; ly < 3; ly++) {
-      var lyy = SURF + 44 + ly * 12;
-      if (lyy > H - 4) break;
-      for (var lx = L; lx < R; lx += 5) {
-        var wob = ((lx * 374761393) >>> 0) % 3;
-        px(ctx, ly % 2 ? "#3A2C1E" : "#463322", lx, lyy + wob, 5, 2);
-        px(ctx, "#54402C", lx, lyy + wob, 3, 1);
+    for (var k = 0; k < tufts.length; k++) {
+      var tu = tufts[k];
+      if (!insideGlade(tu.x, tu.y)) continue;
+      px(ctx, tu.c, tu.x, tu.y, tu.w, 1);
+      px(ctx, tu.c, tu.x + 1, tu.y - 1, 1, 1);
+    }
+    for (var pa = 0; pa < patches.length; pa++) {
+      var pt = patches[pa];
+      if (!insideGlade(pt.x, pt.y)) continue;
+      ellipse(ctx, GRASS_DK, pt.x, pt.y, pt.rx, pt.ry);
+      ellipse(ctx, "#5A6B45", pt.x, pt.y, pt.rx - 2, pt.ry - 1);
+      ellipse(ctx, "#6B7A50", pt.x - 1, pt.y - 1, pt.rx - 4, pt.ry - 2);
+    }
+    for (var pbi = 0; pbi < pebbles.length; pbi++) {
+      if (!insideGlade(pebbles[pbi].x, pebbles[pbi].y)) continue;
+      px(ctx, "#59614F", pebbles[pbi].x, pebbles[pbi].y, 2, 1);
+      px(ctx, "#7C8377", pebbles[pbi].x, pebbles[pbi].y, 1, 1);
+    }
+    for (var fl = 0; fl < flowers.length; fl++) {
+      var fo = flowers[fl];
+      if (!insideGlade(fo.x, fo.y)) continue;
+      px(ctx, fo.c, fo.x, fo.y, 2, 1);
+      px(ctx, fo.c, fo.x, fo.y - 1, 1, 1);
+      px(ctx, fo.c, fo.x + 2, fo.y - 1, 1, 1);
+      px(ctx, "#F7EFC8", fo.x, fo.y, 1, 1);
+    }
+
+    /* --- Teich --- */
+    ellipse(ctx, GRASS_SH, POND.cx, POND.cy, POND.rx + 3, POND.ry + 2);
+    ellipse(ctx, WATER_DK, POND.cx, POND.cy, POND.rx, POND.ry);
+    ellipse(ctx, WATER, POND.cx, POND.cy - 1, POND.rx - 2, POND.ry - 1);
+    ellipse(ctx, WATER_LT, POND.cx - 3, POND.cy - 3, POND.rx - 9, POND.ry - 6);
+    for (var wv = 0; wv < 5; wv++) {
+      var wo = Math.sin(t * 1.1 + wv * 1.7) * 4;
+      px(ctx, WATER_HI, POND.cx - 12 + wv * 6 + wo, POND.cy - 5 + wv * 3, 3, 1);
+    }
+
+    /* --- Weg und Schienen liegen flach --- */
+    for (var d = 0; d < pathDots.length; d++) {
+      var pd = pathDots[d];
+      ellipse(ctx, PATH_DK, pd.x, pd.y, pd.r + 1, pd.r * 0.7 + 1);
+      ellipse(ctx, PATH_C, pd.x, pd.y, pd.r, pd.r * 0.7);
+      ellipse(ctx, PATH_HI, pd.x - 1, pd.y - 1, pd.r - 2, pd.r * 0.5);
+    }
+    px(ctx, GRASS_SH, RAIL_A - 4, RAIL_Y - 6, RAIL_B - RAIL_A + 8, 13);
+    px(ctx, BALLAST, RAIL_A - 3, RAIL_Y - 5, RAIL_B - RAIL_A + 6, 11);
+    for (var rx = RAIL_A; rx < RAIL_B; rx += 6) {
+      px(ctx, "#3A2C1C", rx, RAIL_Y - 4, 4, 9);
+      px(ctx, TIE, rx, RAIL_Y - 4, 4, 8);
+      px(ctx, "#6E5638", rx, RAIL_Y - 4, 4, 1);
+    }
+    px(ctx, "#3A2C1C", RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL, RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL_HI, RAIL_A - 3, RAIL_Y - 5, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, "#3A2C1C", RAIL_A - 3, RAIL_Y + 4, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, RAIL, RAIL_A - 3, RAIL_Y + 3, RAIL_B - RAIL_A + 6, 1);
+    px(ctx, WOOD_OUT, RAIL_B, RAIL_Y - 8, 4, 15);
+    px(ctx, WOOD, RAIL_B, RAIL_Y - 7, 3, 13);
+
+    /* --- Zukünftige Parzellen: sichtbares Potential, kein steriler Platzhalter --- */
+    for (var pc = 0; pc < parcels.length; pc++) {
+      var pl = parcels[pc];
+      ellipse(ctx, "#3C6440", pl.x, pl.y, pl.rx, pl.ry);
+      ellipse(ctx, "#4C7C4E", pl.x, pl.y - 1, pl.rx - 2, pl.ry - 2);
+      for (var mk = 0; mk < 7; mk++) {
+        var ang = (mk / 7) * Math.PI * 2;
+        px(ctx, "#6E7A62", pl.x + Math.round(Math.cos(ang) * pl.rx), pl.y + Math.round(Math.sin(ang) * pl.ry), 2, 1);
       }
+      var sway = Math.sin(t * 1.3 + pc) > 0 ? 0 : 1;
+      px(ctx, LEAF, pl.x - 3 + sway, pl.y - 4, 1, 3);
+      px(ctx, LEAF_HI, pl.x - 3 + sway, pl.y - 5, 1, 1);
+      px(ctx, LEAF, pl.x + 4, pl.y - 3 + sway, 1, 2);
     }
-    for (var g = 0; g < grains.length; g++) {
-      var gr = grains[g];
-      px(ctx, gr.l ? EARTH_LT : EARTH_DK, gr.x, gr.y, 1, 1);
+
+    /* --- Warme Lichtinseln --- */
+    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2 > 0 ? 0.17 : 0.13;
+    function pool(cx, cy, rx, ry, a) {
+      ellipse(ctx, "rgba(255,206,120," + (a * 0.3).toFixed(3) + ")", cx, cy, rx, ry);
+      ellipse(ctx, "rgba(255,208,128," + (a * 0.55).toFixed(3) + ")", cx, cy, rx * 0.66, ry * 0.66);
+      ellipse(ctx, "rgba(255,218,150," + a.toFixed(3) + ")", cx, cy, rx * 0.34, ry * 0.34);
     }
-    for (var so = 0; so < stones.length; so++) {
-      var sn = stones[so];
-      px(ctx, ROCK, sn.x, sn.y, sn.w, 2);
-      px(ctx, ROCK_LT, sn.x, sn.y, sn.w - 1, 1);
+    pool(LAMP_X, LAMP_Y + 1, 16, 8, flick);
+    pool(STORE_X + 26, STORE_Y + 4, 28, 12, 0.14);
+
+    /* --- Alles Stehende nach Fußpunkt sortiert --- */
+    var bp = beaverPos();
+    var items = [];
+
+    for (var tr = 0; tr < trees.length; tr++) {
+      (function (o) {
+        items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size, o.v, o.dark); } });
+      })(trees[tr]);
     }
-    for (var ro = 0; ro < roots.length; ro++) {
-      var rt = roots[ro];
-      for (var k = 0; k < rt.len; k++) {
-        px(ctx, k % 3 === 0 ? ROOT_LT : ROOT_C, rt.x + Math.round(Math.sin(k * 0.6) * 2) * rt.dir, rt.y + k, 1, 1);
+    for (var pr = 0; pr < props.length; pr++) {
+      (function (o) {
+        items.push({ y: o.y, draw: function () {
+          if (o.kind === "rock") drawRock(ctx, o.x, o.y, o.w);
+          else if (o.kind === "stump") drawStump(ctx, o.x, o.y);
+          else drawShrub(ctx, o.x, o.y, o.w, o.dark);
+        }});
+      })(props[pr]);
+    }
+
+    items.push({ y: BEET.base, draw: function () {
+      shadow(ctx, BEET.cx + 3, BEET.cy + BEET.ry - 1, BEET.rx, 4, 0.22);
+      ellipse(ctx, GRASS_SH, BEET.cx, BEET.cy, BEET.rx + 3, BEET.ry + 2);
+      ellipse(ctx, GRASS_DK, BEET.cx, BEET.cy - 1, BEET.rx + 2, BEET.ry + 1);
+      ellipse(ctx, SOIL_DK, BEET.cx, BEET.cy, BEET.rx, BEET.ry);
+      ellipse(ctx, SOIL, BEET.cx, BEET.cy - 1, BEET.rx - 2, BEET.ry - 2);
+      ellipse(ctx, SOIL_HI, BEET.cx - 2, BEET.cy - 3, BEET.rx - 7, BEET.ry - 6);
+      for (var row = -1; row <= 1; row++) px(ctx, SOIL_DK, BEET.cx - 14, BEET.cy + row * 4, 28, 1);
+
+      var bush = [[-13, 3], [-4, 6], [5, 3], [12, 6], [-8, -2], [3, -3]];
+      for (var i = 0; i < bush.length; i++) {
+        var bx = BEET.cx + bush[i][0], by = BEET.cy + bush[i][1];
+        shadow(ctx, bx + 2, by, 5, 2, 0.28);
+        ellipse(ctx, LEAF_OUT, bx, by - 4, 6, 5);
+        ellipse(ctx, LEAF_DK, bx, by - 4, 5, 4);
+        ellipse(ctx, LEAF, bx - 1, by - 5, 4, 3);
+        ellipse(ctx, LEAF_HI, bx - 2, by - 6, 2, 1);
+        var lit = (Math.sin(t * 2.2 + i) + 1) / 2;
+        px(ctx, lit > 0.55 ? BERRY_HI : BERRY, bx - 3, by - 4, 1, 1);
+        px(ctx, lit > 0.3 ? BERRY : "#D9A93C", bx + 1, by - 6, 1, 1);
+        px(ctx, lit > 0.75 ? BERRY_HI : BERRY, bx + 3, by - 3, 1, 1);
       }
+    }});
+
+    items.push({ y: LAMP_Y, draw: function () {
+      shadow(ctx, LAMP_X + 2, LAMP_Y, 4, 2, 0.30);
+      px(ctx, "#241708", LAMP_X - 2, LAMP_Y - 17, 4, 17);
+      px(ctx, WOOD_DK, LAMP_X - 2, LAMP_Y - 17, 3, 17);
+      px(ctx, WOOD, LAMP_X - 2, LAMP_Y - 17, 1, 17);
+      px(ctx, "#241708", LAMP_X - 4, LAMP_Y - 23, 8, 7);
+      px(ctx, flick > 0.15 ? LAMP : "#E8BE6C", LAMP_X - 3, LAMP_Y - 22, 6, 5);
+      px(ctx, "#FFF3CE", LAMP_X - 3, LAMP_Y - 22, 6, 2);
+    }});
+
+    items.push({ y: STATION_Y, draw: function () {
+      drawStation(ctx, STATION_X, STATION_Y, { slots: STATION_SLOTS, crates: state.crates });
+    }});
+    items.push({ y: STORE_Y, draw: function () { drawStorehouse(ctx, STORE_X, STORE_Y, t); } });
+    items.push({ y: RAIL_Y + 2, draw: function () { drawCart(ctx, state.cart.x, RAIL_Y + 4, state.cart.load); } });
+
+    items.push({ y: bp.y, draw: function () {
+      var b = state.beaver;
+      var moving = (b.phase === "go" || b.phase === "back");
+      var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
+      var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
+      shadow(ctx, bp.x + 1, bp.y, 6, 2, 0.32);
+      drawSprite(ctx, frame, BEAVER_PAL, bp.x - 5, bp.y - 11 + bob);
+      if (b.carrying) drawCrate(ctx, bp.x + 3, bp.y - 13);
+    }});
+
+    items.push({ y: NEST.cy + NEST.ry, draw: function () {
+      shadow(ctx, NEST.cx + 4, NEST.cy + NEST.ry - 2, NEST.rx, 5, 0.26);
+      ellipse(ctx, "#20361F", NEST.cx, NEST.cy, NEST.rx, NEST.ry);
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx - 1, NEST.ry - 1);
+      ellipse(ctx, "#4B7444", NEST.cx - 1, NEST.cy - 1, NEST.rx - 3, NEST.ry - 3);
+      for (var w = 0; w < 6; w++) px(ctx, "#8A7448", NEST.cx - 13 + w * 5, NEST.cy - 6 + (w % 3) * 5, 3, 1);
+
+      var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
+      var lift = state.react > 0 ? -1 : 0;
+      drawSprite(ctx, WOLF, WOLF_PAL, NEST.cx - 13, NEST.cy - 12 + breath + lift);
+
+      ellipse(ctx, "#20361F", NEST.cx, NEST.cy, NEST.rx, NEST.ry, NEST.ry - 3, NEST.ry);
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx - 1, NEST.ry - 1, NEST.ry - 4, NEST.ry);
+      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy - 1, NEST.rx - 3, NEST.ry - 3, NEST.ry - 5, NEST.ry);
+
+      px(ctx, "#3E6440", NEST.cx + NEST.rx - 4, NEST.cy - 7, 1, 8);
+      drawBlossom(ctx, NEST.cx + NEST.rx - 5, NEST.cy - 11, pulse > 0.5);
+
+      if (state.react <= 0 && state.zzz < 2) {
+        var zy = NEST.cy - 17 - Math.floor(state.zzz * 3);
+        px(ctx, "#D5E2EA", NEST.cx - 11, zy, 3, 1);
+        px(ctx, "#D5E2EA", NEST.cx - 10, zy + 1, 1, 1);
+        px(ctx, "#D5E2EA", NEST.cx - 11, zy + 2, 3, 1);
+      }
+      if (state.react > 0) {
+        var hy = NEST.cy - 18 - Math.floor((1.7 - state.react) * 3);
+        px(ctx, "#FF9CC0", NEST.cx - 11, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 9, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 12, hy + 1, 5, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 11, hy + 2, 3, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 10, hy + 3, 1, 1);
+      }
+    }});
+
+    items.sort(function (a, b) { return a.y - b.y; });
+    for (var it = 0; it < items.length; it++) items[it].draw();
+
+    for (var g = 0; g < 8; g++) {
+      var gx = L + 16 + ((g * 37 + t * 6) % (W - 32));
+      var gy = 40 + Math.sin(t * 0.8 + g * 2) * 12 + g * 7;
+      px(ctx, (Math.sin(t * 3 + g) > 0) ? "#FFF6C0" : "#D8C070", gx, gy, 1, 1);
     }
 
-    /* --- Grasnarbe --- */
-    px(ctx, "#1E3A22", L, SURF - 4, W, 3);
-    px(ctx, GRASS_DK, L, SURF - 6, W, 3);
-    px(ctx, GRASS, L, SURF - 7, W, 2);
-    px(ctx, GRASS_HI, L, SURF - 7, W, 1);
-    for (var gt = L; gt < R; gt++) {
-      var n = ((gt * 2654435761) >>> 0) % 11;
-      if (n < 4) px(ctx, n < 2 ? GRASS_HI : GRASS_LT, gt, SURF - 8 - (n % 2), 1, 2 + (n % 2));
-    }
-
-    /* --- Kammern der ersten Ebene --- */
-    cave(ctx, 8, LVL_A - 26, 48, 26, true);            // Nestkammer
-    cave(ctx, 62, LVL_A - 28, 58, 28, true);           // Verladekammer
-    cave(ctx, 118, LVL_A - 17, 40, 17, false);         // Stollen
-    cave(ctx, 152, LVL_A - 28, 50, 28, true);          // Vorratskammer
-    cave(ctx, SHAFT_X, SURF - 6, SHAFT_W, LVL_A - SURF + 6, false);  // Aufzugschacht
-
-    beamFrame(ctx, 8, LVL_A - 26, 48, 26);
-    beamFrame(ctx, 62, LVL_A - 28, 58, 28);
-    beamFrame(ctx, 152, LVL_A - 28, 50, 28);
-    px(ctx, "#181016", 118, LVL_A - 17, 40, 2);
-    px(ctx, BEAM_DK, 118, LVL_A - 17, 40, 1);
-    for (var sb = SURF; sb < LVL_A - 8; sb += 8) {
-      px(ctx, BEAM_DK, SHAFT_X + 1, sb, 2, 6);
-      px(ctx, BEAM_DK, SHAFT_X + SHAFT_W - 3, sb, 2, 6);
-    }
-
-    /* --- Böden der Ebene --- */
-    px(ctx, "#2E2114", 8, LVL_A - 3, 194, 3);
-    px(ctx, EARTH_LT, 8, LVL_A - 3, 194, 1);
-
-    /* --- Zukünftige Ebene: angedeutete Kammer --- */
-    var fx = 50, fy = LVL_A + 8, fw = 96, fh = 18;
-    px(ctx, "rgba(120,92,50,0.20)", fx, fy, fw, fh);
-    for (var d = 0; d < fw; d += 5) px(ctx, "#9A7A45", fx + d, fy, 3, 1);
-    for (var d2 = 0; d2 < fw; d2 += 5) px(ctx, "#9A7A45", fx + d2, fy + fh, 3, 1);
-    for (var d3 = 0; d3 < fh; d3 += 5) {
-      px(ctx, "#9A7A45", fx, fy + d3, 1, 3);
-      px(ctx, "#9A7A45", fx + fw, fy + d3, 1, 3);
-    }
-    // ein Trieb, der schon von oben hereinwächst
-    for (var sp = 0; sp < 7; sp++) px(ctx, ROOT_LT, fx + 26 + Math.round(Math.sin(sp * 0.7) * 2), fy - 7 + sp, 1, 1);
-    px(ctx, LEAF_DK, fx + 24, fy - 9, 5, 3);
-    px(ctx, LEAF, fx + 25, fy - 9, 3, 2);
-    px(ctx, LEAF_HI, fx + 25, fy - 9, 1, 1);
-    // Maulwurfsgang, der auf die Kammer zuläuft
-    for (var mg = 0; mg < 30; mg++) {
-      px(ctx, "#3A2A1A", fx - 30 + mg, fy + 8 + Math.round(Math.sin(mg * 0.3) * 3), 2, 3);
-    }
-
-    /* --- Laternen in den Kammern --- */
-    lantern(ctx, 100, LVL_A - 22, t);
-    lantern(ctx, 190, LVL_A - 22, t);
-
-    /* --- Oberfläche: Bäume, Beet, Schachtkopf --- */
-    for (var tr = 0; tr < surfTrees.length; tr++) {
-      var o = surfTrees[tr];
-      if (o.x > SHAFT_X - 12 && o.x < SHAFT_X + SHAFT_W + 12) continue;
-      drawTree(ctx, o.x, SURF - 7, o.size, o.v, o.x < 26 || o.x > 160);
-    }
-    for (var bs = 0; bs < 4; bs++) drawBush(ctx, BEET_X + bs * 9, SURF - 7, 5, t, bs);
-
-    px(ctx, "#181016", SHAFT_X - 2, SURF - 12, SHAFT_W + 4, 6);
-    px(ctx, BEAM, SHAFT_X - 1, SURF - 11, SHAFT_W + 2, 4);
-    px(ctx, BEAM_LT, SHAFT_X - 1, SURF - 11, SHAFT_W + 2, 1);
-    px(ctx, "#181016", SHAFT_X + 4, SURF - 18, 6, 6);
-    px(ctx, BEAM_DK, SHAFT_X + 5, SURF - 17, 4, 4);
-    px(ctx, BEAM_LT, SHAFT_X + 6, SURF - 16, 2, 2);
-
-    /* --- Herzknospe über der Nestkammer, Wurzeln reichen hinein --- */
-    px(ctx, "#3E6440", NEST_X + 4, SURF - 12, 1, 5);
-    drawBlossom(ctx, NEST_X + 2, SURF - 17, pulse > 0.5);
-    for (var rr = 0; rr < 8; rr++) {
-      px(ctx, ROOT_C, NEST_X + 4 + Math.round(Math.sin(rr * 0.8) * 2), SURF - 6 + rr, 1, 1);
-    }
-    for (var rr2 = 0; rr2 < 6; rr2++) {
-      px(ctx, ROOT_LT, NEST_X + 4 + Math.round(Math.sin(rr2 * 0.9) * 3), LVL_A - 26 + rr2, 1, 1);
-    }
-
-    /* --- Aufzug --- */
-    px(ctx, "#5A4A38", SHAFT_X + 4, SURF - 14, 1, state.lift.y - SURF + 14);
-    px(ctx, "#5A4A38", SHAFT_X + 9, SURF - 14, 1, state.lift.y - SURF + 14);
-    px(ctx, "#181016", SHAFT_X + 1, state.lift.y, 12, 5);
-    px(ctx, BEAM, SHAFT_X + 2, state.lift.y + 1, 10, 3);
-    px(ctx, BEAM_LT, SHAFT_X + 2, state.lift.y + 1, 10, 1);
-    if (state.lift.crate) drawCrate(ctx, SHAFT_X + 3, state.lift.y - 8);
-
-    /* --- Nestkammer einrichten --- */
-    px(ctx, BEAM_DK, 12, LVL_A - 19, 14, 2);
-    px(ctx, BEAM_LT, 12, LVL_A - 19, 14, 1);
-    px(ctx, "#A87A48", 14, LVL_A - 23, 4, 4);
-    px(ctx, "#7A5530", 20, LVL_A - 22, 3, 3);
-    lantern(ctx, 48, LVL_A - 20, t);
-
-    /* --- Nest und Cozywolf --- */
-    ellipse(ctx, "#20361F", NEST_X + 4, LVL_A - 4, 17, 5);
-    ellipse(ctx, "#33512F", NEST_X + 4, LVL_A - 5, 16, 4);
-    var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
-    var lift2 = state.react > 0 ? -1 : 0;
-    drawSprite(ctx, WOLF, WOLF_PAL, NEST_X - 8, LVL_A - 22 + breath + lift2);
-    ellipse(ctx, "#33512F", NEST_X + 4, LVL_A - 4, 16, 4, 1, 5);
-    if (state.react <= 0 && state.zzz < 2) {
-      var zy = LVL_A - 26 - Math.floor(state.zzz * 2);
-      px(ctx, "#D5E2EA", NEST_X - 4, zy, 3, 1);
-      px(ctx, "#D5E2EA", NEST_X - 3, zy + 1, 1, 1);
-      px(ctx, "#D5E2EA", NEST_X - 4, zy + 2, 3, 1);
-    }
-    if (state.react > 0) {
-      var hy = LVL_A - 27 - Math.floor((1.7 - state.react) * 2);
-      px(ctx, "#FF9CC0", NEST_X - 5, hy, 1, 1);
-      px(ctx, "#FF9CC0", NEST_X - 3, hy, 1, 1);
-      px(ctx, "#FF9CC0", NEST_X - 6, hy + 1, 5, 1);
-      px(ctx, "#FF9CC0", NEST_X - 5, hy + 2, 3, 1);
-    }
-
-    /* --- Verladestation, Wagen, Regale --- */
-    drawStation(ctx, STATION_X, LVL_A - 3, { slots: STATION_SLOTS, crates: state.crates });
-    drawShelves(ctx, SHELF_X, LVL_A - 3, SHELF_W, Math.min(9, Math.floor(state.stock / 6)));
-    drawCart(ctx, state.cart.x, LVL_A - 3, state.cart.load);
-
-    /* --- Bramble auf der Oberfläche --- */
-    var b = state.beaver;
-    var moving = (b.phase === "go" || b.phase === "back");
-    var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
-    var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
-    shadow(ctx, b.x + 1, SURF - 7, 6, 2, 0.32);
-    drawSprite(ctx, frame, BEAVER_PAL, b.x - 5, SURF - 18 + bob);
-    if (b.carrying) drawCrate(ctx, b.x + 3, SURF - 19);
-
-    /* --- Glühwürmchen über der Wiese --- */
-    for (var gw = 0; gw < 6; gw++) {
-      var gx = L + 12 + ((gw * 41 + t * 6) % (W - 24));
-      var gy = 16 + Math.sin(t * 0.8 + gw * 2) * 6 + gw;
-      px(ctx, (Math.sin(t * 3 + gw) > 0) ? "#FFF6C0" : "#D8C070", gx, gy, 1, 1);
-    }
-
-    for (var v = 0; v < 8; v++) {
-      var a = ((8 - v) * 0.014).toFixed(3);
-      px(ctx, "rgba(6,10,16," + a + ")", L + v * 3, 0, 3, H);
-      px(ctx, "rgba(6,10,16," + a + ")", R - 3 - v * 3, 0, 3, H);
+    // Gestufte Randabdunklung – bündelt den Blick auf die Parzelle
+    for (var v = 0; v < 9; v++) {
+      var a = ((9 - v) * 0.012).toFixed(3);
+      px(ctx, "rgba(8,18,14," + a + ")", L + v * 3, 0, 3, H);
+      px(ctx, "rgba(8,18,14," + a + ")", R - 3 - v * 3, 0, 3, H);
+      if (v < 5) px(ctx, "rgba(8,18,14," + a + ")", L, H - 3 - v * 3, W, 3);
     }
   }
 
@@ -2025,11 +1987,10 @@
   if (reduce) {
     state.crates = 1;
     state.cart.x = (CART_HOME + CART_DOCK) / 2;
-    state.cart.phase = "out"; state.cart.load = 2; state.stock = 30;
-    state.beaver.x = 56; state.beaver.carrying = true;
-    state.lift.y = (LIFT_TOP + LIFT_BOT) / 2; state.lift.crate = true;
-    setHud("crates", "1"); setHud("cart", "2"); setHud("stock", "30");
-    setHud("status", "Wurzelwagen fährt durch den Stollen");
+    state.cart.phase = "out"; state.cart.load = 2; state.stock = 18;
+    state.beaver.p = 0.45; state.beaver.carrying = true;
+    setHud("crates", "1"); setHud("cart", "2"); setHud("stock", "18");
+    setHud("status", "Wurzelwagen fährt zum Vorratshaus");
     render();
   } else {
     requestAnimationFrame(frame);
