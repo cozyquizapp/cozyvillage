@@ -135,8 +135,8 @@ function pruefe(datei) {
 
 const dateien = sammlePngs(ARG);
 if (!dateien.length) {
-  console.error(`Keine PNG-Dateien unter ${ARG} gefunden.`);
-  process.exit(2);
+  console.log(`Keine PNG-Dateien unter ${ARG} gefunden – nichts zu prüfen.`);
+  process.exit(0);
 }
 
 let fehlerhaft = 0;

@@ -1,0 +1,49 @@
+name: Assets prüfen
+
+# Misst jede Asset-Lieferung objektiv gegen assets/AUFTRAG-TILESET.md.
+# Das Ergebnis erscheint direkt am Pull Request, ohne dass jemand
+# Dateien von Hand anschauen muss.
+
+on:
+  pull_request:
+    paths:
+      - "assets/**"
+      - "tools/pruefe-assets.mjs"
+  push:
+    paths:
+      - "assets/**"
+  workflow_dispatch:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Technische Vorgaben prüfen
+        run: |
+          if [ ! -d assets/tilesets ] || [ -z "$(find assets/tilesets -name '*.png' -print -quit)" ]; then
+            echo "Noch keine PNG-Dateien unter assets/tilesets – nichts zu prüfen."
+            exit 0
+          fi
+          node tools/pruefe-assets.mjs assets/tilesets | tee pruefbericht.txt
+
+      - name: Bericht als Zusammenfassung anhängen
+        if: always()
+        run: |
+          {
+            echo "## Prüfbericht Assets"
+            echo ""
+            echo "Gemessen gegen \`assets/AUFTRAG-TILESET.md\`, Abschnitt 1 und 3."
+            echo ""
+            echo '```'
+            cat pruefbericht.txt 2>/dev/null || echo "kein Bericht erzeugt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
