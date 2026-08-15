@@ -48,6 +48,23 @@ einen Pixel-Artist oder eine andere KI übergeben werden kann: Perspektive,
 Kachelgröße, Palette, Inhaltsliste, Figurenregeln, Prüfliste und die
 Lizenzfragen, die beantwortet sein müssen.
 
+## Lieferung prüfen
+
+Bevor ein Paket eingebaut wird, misst der Prüfer die technischen Vorgaben
+objektiv statt nach Augenmaß:
+
+```bash
+npm run pruefe assets/tilesets/<paket>
+```
+
+Er meldet je Datei die tatsächlichen Pixelmaße, die Anzahl der Farben, die
+Zahl halbtransparenter Randpixel und alle Farben außerhalb der Palette.
+Damit lassen sich die beiden Fehler aus Abschnitt 0.5 des Auftrags in
+Sekunden erkennen — Anti-Aliasing am Rand und hochaufgelöste Zeichnung mit
+Pixel-Optik.
+
+Rückgabewert 0 heißt bestanden, 1 heißt: mindestens eine Datei hat Fehler.
+
 ## Lizenzhinweis
 
 Nur Pakete verwenden, deren Lizenz kommerzielle Nutzung erlaubt.
