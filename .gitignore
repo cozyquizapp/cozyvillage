@@ -1,0 +1,16 @@
+# Abhängigkeiten
+node_modules/
+
+# Erzeugte Fassungen
+dist/
+*.tsbuildinfo
+
+# Werkzeuge und Umgebung
+.DS_Store
+.vite/
+.env
+.env.local
+*.log
+
+# Prüfberichte
+pruefbericht.txt
