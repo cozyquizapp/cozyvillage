@@ -1,0 +1,1416 @@
+<title>Fellgrund</title>
+
+<style>
+  /* ---------- Tokens: light is the base, dark redefines only values ---------- */
+  :root {
+    --paper:      #E7EBDF;
+    --panel:      #F3F5EC;
+    --ink:        #1B2620;
+    --ink-soft:   #47584C;
+    --ink-faint:  #6B7C6E;
+    --line:       #C2CCB7;
+    --line-hard:  #4F6250;
+    --glow:       #C88A1E;
+    --glow-ink:   #85590C;
+    --quell:      #2C7C73;
+    --herz:       #A44C60;
+    --shadow:     #C6D0BB;
+
+    --scene-bg:   #1E2A2B;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: "Avenir Next", Avenir, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #121A14;
+      --panel:     #1A241C;
+      --ink:       #DEE7D7;
+      --ink-soft:  #A0B29F;
+      --ink-faint: #7C8E7C;
+      --line:      #2D3C2F;
+      --line-hard: #6E8470;
+      --glow:      #F0B84A;
+      --glow-ink:  #F0B84A;
+      --quell:     #6FC4B5;
+      --herz:      #E191A2;
+      --shadow:    #080D09;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #121A14;
+    --panel:     #1A241C;
+    --ink:       #DEE7D7;
+    --ink-soft:  #A0B29F;
+    --ink-faint: #7C8E7C;
+    --line:      #2D3C2F;
+    --line-hard: #6E8470;
+    --glow:      #F0B84A;
+    --glow-ink:  #F0B84A;
+    --quell:     #6FC4B5;
+    --herz:      #E191A2;
+    --shadow:    #080D09;
+  }
+
+  /* ---------- Base ---------- */
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, p, ul, ol, li, blockquote, figure, figcaption { margin: 0; padding: 0; }
+  ul, ol { list-style: none; }
+  canvas { display: block; }
+
+  a { color: var(--glow-ink); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--glow-ink); outline-offset: 3px; }
+
+  /* ---------- Page grid: centred measure with a bleed lane ---------- */
+  .page {
+    display: grid;
+    grid-template-columns: 1fr min(68ch, 100% - 2.5rem) 1fr;
+    row-gap: clamp(3.25rem, 6vw, 5.25rem);
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) 3.5rem;
+  }
+  .page > * { grid-column: 2; min-width: 0; }
+  .bleed {
+    grid-column: 1 / -1;
+    width: min(1040px, 100% - 2.5rem);
+    margin-inline: auto;
+  }
+
+  section { display: grid; gap: 1.15rem; }
+  section > * { min-width: 0; }
+
+  /* ---------- Typography ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.19em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 6px; height: 6px;
+    background: var(--glow);
+    flex: none;
+  }
+
+  .wordmark {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.9rem, 8.5vw, 4.75rem);
+    line-height: 0.98;
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 3.4vw, 1.95rem);
+    line-height: 1.18;
+    letter-spacing: 0.005em;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1.3;
+  }
+
+  .lede {
+    font-size: clamp(1.06rem, 2.2vw, 1.2rem);
+    line-height: 1.55;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+  }
+
+  p { text-wrap: pretty; }
+  .soft { color: var(--ink-soft); }
+  .small { font-size: 0.92rem; }
+
+  .shead { display: grid; gap: 0.45rem; }
+
+  /* ---------- Hero ---------- */
+  .hero { gap: 1.4rem; }
+  .hero .wordmark { margin-top: 0.2rem; }
+
+  /* ---------- Diorama ---------- */
+  .diorama {
+    display: grid;
+    gap: 0;
+    border: 2px solid var(--line-hard);
+    box-shadow: 5px 5px 0 var(--shadow);
+    background: var(--scene-bg);
+  }
+  .screen {
+    display: flex;
+    justify-content: center;
+    background: var(--scene-bg);
+    padding: 0;
+    overflow: hidden;
+  }
+  #scene { image-rendering: pixelated; max-width: 100%; }
+
+  .hud {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 2px solid var(--line-hard);
+    background: var(--panel);
+  }
+  @media (max-width: 520px) {
+    .hud { grid-template-columns: 1fr; }
+    .stat { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  .stat {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.7rem 0.9rem;
+    border-right: 1px solid var(--line);
+  }
+  .stat:last-child { border-right: 0; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .stat-value.is-glow { color: var(--glow-ink); }
+  .status {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--line);
+    padding: 0.55rem 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+  }
+  .status::before { content: "› "; color: var(--glow-ink); }
+
+  figcaption {
+    margin-top: 0.85rem;
+    font-size: 0.88rem;
+    color: var(--ink-faint);
+    max-width: 62ch;
+  }
+
+  /* ---------- Chains ---------- */
+  .chain-wrap { overflow-x: auto; padding-bottom: 0.5rem; min-width: 0; }
+  .chain {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: max-content;
+    min-width: 100%;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    line-height: 1.3;
+    padding: 0.5rem 0.65rem;
+    border: 2px solid var(--line-hard);
+    background: var(--panel);
+    box-shadow: 3px 3px 0 var(--shadow);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .chip.is-lit {
+    border-color: var(--glow-ink);
+    color: var(--glow-ink);
+  }
+  .arrow {
+    align-self: center;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+  .chain-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.5rem;
+  }
+
+  /* ---------- Rule callout ---------- */
+  .rule {
+    position: relative;
+    border: 2px solid var(--line-hard);
+    background: var(--panel);
+    padding: 1.35rem 1.15rem 1.1rem;
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .rule-tag {
+    position: absolute;
+    top: -0.62rem;
+    left: 0.8rem;
+    background: var(--paper);
+    padding: 0 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--glow-ink);
+  }
+
+  /* ---------- Pull quote ---------- */
+  blockquote {
+    font-family: var(--serif);
+    font-size: clamp(1.3rem, 3.4vw, 1.7rem);
+    line-height: 1.32;
+    font-style: italic;
+    color: var(--ink);
+    text-wrap: balance;
+    border-top: 2px solid var(--line-hard);
+    border-bottom: 2px solid var(--line-hard);
+    padding-block: 1.1rem;
+  }
+
+  /* ---------- Lists ---------- */
+  .marks { display: grid; gap: 0.6rem; }
+  .marks li {
+    display: grid;
+    grid-template-columns: 0.9rem 1fr;
+    gap: 0.65rem;
+    align-items: start;
+  }
+  .marks li::before {
+    content: "";
+    width: 6px; height: 6px;
+    margin-top: 0.62em;
+    background: var(--quell);
+  }
+  .marks.is-glow li::before { background: var(--glow); }
+
+  .cols2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 0.6rem 1.6rem;
+  }
+
+  /* ---------- Residents ---------- */
+  .residents {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  .resident {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9rem;
+    align-items: start;
+    border: 2px solid var(--line);
+    background: var(--panel);
+    padding: 0.85rem;
+  }
+  .resident canvas {
+    image-rendering: pixelated;
+    background: var(--scene-bg);
+    border: 1px solid var(--line-hard);
+  }
+  .resident h3 { font-size: 1.02rem; }
+  .resident-role {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    display: block;
+    margin-top: 0.15rem;
+  }
+  .resident p { font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); margin-top: 0.35rem; }
+
+  /* ---------- Upgrade compare ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .compare figure {
+    border: 2px solid var(--line-hard);
+    background: var(--scene-bg);
+    box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .compare canvas { image-rendering: pixelated; margin-inline: auto; }
+  .compare figcaption {
+    margin: 0;
+    border-top: 2px solid var(--line-hard);
+    background: var(--panel);
+    padding: 0.55rem 0.75rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .compare figcaption.is-after { color: var(--glow-ink); }
+
+  /* ---------- Slice sequence ---------- */
+  .slice { display: grid; gap: 0.1rem; border-top: 1px solid var(--line); }
+  .slice li {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0.8rem;
+    align-items: baseline;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .slice .n {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--glow-ink);
+    letter-spacing: 0.06em;
+  }
+  .slice strong { font-weight: 600; }
+  .slice span.d { display: block; font-size: 0.9rem; color: var(--ink-soft); }
+
+  /* ---------- Tech ---------- */
+  .tech { display: grid; gap: 0.55rem; }
+  .tech li { display: grid; grid-template-columns: minmax(0, 11rem) 1fr; gap: 0.35rem 1rem; }
+  .tech .k {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.28em;
+  }
+  @media (max-width: 480px) {
+    .tech li { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Footer ---------- */
+  .colophon {
+    border-top: 2px solid var(--line-hard);
+    padding-top: 1rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <p class="eyebrow">Spielidee &nbsp;·&nbsp; Entwicklungsdokument</p>
+    <h1 class="wordmark">Fellgrund</h1>
+    <p class="lede">Ein langfristiges, gemütliches 2D-Pixel-Automationsspiel für den Desktop. Man baut als
+      erwachsener Cozywolf seinen ersten eigenen Cozyplace von null auf – nicht durch direkte Figursteuerung,
+      sondern durch das Gestalten und Automatisieren einer lebendigen Dorfwirtschaft.</p>
+  </header>
+
+  <figure class="bleed">
+    <div class="diorama">
+      <div class="screen"><canvas id="scene"></canvas></div>
+      <div class="hud">
+        <div class="stat">
+          <span class="stat-label">Kisten · Verladestation</span>
+          <span class="stat-value" id="hud-crates">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Ladung · Wurzelwagen</span>
+          <span class="stat-value" id="hud-cart">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Glühbeerenbestand</span>
+          <span class="stat-value is-glow" id="hud-stock">0</span>
+        </div>
+        <div class="status" id="hud-status">Bramble macht sich auf den Weg zum Glühbeerenbeet</div>
+      </div>
+    </div>
+    <figcaption>So soll die erste Kette im Spiel aussehen. Bramble erntet sichtbar, legt Kisten an der
+      Verladestation ab, der Wurzelwagen fährt auf echten Schienen – und der Bestand im Vorratshaus steigt
+      erst bei der tatsächlichen Ankunft, nie vorher. Alle Figuren sind nach Fußpunkt sortiert.</figcaption>
+  </figure>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Kerngefühl</p>
+      <h2>Ein Ort, an den man gerne zurückkommt</h2>
+    </div>
+    <blockquote>„Ich komme immer wieder an einen schönen Ort zurück, sehe, wie alles harmonisch arbeitet,
+      und kann ihn noch lange verbessern.“</blockquote>
+    <p class="soft">Cozywolf schläft im zentralen Nest und ist das emotionale Herz des Ortes. Neue Tiere ziehen
+      nach und nach ein, übernehmen passende Aufgaben und machen Fellgrund sichtbar lebendiger. Die
+      Befriedigung entsteht dabei nicht aus einer einzelnen Mechanik, sondern aus fünf Dingen gleichzeitig:</p>
+    <ul class="marks">
+      <li>sichtbaren Tieren bei der Arbeit</li>
+      <li>Ressourcen, die physisch weitergegeben werden</li>
+      <li>Wagen und Transportwegen, die zuverlässig laufen</li>
+      <li>Gebäuden, die sich sichtbar weiterentwickeln</li>
+      <li>einem Dorf, das organisch wächst, ohne unordentlich oder überdeckt zu wirken</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Zentraler Spielkreislauf</p>
+      <h2>Jede Produktionskette ist sichtbar und logisch</h2>
+    </div>
+    <div>
+      <p class="chain-label">Schema</p>
+      <div class="chain-wrap">
+        <div class="chain">
+          <div class="chip">Ressourcenort</div><span class="arrow">→</span>
+          <div class="chip">Tier sammelt</div><span class="arrow">→</span>
+          <div class="chip">Station lagert / verarbeitet</div><span class="arrow">→</span>
+          <div class="chip">Wagen transportiert</div><span class="arrow">→</span>
+          <div class="chip">Zielgebäude verarbeitet</div><span class="arrow">→</span>
+          <div class="chip">neue Ressource / Upgrade</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="chain-label">Erste Kette im Spiel</p>
+      <div class="chain-wrap">
+        <div class="chain">
+          <div class="chip is-lit">Glühbeerenbeet</div><span class="arrow">→</span>
+          <div class="chip is-lit">Biber Bramble</div><span class="arrow">→</span>
+          <div class="chip is-lit">Verladestation</div><span class="arrow">→</span>
+          <div class="chip is-lit">Wurzelwagen</div><span class="arrow">→</span>
+          <div class="chip is-lit">Vorratshaus</div><span class="arrow">→</span>
+          <div class="chip is-lit">Glühbeerenbestand</div>
+        </div>
+      </div>
+    </div>
+    <div class="rule">
+      <span class="rule-tag">Harte Regel</span>
+      <p>Ressourcen dürfen nicht nur als Zahl erscheinen. Man muss sehen, wie Bramble Beeren sammelt, sie an
+        einer Station ablegt, wie eine Kiste auf den Wagen geladen wird und wie der Wagen sie zum Vorratshaus
+        bringt. <strong>Der Bestand steigt erst bei der tatsächlichen Ankunft.</strong></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Start und Einstieg</p>
+      <h2>Ein Mooskissen, ein Herzknospen-Samen, ein leerer Ort</h2>
+    </div>
+    <p class="soft">Cozywolves leben als junge Wölfe bei ihrer Familie. Wenn sie alt genug sind, gründen sie
+      ihren eigenen Cozyplace. Cozywolf erhält ein Mooskissen und einen Herzknospen-Samen und findet den Ort
+      Fellgrund.</p>
+    <ul class="marks is-glow">
+      <li>Der Einstieg ist kurz und vollständig deutschsprachig.</li>
+      <li>Ein freundliches Mini-Spiel ohne Fail-State – „Ruf weben“ – bestimmt oder beeinflusst den ersten Bewohner.</li>
+      <li>Das erste Tier zieht ein und startet sofort die erste sichtbare Produktionskette.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Spielerrolle</p>
+      <h2>Gestalten statt steuern</h2>
+    </div>
+    <p class="soft">Die Person steuert Cozywolf kaum direkt. Stattdessen entscheidet sie:</p>
+    <ul class="marks cols2">
+      <li>welche Parzelle als Nächstes entwickelt wird</li>
+      <li>welche Kette oder Verbesserung Priorität hat</li>
+      <li>wann ein Upgrade gekauft wird</li>
+      <li>wie Produktionswege sinnvoll erweitert werden</li>
+    </ul>
+    <p class="soft">Ein Klick auf ein Gebäude öffnet dessen Zustand, Warteschlange und Upgrades. Die Welt
+      arbeitet ansonsten grundsätzlich selbstständig weiter.</p>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Dorfaufbau</p>
+      <h2>Ein einziger dauerhafter Heimatort</h2>
+    </div>
+    <p class="soft">Es gibt keinen Ortswechsel und kein Zurücklassen einer aufgebauten Basis. Fellgrund wächst
+      über handgefertigte, organisch passende Bauparzellen.</p>
+    <ul class="marks">
+      <li>Gebäude verdecken sich nie.</li>
+      <li>Wege und Schienen fügen sich automatisch sinnvoll ein.</li>
+      <li>Jede Erweiterung verändert die Welt sichtbar.</li>
+      <li>Leere zukünftige Flächen zeigen Potential, aber keine sterilen Platzhalter.</li>
+    </ul>
+    <div>
+      <p class="chain-label">Spätere Bereiche</p>
+      <div class="chain-wrap">
+        <div class="chain">
+          <div class="chip">Glühbeeren-Garten</div>
+          <div class="chip">Holz- und Wurzelwerkstatt</div>
+          <div class="chip">Wasserbecken &amp; Kristallquelle</div>
+          <div class="chip">Vorratshaus &amp; Küche</div>
+          <div class="chip">Schlafplätze</div>
+          <div class="chip">Stationen, Aufzüge, Schienenabzweige</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Tiere und Bewohner</p>
+      <h2>Charaktere mit Aufgabe, keine austauschbaren Icons</h2>
+    </div>
+    <p class="soft">Neue Tiere kommen hinzu, weil der Ort etwas gebaut oder verbessert hat. Jeder Bewohner ist
+      sichtbar und hat ein eigenes Arbeitsfeld.</p>
+    <ul class="residents">
+      <li class="resident">
+        <canvas data-critter="biber" width="1" height="1"></canvas>
+        <div>
+          <h3>Biber</h3>
+          <span class="resident-role">HOLZ · TRANSPORT</span>
+          <p>Holz, Dämme, Wagen und Schienen. Baut die Wege, auf denen alles andere läuft.</p>
+        </div>
+      </li>
+      <li class="resident">
+        <canvas data-critter="eichhoernchen" width="1" height="1"></canvas>
+        <div>
+          <h3>Eichhörnchen</h3>
+          <span class="resident-role">LAGER · LOGISTIK</span>
+          <p>Samen, Nüsse, Lagerlogistik. Sortiert, stapelt und hält den Nachschub in Bewegung.</p>
+        </div>
+      </li>
+      <li class="resident">
+        <canvas data-critter="axolotl" width="1" height="1"></canvas>
+        <div>
+          <h3>Axolotl</h3>
+          <span class="resident-role">WASSER · QUELLEN</span>
+          <p>Wasserpflanzen, Quellen und Teiche. Öffnet die gesamte Wasserseite von Fellgrund.</p>
+        </div>
+      </li>
+      <li class="resident">
+        <canvas data-critter="biene" width="1" height="1"></canvas>
+        <div>
+          <h3>Biene</h3>
+          <span class="resident-role">BLÜTEN · ESSENZEN</span>
+          <p>Blüten, Bestäubung, seltene Essenzen. Veredelt, was andere nur sammeln können.</p>
+        </div>
+      </li>
+      <li class="resident">
+        <canvas data-critter="maulwurf" width="1" height="1"></canvas>
+        <div>
+          <h3>Maulwurf</h3>
+          <span class="resident-role">UNTERGRUND · AUFZÜGE</span>
+          <p>Unterirdische Wege und Wurzelaufzüge. Verbindet Ebenen, die oben nicht zusammenpassen.</p>
+        </div>
+      </li>
+    </ul>
+    <div class="rule">
+      <span class="rule-tag">Fairness</span>
+      <p>Die Reihenfolge darf durch Entscheidungen beeinflusst werden, darf aber niemanden dauerhaft
+        bestrafen. Ein Dorfbuch erklärt später, welche Voraussetzungen welche Bewohner anziehen.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Animation und Weltregeln</p>
+      <h2>Die Karte darf nie wie ein statischer Hintergrund wirken</h2>
+    </div>
+    <ul class="marks">
+      <li>Tiere laufen ausschließlich auf echten Wegen.</li>
+      <li>Wagen fahren ausschließlich auf sichtbaren Schienen oder Wurzelrouten.</li>
+      <li>Figuren werden nach Fußpunkt sortiert und erscheinen dadurch glaubwürdig vor oder hinter Gebäuden.</li>
+      <li>Güter wechseln sichtbar den Besitzer.</li>
+      <li>Wasser bewegt sich, Lichter flackern, Blüten funkeln.</li>
+      <li>Cozywolf schläft, atmet, blinzelt und reagiert auf Ankünfte sowie Upgrades.</li>
+      <li>Die Kamera bleibt ruhig. Kleine Fokusbewegungen nur bei wichtigen Lieferungen oder Ausbauten.</li>
+    </ul>
+    <div class="rule">
+      <span class="rule-tag">Cozywolf</span>
+      <p>Cozywolf ist <strong>pink mit petrolfarbener Latzhose</strong>. Das Pink macht ihn im mossgrünen
+        Fellgrund automatisch zum hellsten Punkt im Bild – genau richtig für die Figur, die das emotionale
+        Herz des Ortes ist. Die Latzhose sagt ohne ein Wort Text: Dieser Wolf baut hier etwas auf.</p>
+      <p style="margin-top:0.7rem">Wichtig ist die Trennung von zwei Auflösungen. Das ausgearbeitete
+        Charakterbild mit weichen Kanten und Verläufen ist <strong>Key-Art</strong> für Intro, Dorfbuch und
+        Dialoge. Der Weltsprite ist rund 13 Pixel hoch und wird daraus neu gezeichnet: harte Kanten, feste
+        Palette, nur die Merkmale, die diese Größe überleben – pinkes Fell, petrolfarbene Hose, dunkle
+        Nase, geschlossene Augen. Weichgezeichnete Kanten würden neben Fellgrunds Silhouetten zu Matsch.</p>
+    </div>
+    <div class="rule">
+      <span class="rule-tag">Sichtreferenz</span>
+      <p><strong>Kingdom</strong> für den Aufbau des Bildes: Seitenansicht, gestaffelte Baum-Silhouetten,
+        ruhige Nachtstimmung und warme Lichtinseln, die zeigen, wo etwas passiert.
+        <strong>Stardew Valley</strong> für die Figuren und Gebäude: warme, gesättigte Farben, klar lesbare
+        Sprites mit weichen Umrissen, jedes Objekt auf einen Blick erkennbar. Fellgrund liegt dazwischen –
+        Kingdoms Tiefe und Licht, Stardews Wärme und Freundlichkeit.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Erstes Upgrade</p>
+      <h2>Das Wagenlager</h2>
+    </div>
+    <p class="soft">Nach mehreren erfolgreichen Lieferungen wird das Wagenlager freigeschaltet. Es verändert
+      Bild, Rhythmus und Leistung gleichzeitig.</p>
+    <div class="compare">
+      <figure>
+        <canvas data-station="base" width="1" height="1"></canvas>
+        <figcaption>Vorher · 2 Kistenplätze</figcaption>
+      </figure>
+      <figure>
+        <canvas data-station="upgraded" width="1" height="1"></canvas>
+        <figcaption class="is-after">Nachher · Vordach, 4 Plätze</figcaption>
+      </figure>
+    </div>
+    <ul class="marks is-glow">
+      <li>Die Verladestation erhält sichtbar ein Vordach und zusätzliche Kistenplätze.</li>
+      <li>Der Wagen transportiert mehr Ressourcen pro Fahrt.</li>
+      <li>Cozywolfs Nest bekommt eine leuchtende neue Blüte.</li>
+    </ul>
+    <div class="rule">
+      <span class="rule-tag">Harte Regel</span>
+      <p>Jedes Upgrade muss sichtbar sein und das Spielgefühl verändern. <strong>Keine reinen
+        Zahlenboni.</strong></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Technischer Ansatz</p>
+      <h2>Alles, was zählt, ist ein echtes Spielobjekt</h2>
+    </div>
+    <ul class="tech">
+      <li><span class="k">Engine</span><span>2D-Pixelwelt mit Phaser.</span></li>
+      <li><span class="k">Sichtreferenz</span><span>Kingdom für Seitenansicht, Parallax und Licht; Stardew Valley für Figurenwärme und Lesbarkeit.</span></li>
+      <li><span class="k">Weltmodell</span><span>Szenen, Sprites, Routen, Tiefensortierung und Kamera sind echte Spielobjekte – keine gemalten Kulissen.</span></li>
+      <li><span class="k">Spielstand</span><span>Lokal gespeichert, für dauerhaftes Fortschreiten.</span></li>
+      <li><span class="k">Auslieferung</span><span>Spätere Verpackung als Desktop-App, sobald der Kern-Loop bewiesen ist.</span></li>
+      <li><span class="k">Sprache</span><span>Alle Spieltexte auf Deutsch.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Priorität</p>
+      <h2>Der erste spielbare Slice</h2>
+    </div>
+    <p class="soft">Nicht zuerst ein großes Dorf bauen. Zuerst diese sechs Dinge beweisen – in dieser
+      Reihenfolge, weil jeder Schritt den nächsten erst sichtbar macht.</p>
+    <ol class="slice">
+      <li><span class="n">01</span><span><strong>Intro und erster Bewohner</strong><span class="d">„Ruf weben“, Einzug, erste Aufgabe.</span></span></li>
+      <li><span class="n">02</span><span><strong>Eine vollständige sichtbare Produktionskette</strong><span class="d">Beet → Bramble → Verladestation.</span></span></li>
+      <li><span class="n">03</span><span><strong>Ein funktionierender Wagen auf echter Route</strong><span class="d">Schienen als Spielobjekt, nicht als Textur.</span></span></li>
+      <li><span class="n">04</span><span><strong>Ressourcenübergaben und Ankunft</strong><span class="d">Kiste wechselt sichtbar den Besitzer, Bestand steigt erst am Ziel.</span></span></li>
+      <li><span class="n">05</span><span><strong>Wolf-Reaktion</strong><span class="d">Cozywolf nimmt die Lieferung wahr.</span></span></li>
+      <li><span class="n">06</span><span><strong>Ein sichtbares Upgrade</strong><span class="d">Das Wagenlager, mit Bild- und Rhythmuswirkung.</span></span></li>
+    </ol>
+    <p class="soft">Wenn dieser Loop wirklich satisfying ist, wird Fellgrund Schritt für Schritt zu einer
+      großen, langfristig spielbaren Cozy-Automationswelt erweitert.</p>
+  </section>
+
+  <footer class="colophon">
+    <span>FELLGRUND</span>
+    <span>Konzeptstand für die Entwicklung</span>
+    <span>Diorama live gerendert, 232 × 84 Pixel</span>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ------------------------------------------------------------------ *
+   * Sprite-Engine: Zeichenraster + Palette, 1 Zeichen = 1 Pixel
+   * ------------------------------------------------------------------ */
+  function drawSprite(ctx, rows, pal, ox, oy) {
+    ox = Math.round(ox); oy = Math.round(oy);
+    for (var y = 0; y < rows.length; y++) {
+      var r = rows[y];
+      for (var x = 0; x < r.length; x++) {
+        var c = r[x];
+        if (c === "." || c === " ") continue;
+        var col = pal[c];
+        if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect(ox + x, oy + y, 1, 1);
+      }
+    }
+  }
+
+  function px(ctx, color, x, y, w, h) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x), Math.round(y), w, h);
+  }
+
+  function fit(canvas, w, h, maxScale) {
+    var host = canvas.parentElement;
+    var avail = host ? host.clientWidth : w;
+    var s = Math.floor(avail / w);
+    if (!isFinite(s) || s < 1) s = 1;
+    if (s > maxScale) s = maxScale;
+    canvas.width = w * s;
+    canvas.height = h * s;
+    canvas.style.width = (w * s) + "px";
+    canvas.style.height = (h * s) + "px";
+    var ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.setTransform(s, 0, 0, s, 0, 0);
+    return ctx;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Paletten
+   * ------------------------------------------------------------------ */
+  // Sichtreferenz: Kingdom (Seitenansicht, Parallax-Silhouetten, Lichtstimmung)
+  // trifft Stardew Valley (warme, gut lesbare Pixelfiguren)
+  var SKY = ["#1C2733", "#24313C", "#2D3B42", "#374544"];
+  var FAR = "#283739";       // hinterste Silhouettenschicht
+  var MID = "#22322F";       // mittlere Silhouettenschicht
+  var NEAR = "#1A2724";      // vorderste Silhouette
+  var GROUND = "#3A5140";
+  var GROUND_DK = "#2E4234";
+  var GROUND_LT = "#48604A";
+  var PATH = "#7A6D52";
+  var PATH_LT = "#8E8062";
+  var WOOD = "#9A6E44";
+  var WOOD_DK = "#63472C";
+  var WOOD_LT = "#BC8D57";
+  var RAIL = "#7C6A52";
+  var TIE = "#513F2F";
+  var STONE = "#8B917E";
+  var STONE_DK = "#616852";
+  var LEAF = "#4A8B54";
+  var LEAF_DK = "#2F6640";
+  var BERRY = "#F7C651";
+  var LAMP = "#FFD98A";
+
+  // Cozywolf, zusammengerollt: beide Ohren, Schnauze links, buschiger Schwanz über dem Rücken
+  var WOLF = [
+    "..D..........D..........",
+    "..DD........DD..........",
+    ".DFFD......DFFD.........",
+    ".DFFFD....DFFFD....TTT..",
+    ".DFFFFDDDDFFFFFD.TTfffT.",
+    ".DFFccFFFFFFFFFDTffffffT",
+    "DLLFFFFFFFFFOOOTffffffFT",
+    "DKLFFFFFFFOOOOOOOOFFFFFT",
+    "DKLLFFFFFFOOOoOOOOOFFFFD",
+    "DLLFFFFFFFOOOOOOOOOFFFFD",
+    ".DLFFFFFFFOOOoOOOOOFFFFD",
+    "..DFFFFFFFOOOOOOOOFFFFD.",
+    "...DDFFFFFFOOOOOOFFFFDD.",
+    ".....DDDDDDDDDDDDDD....."
+  ];
+  // Pink + Petrol nach der Charakterreferenz; harte Kanten, feste Palette
+  var WOLF_PAL = {
+    F: "#EE6A9E", D: "#A8305F", L: "#FFC3D9", K: "#1B2233",
+    c: "#1B2233", f: "#FF9CC0", T: "#C44577",
+    O: "#2F8F96", o: "#E8B04A"
+  };
+
+  // Nest in zwei Ebenen, damit Cozywolf sichtbar darin liegt
+  var NEST_BACK = [
+    "....mmmmmmmmmmmmmmmmmmmmmmmm....",
+    "..mmMMMMMMMMMMMMMMMMMMMMMMMMmm..",
+    ".mMMMMMMMMMMMMMMMMMMMMMMMMMMMMm.",
+    "mMMttMMMMttMMMMMMMMttMMMMttMMMMm",
+    "mMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMm"
+  ];
+  var NEST_FRONT = [
+    "mMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMm",
+    "mMMttMMMMMMMMttMMMMMMMMttMMMMMMm",
+    ".mMMMMMMMMMMMMMMMMMMMMMMMMMMMMm.",
+    "..mmMMMMMMMMMMMMMMMMMMMMMMMMmm..",
+    "....mmmmmmmmmmmmmmmmmmmmmmmm...."
+  ];
+  var NEST_PAL = { m: "#33512F", M: "#4B7444", t: "#7A6740" };
+
+  var BUSH = [
+    "......gg....gg......",
+    "....ggGGgg.gGGgg....",
+    "...gGGGGGGgGGGGGg...",
+    "..gGGbGGGGGGGGbGGg..",
+    "..gGGGGGGGGbGGGGGg..",
+    "..gGGGGbGGGGGGGGGg..",
+    "...gGGGGGGGGGbGGg...",
+    "....ggGGGGGGGGgg....",
+    "......gg.ss.gg......",
+    ".........ss.........",
+    "........dddd........"
+  ];
+  var BUSH_PAL = { g: LEAF_DK, G: LEAF, b: BERRY, s: "#5C4229", d: "#2A3B31" };
+
+  var BEAVER_A = [
+    "...bbbb...",
+    "..bBBBBb..",
+    "..bBkBkb..",
+    "..bBBnBb..",
+    ".bbBBBBbb.",
+    "tbBBBBBBb.",
+    "ttBBBBBBb.",
+    "tbBBBBBBb.",
+    ".bBBBBBBb.",
+    "..bb..bb..",
+    "..dd..dd.."
+  ];
+  var BEAVER_B = [
+    "...bbbb...",
+    "..bBBBBb..",
+    "..bBkBkb..",
+    "..bBBnBb..",
+    ".bbBBBBbb.",
+    "tbBBBBBBb.",
+    "ttBBBBBBb.",
+    "tbBBBBBBb.",
+    ".bBBBBBBb.",
+    "...bbbb...",
+    "..dd..dd.."
+  ];
+  var BEAVER_PAL = { b: "#4E3421", B: "#8A6240", k: "#1C1310", n: "#3A2718", t: "#4A3320", d: "#3A2718" };
+
+  var CRITTERS = {
+    biber: { rows: BEAVER_A, pal: BEAVER_PAL, w: 10, h: 11 },
+    eichhoernchen: {
+      rows: [
+        "........TTT.",
+        ".......TttT.",
+        "..ooo..TttT.",
+        ".oBBBo.TttT.",
+        ".oBkBBoTttT.",
+        ".oBBnBoTttT.",
+        "..oBBBottT..",
+        ".oBBBBBBtT..",
+        ".oBLLLBBo...",
+        ".oBLLLBBo...",
+        "..oBBBBo....",
+        "...oo.oo...."
+      ],
+      pal: { o: "#5A3A1E", B: "#C4783A", L: "#EFCBA0", k: "#1C1310", n: "#3A2718", T: "#5A3A1E", t: "#D89A55" },
+      w: 12, h: 12
+    },
+    axolotl: {
+      rows: [
+        ".g.........g.",
+        ".gg.PPPPP.gg.",
+        "gggPppppppPgg",
+        ".gPpkppppkpP.",
+        ".gPppppppppP.",
+        "..PppppppppPP",
+        "...PPppppPP.P",
+        ".....PPPP...."
+      ],
+      pal: { p: "#EFA6BE", P: "#C97694", g: "#F7C8D8", k: "#3A1E28" },
+      w: 13, h: 8
+    },
+    biene: {
+      rows: [
+        "...ww.ww...",
+        "..wwwwwww..",
+        "...wwwww...",
+        "..KYYKYYK..",
+        ".KYYKYYKYK.",
+        ".KYYKYYKYK.",
+        "..KYYKYYK..",
+        "...KKKKK..."
+      ],
+      pal: { Y: "#F2C14E", K: "#2A2118", w: "#CFE2EA" },
+      w: 11, h: 8
+    },
+    maulwurf: {
+      rows: [
+        "....mmmm....",
+        "..mmMMMMmm..",
+        ".mMMMMMMMMm.",
+        ".mMMkMMkMMm.",
+        "nnMMMMMMMMm.",
+        "nnmMMMMMMMm.",
+        ".mMMMMMMMMm.",
+        ".cmMMMMMMmc.",
+        ".cc.mmmm.cc."
+      ],
+      pal: { m: "#413740", M: "#6A5C62", k: "#1C1310", n: "#E39AA6", c: "#D9CFC2" },
+      w: 12, h: 9
+    }
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Prozedurale Bauwerke
+   * ------------------------------------------------------------------ */
+  // Kiste mit Latten – die Beeren nur als warmer Schimmer am oberen Rand
+  function drawCrate(ctx, x, y) {
+    px(ctx, "#63472C", x, y, 6, 6);
+    px(ctx, "#B08350", x + 1, y + 1, 4, 4);
+    px(ctx, "#8A6440", x + 1, y + 2, 4, 1);
+    px(ctx, "#8A6440", x + 1, y + 4, 4, 1);
+    px(ctx, "#E0B45C", x + 2, y + 1, 2, 1);
+  }
+
+  // Verladestation: Pfosten, Deck, Kistenplätze, optionales Vordach
+  function drawStation(ctx, x, baseY, opts) {
+    var slots = opts.slots || 2;
+    var crates = opts.crates || 0;
+    var w = 4 + slots * 8;
+
+    if (opts.roof) {
+      var ry = baseY - 26;
+      for (var i = 0; i < 5; i++) {
+        px(ctx, i === 0 ? WOOD_LT : WOOD_DK, x - 2 + i, ry + i, w + 4 - i * 2, 1);
+      }
+      px(ctx, WOOD_DK, x + 1, ry + 5, 2, 6);
+      px(ctx, WOOD_DK, x + w - 3, ry + 5, 2, 6);
+      px(ctx, LAMP, x + Math.floor(w / 2) - 1, ry + 5, 2, 2);
+    }
+
+    // Rückwand / Ladegeländer – macht aus dem Tisch eine Verladestation
+    if (!opts.roof) {
+      px(ctx, WOOD_DK, x, baseY - 22, w, 1);
+      px(ctx, WOOD_DK, x + 1, baseY - 22, 1, 7);
+      px(ctx, WOOD_DK, x + w - 2, baseY - 22, 1, 7);
+    }
+
+    // Deck
+    px(ctx, WOOD_LT, x, baseY - 15, w, 2);
+    px(ctx, WOOD_DK, x, baseY - 13, w, 2);
+    // Pfosten
+    px(ctx, WOOD, x + 1, baseY - 11, 2, 11);
+    px(ctx, WOOD, x + w - 3, baseY - 11, 2, 11);
+    px(ctx, WOOD_DK, x + 1, baseY - 1, 2, 1);
+    px(ctx, WOOD_DK, x + w - 3, baseY - 1, 2, 1);
+    // Rampe
+    px(ctx, WOOD_DK, x, baseY - 5, w, 1);
+
+    for (var c = 0; c < crates && c < slots; c++) {
+      drawCrate(ctx, x + 2 + c * 8, baseY - 21);
+    }
+    // freie Plätze angedeutet
+    for (var s = crates; s < slots; s++) {
+      px(ctx, WOOD_DK, x + 2 + s * 8, baseY - 16, 6, 1);
+    }
+    return w;
+  }
+
+  // Vorratshaus
+  function drawStorehouse(ctx, x, baseY) {
+    var w = 34, h = 17;
+    var top = baseY - h;
+    px(ctx, STONE_DK, x, top, w, h);
+    px(ctx, STONE, x + 1, top + 1, w - 2, h - 2);
+    // Balken
+    px(ctx, WOOD_DK, x + 1, top + 7, w - 2, 1);
+    px(ctx, WOOD_DK, x + 8, top + 1, 1, h - 2);
+    px(ctx, WOOD_DK, x + 25, top + 1, 1, h - 2);
+    // Giebeldach, gestuft bis zur Spitze
+    for (var i = 0; i < 10; i++) {
+      var rw = w + 6 - i * 4;
+      if (rw < 2) break;
+      px(ctx, i < 2 ? "#5C7F66" : "#456650", x - 3 + i * 2, top - 1 - i, rw, 1);
+    }
+    px(ctx, "#2C4638", x - 4, top - 1, w + 8, 1);
+    // Tür
+    px(ctx, WOOD_DK, x + 14, baseY - 8, 7, 8);
+    px(ctx, WOOD, x + 15, baseY - 7, 5, 7);
+    // Fenster mit Licht
+    px(ctx, WOOD_DK, x + 3, top + 9, 5, 5);
+    px(ctx, LAMP, x + 4, top + 10, 3, 3);
+    px(ctx, WOOD_DK, x + 27, top + 9, 5, 5);
+    px(ctx, LAMP, x + 28, top + 10, 3, 3);
+    return w;
+  }
+
+  function drawCart(ctx, x, baseY, load) {
+    px(ctx, WOOD_DK, x, baseY - 8, 15, 6);
+    px(ctx, WOOD, x + 1, baseY - 7, 13, 4);
+    px(ctx, WOOD_LT, x + 1, baseY - 7, 13, 1);
+    // Wurzelgeflecht
+    px(ctx, "#4E3A22", x + 3, baseY - 6, 1, 3);
+    px(ctx, "#4E3A22", x + 8, baseY - 6, 1, 3);
+    px(ctx, "#4E3A22", x + 12, baseY - 6, 1, 3);
+    // Räder
+    px(ctx, "#3A2E22", x + 2, baseY - 2, 3, 3);
+    px(ctx, "#3A2E22", x + 10, baseY - 2, 3, 3);
+    px(ctx, "#5C4A36", x + 3, baseY - 1, 1, 1);
+    px(ctx, "#5C4A36", x + 11, baseY - 1, 1, 1);
+    for (var i = 0; i < load; i++) {
+      drawCrate(ctx, x + 1 + i * 7, baseY - 14);
+    }
+  }
+
+  function drawBlossom(ctx, x, y, glow) {
+    px(ctx, "#D9C88A", x + 1, y, 2, 1);
+    px(ctx, "#F5E9C0", x, y + 1, 4, 2);
+    px(ctx, "#D9C88A", x + 1, y + 3, 2, 1);
+    px(ctx, glow ? "#FFF6D8" : BERRY, x + 1, y + 1, 2, 1);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Kleine Bewohner-Icons
+   * ------------------------------------------------------------------ */
+  document.querySelectorAll("canvas[data-critter]").forEach(function (cv) {
+    var def = CRITTERS[cv.getAttribute("data-critter")];
+    if (!def) return;
+    var W = 16, H = 14;
+    var ctx = fit(cv, W, H, 3);
+    ctx.fillStyle = "#22302F";
+    ctx.fillRect(0, 0, W, H);
+    px(ctx, "#2A3B31", 0, H - 3, W, 3);
+    drawSprite(ctx, def.rows, def.pal,
+      Math.floor((W - def.w) / 2), H - 2 - def.h);
+  });
+
+  /* ------------------------------------------------------------------ *
+   * Vorher / Nachher der Verladestation
+   * ------------------------------------------------------------------ */
+  document.querySelectorAll("canvas[data-station]").forEach(function (cv) {
+    var up = cv.getAttribute("data-station") === "upgraded";
+    var W = 44, H = 40;
+    var ctx = fit(cv, W, H, 4);
+    ctx.fillStyle = "#22302F";
+    ctx.fillRect(0, 0, W, H);
+    px(ctx, GROUND, 0, H - 8, W, 8);
+    px(ctx, GROUND_LT, 0, H - 8, W, 1);
+    var w = up ? 4 + 4 * 8 : 4 + 2 * 8;
+    drawStation(ctx, Math.floor((W - w) / 2), H - 8, {
+      slots: up ? 4 : 2,
+      crates: up ? 4 : 2,
+      roof: up
+    });
+  });
+
+  /* ------------------------------------------------------------------ *
+   * Das Diorama
+   * ------------------------------------------------------------------ */
+  var W = 232, H = 84;
+  var canvas = document.getElementById("scene");
+  var ctx = fit(canvas, W, H, 4);
+
+  var GROUND_Y = 46;           // Fußpunkt der hinteren Reihe
+  var BUSH_X = 10;
+  var STATION_X = 56;
+  var STATION_W = 4 + 2 * 8;
+  var STORE_X = 176;
+  var RAIL_A = STATION_X + STATION_W + 2;
+  var RAIL_B = STORE_X - 1;
+  var PATH_Y = 58;             // Fußpunkt Brambles Weg (vordere Ebene)
+  var NEST_X = 96;
+  var NEST_Y = 76;
+
+  // statische Streuung, einmal berechnet
+  var speckles = [], stars = [], tufts = [], layers = [];
+  (function () {
+    var seed = 7;
+    function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+    for (var i = 0; i < 80; i++) {
+      speckles.push({
+        x: Math.floor(rnd() * W),
+        y: 41 + Math.floor(rnd() * (H - 41)),
+        c: rnd() > 0.5 ? GROUND_LT : GROUND_DK
+      });
+    }
+    for (var j = 0; j < 16; j++) {
+      stars.push({ x: Math.floor(rnd() * W), y: Math.floor(rnd() * 26), p: rnd() * 6 });
+    }
+    // Grasbüschel als durchgehender Vordergrundstreifen am unteren Bildrand
+    for (var g = -1; g < W + 2; g += 2) {
+      tufts.push({ x: g, h: 2 + Math.floor(rnd() * 4) });
+    }
+    // drei Baum-Silhouettenschichten für die Parallaxtiefe
+    var defs = [
+      { color: FAR, base: 34, minH: 6, maxH: 11, step: 8, w: 7 },
+      { color: MID, base: 38, minH: 5, maxH: 9, step: 12, w: 9 },
+      { color: NEAR, base: 41, minH: 4, maxH: 7, step: 19, w: 11 }
+    ];
+    for (var d = 0; d < defs.length; d++) {
+      var def = defs[d], trees = [];
+      for (var x = -6; x < W + 6; x += def.step) {
+        trees.push({
+          x: x + Math.floor(rnd() * 5) - 2,
+          h: def.minH + Math.floor(rnd() * (def.maxH - def.minH + 1)),
+          w: def.w
+        });
+      }
+      layers.push({ color: def.color, base: def.base, trees: trees });
+    }
+  })();
+
+  // Nadelbaum-Silhouette: schmale Spitze oben, breite Basis unten
+  function drawTreeSilhouette(ctx, color, x, baseY, w, h) {
+    for (var i = 0; i < h; i++) {
+      var ww = Math.max(1, 1 + Math.round(i * (w - 1) / (h - 1)));
+      px(ctx, color, x + Math.floor((w - ww) / 2), baseY - h + i, ww, 1);
+    }
+    px(ctx, color, x + Math.floor(w / 2), baseY, 1, 2);
+  }
+
+  var state = {
+    t: 0,
+    beaver: { x: 62, phase: "go", timer: 0, carrying: false },
+    crates: 0,
+    cart: { x: RAIL_A, phase: "idle", load: 0, timer: 0 },
+    stock: 0,
+    react: 0,
+    zzz: 0,
+    status: "Bramble macht sich auf den Weg zum Glühbeerenbeet"
+  };
+
+  var BUSH_STOP = BUSH_X + 16;
+  var STATION_STOP = STATION_X + 2;
+  var CART_HOME = RAIL_A;
+  var CART_DOCK = STORE_X - 17;   // hält vor dem Vorratshaus, nicht darin
+
+  var hud = {
+    crates: document.getElementById("hud-crates"),
+    cart: document.getElementById("hud-cart"),
+    stock: document.getElementById("hud-stock"),
+    status: document.getElementById("hud-status")
+  };
+  var lastHud = {};
+  function setHud(key, value) {
+    if (lastHud[key] === value) return;
+    lastHud[key] = value;
+    hud[key].textContent = value;
+  }
+
+  function update(dt) {
+    state.t += dt;
+    var b = state.beaver, c = state.cart;
+
+    // --- Bramble ---
+    if (b.phase === "go") {
+      b.x -= 26 * dt;
+      state.status = "Bramble geht zum Glühbeerenbeet";
+      if (b.x <= BUSH_STOP) { b.x = BUSH_STOP; b.phase = "harvest"; b.timer = 0.9; }
+    } else if (b.phase === "harvest") {
+      b.timer -= dt;
+      state.status = "Bramble erntet Glühbeeren";
+      if (b.timer <= 0) { b.phase = "back"; b.carrying = true; }
+    } else if (b.phase === "back") {
+      b.x += 26 * dt;
+      state.status = "Bramble trägt eine Kiste zur Verladestation";
+      if (b.x >= STATION_STOP) { b.x = STATION_STOP; b.phase = "drop"; b.timer = 0.45; }
+    } else if (b.phase === "drop") {
+      b.timer -= dt;
+      state.status = "Bramble legt die Kiste an der Verladestation ab";
+      if (b.timer <= 0) {
+        if (state.crates < 2) {
+          state.crates++;
+          b.carrying = false;
+          b.phase = "go";
+        } else {
+          state.status = "Verladestation voll – Bramble wartet auf den Wurzelwagen";
+          b.timer = 0.4;
+        }
+      }
+    }
+
+    // --- Wurzelwagen ---
+    if (c.phase === "idle") {
+      if (state.crates >= 2) {
+        c.load = state.crates;
+        state.crates = 0;
+        c.phase = "out";
+      }
+    } else if (c.phase === "out") {
+      c.x += 38 * dt;
+      state.status = "Wurzelwagen fährt zum Vorratshaus";
+      if (c.x >= CART_DOCK) { c.x = CART_DOCK; c.phase = "unload"; c.timer = 1.1; }
+    } else if (c.phase === "unload") {
+      c.timer -= dt;
+      state.status = "Ankunft – Kisten werden eingelagert";
+      if (c.timer <= 0) {
+        state.stock += c.load * 6;      // Bestand steigt erst hier
+        c.load = 0;
+        c.phase = "home";
+        state.react = 1.6;              // Cozywolf reagiert
+      }
+    } else if (c.phase === "home") {
+      c.x -= 38 * dt;
+      state.status = "Wurzelwagen kehrt zur Verladestation zurück";
+      if (c.x <= CART_HOME) { c.x = CART_HOME; c.phase = "idle"; }
+    }
+
+    if (state.react > 0) {
+      state.react -= dt;
+      state.status = "Cozywolf hebt kurz das Ohr";
+    }
+    state.zzz = (state.zzz + dt) % 4;
+
+    setHud("crates", String(state.crates));
+    setHud("cart", String(state.cart.load));
+    setHud("stock", String(state.stock));
+    setHud("status", state.status);
+  }
+
+  function render() {
+    var t = state.t;
+
+    // Himmel in Bändern
+    for (var i = 0; i < SKY.length; i++) {
+      px(ctx, SKY[i], 0, i * 8, W, 8);
+    }
+    px(ctx, SKY[3], 0, 32, W, 14);
+    // Sterne
+    for (var s = 0; s < stars.length; s++) {
+      var st = stars[s];
+      var tw = (Math.sin(t * 1.6 + st.p) + 1) / 2;
+      px(ctx, tw > 0.55 ? "#CFE0DA" : "#7C9089", st.x, st.y, 1, 1);
+    }
+    // Mond
+    px(ctx, "#E8EFDF", 206, 9, 7, 7);
+    px(ctx, "#DCE6D6", 205, 11, 1, 3);
+    px(ctx, SKY[1], 203, 8, 5, 6);
+
+    // Parallax: drei Silhouettenschichten, von hinten nach vorn dunkler
+    for (var L = 0; L < layers.length; L++) {
+      var lay = layers[L];
+      for (var n = 0; n < lay.trees.length; n++) {
+        var tr = lay.trees[n];
+        drawTreeSilhouette(ctx, lay.color, tr.x, lay.base, tr.w, tr.h);
+      }
+      px(ctx, lay.color, 0, lay.base, W, 42 - lay.base);
+    }
+
+    // Boden
+    px(ctx, GROUND, 0, 41, W, H - 41);
+    px(ctx, GROUND_LT, 0, 41, W, 1);
+    for (var k = 0; k < speckles.length; k++) {
+      px(ctx, speckles[k].c, speckles[k].x, speckles[k].y, 1, 1);
+    }
+
+    // Warme Lichtinseln auf dem Boden – zeigen, wo etwas passiert
+    px(ctx, "rgba(255,205,120,0.10)", 40, 44, 18, 6);
+    px(ctx, "rgba(255,205,120,0.08)", 36, 46, 26, 4);
+    px(ctx, "rgba(255,205,120,0.10)", STORE_X - 2, 44, 38, 6);
+    px(ctx, "rgba(255,205,120,0.07)", STORE_X - 6, 46, 46, 5);
+
+    // Weg für Bramble (echter Weg, nur darauf läuft er)
+    for (var wx = BUSH_X + 6; wx < STATION_X + 12; wx += 3) {
+      px(ctx, PATH, wx, PATH_Y - 1, 2, 2);
+      px(ctx, PATH_LT, wx, PATH_Y - 1, 1, 1);
+    }
+
+    // Schienen (echte Route für den Wagen)
+    for (var rx = RAIL_A - 4; rx < RAIL_B; rx += 4) {
+      px(ctx, TIE, rx, GROUND_Y - 1, 3, 2);
+    }
+    px(ctx, RAIL, RAIL_A - 4, GROUND_Y - 2, RAIL_B - RAIL_A + 4, 1);
+    px(ctx, RAIL, RAIL_A - 4, GROUND_Y + 1, RAIL_B - RAIL_A + 4, 1);
+
+    // Laterne mit flackerndem, gestuftem Lichtkegel
+    px(ctx, WOOD_DK, 48, GROUND_Y - 14, 1, 14);
+    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2;
+    var halo = flick > 0 ? 0.11 : 0.08;
+    px(ctx, "rgba(255,211,122," + halo + ")", 45, GROUND_Y - 19, 7, 9);
+    px(ctx, "rgba(255,211,122," + halo + ")", 44, GROUND_Y - 17, 9, 5);
+    px(ctx, "rgba(255,211,122," + (halo * 1.7) + ")", 46, GROUND_Y - 18, 5, 6);
+    px(ctx, flick > 0 ? LAMP : "#E0B25C", 47, GROUND_Y - 17, 3, 3);
+
+    /* --- hintere Reihe (Fußpunkt GROUND_Y) --- */
+    // Glühbeerenbeet
+    var pulse = (Math.sin(t * 2.2) + 1) / 2;
+    BUSH_PAL.b = pulse > 0.6 ? "#FFE9A8" : (pulse > 0.3 ? BERRY : "#D9A93C");
+    drawSprite(ctx, BUSH, BUSH_PAL, BUSH_X, GROUND_Y - BUSH.length);
+
+    drawStation(ctx, STATION_X, GROUND_Y, { slots: 2, crates: state.crates });
+    drawStorehouse(ctx, STORE_X, GROUND_Y);
+
+    // Wagen auf der Schiene
+    drawCart(ctx, state.cart.x, GROUND_Y, state.cart.load);
+
+    /* --- mittlere Ebene: Bramble auf dem Weg --- */
+    var b = state.beaver;
+    var moving = (b.phase === "go" || b.phase === "back");
+    var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
+    var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
+    drawSprite(ctx, frame, BEAVER_PAL, b.x, PATH_Y - 11 + bob);
+    if (b.carrying) drawCrate(ctx, b.x + 8, PATH_Y - 10);
+
+    /* --- vordere Ebene: Nest und Cozywolf --- */
+    drawSprite(ctx, NEST_BACK, NEST_PAL, NEST_X, NEST_Y - 10);
+    var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
+    var lift = state.react > 0 ? -1 : 0;
+    drawSprite(ctx, WOLF, WOLF_PAL, NEST_X + 4, NEST_Y - 19 + breath + lift);
+    drawSprite(ctx, NEST_FRONT, NEST_PAL, NEST_X, NEST_Y - 5);
+
+    // Herzknospe am rechten Nestrand, auf einem Stiel – frei vom Wolf
+    px(ctx, "#3E6440", NEST_X + 30, NEST_Y - 12, 1, 8);
+    drawBlossom(ctx, NEST_X + 29, NEST_Y - 16, pulse > 0.5);
+
+    // Schlaf-Zeichen
+    if (state.react <= 0 && state.zzz < 2) {
+      var zy = NEST_Y - 22 - Math.floor(state.zzz * 3);
+      px(ctx, "#A9BCC6", NEST_X + 7, zy, 3, 1);
+      px(ctx, "#A9BCC6", NEST_X + 8, zy + 1, 1, 1);
+      px(ctx, "#A9BCC6", NEST_X + 7, zy + 2, 3, 1);
+    }
+    // Reaktions-Herz
+    if (state.react > 0) {
+      var hy = NEST_Y - 23 - Math.floor((1.6 - state.react) * 3);
+      px(ctx, "#FF9CC0", NEST_X + 7, hy, 1, 1);
+      px(ctx, "#FF9CC0", NEST_X + 9, hy, 1, 1);
+      px(ctx, "#FF9CC0", NEST_X + 6, hy + 1, 5, 1);
+      px(ctx, "#FF9CC0", NEST_X + 7, hy + 2, 3, 1);
+      px(ctx, "#FF9CC0", NEST_X + 8, hy + 3, 1, 1);
+    }
+
+    // Vordergrund-Silhouette: durchgehendes Gras am unteren Bildrand
+    px(ctx, "#16211D", 0, 81, W, H - 81);
+    for (var g = 0; g < tufts.length; g++) {
+      var tf = tufts[g];
+      px(ctx, "#16211D", tf.x, 81 - tf.h, 2, tf.h);
+    }
+  }
+
+  var last = 0;
+  function frame(now) {
+    var dt = last ? Math.min((now - last) / 1000, 0.05) : 0.016;
+    last = now;
+    update(dt);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", function () {
+    ctx = fit(canvas, W, H, 4);
+    if (reduce) render();
+  });
+
+  if (reduce) {
+    // Ein ruhiger, aussagekräftiger Standbild-Zustand
+    state.crates = 1;
+    state.cart.x = (CART_HOME + CART_DOCK) / 2;
+    state.cart.phase = "out";
+    state.cart.load = 2;
+    state.stock = 18;
+    state.beaver.x = 34;
+    state.beaver.carrying = true;
+    setHud("crates", "1");
+    setHud("cart", "2");
+    setHud("stock", "18");
+    setHud("status", "Wurzelwagen fährt zum Vorratshaus");
+    render();
+  } else {
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
