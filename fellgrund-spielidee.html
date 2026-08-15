@@ -342,6 +342,40 @@
   }
   .resident p { font-size: 0.9rem; line-height: 1.5; color: var(--ink-soft); margin-top: 0.35rem; }
 
+  /* ---------- Tabellen ---------- */
+  .tbl-wrap { overflow-x: auto; min-width: 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 400px; font-size: 0.91rem; }
+  th, td {
+    text-align: left;
+    padding: 0.55rem 0.75rem 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    border-bottom: 2px solid var(--line-hard);
+    white-space: nowrap;
+  }
+  td.num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--glow-ink);
+    white-space: nowrap;
+  }
+  td.step {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+
   /* ---------- Spritesheet ---------- */
   .sheet {
     border: 2px solid var(--line-hard);
@@ -603,9 +637,11 @@
       eigentliche Genuss: nicht ein Detail zu verfolgen, sondern zu sehen, wie <em>alles</em> ineinandergreift.</p>
     <div class="rule">
       <span class="rule-tag">Kernentscheidung</span>
-      <p><strong>Der Rahmen wächst nie. Die Lichtung füllt sich.</strong> Fellgrund ist eine feste Bühne:
-        eine Waldlichtung mit klarer Kante, rundum geschlossen. Wachstum heißt nicht, dass die Karte größer
-        wird, sondern dass sie dichter, reicher und besser wird.</p>
+      <p><strong>Die Lichtung füllt sich, bevor sie wächst.</strong> Fellgrund ist eine Waldlichtung mit
+        klarer Kante, rundum geschlossen. Wachstum heißt zuallererst dichter, reicher und besser – nicht
+        größer. Erst wenn eine Ausbaustufe wirklich voll ist, weicht der Wald ein Stück zurück. Das
+        passiert genau <strong>dreimal im ganzen Spiel</strong> und ist jedes Mal ein gefeierter Moment,
+        kein schleichendes Ausufern.</p>
     </div>
     <ul class="marks is-glow">
       <li>Parzellen werden freigeschaltet, bebaut und dann immer weiter aufgewertet – aus Wiese wird Beet,
@@ -620,6 +656,86 @@
     <p class="soft">Leere Parzellen sind deshalb kein Mangel, sondern ein Versprechen: gemähte Moosflächen
       mit Markiersteinen, auf denen schon ein erster Trieb steht. Man sieht von Anfang an, wie viel
       Fellgrund noch werden kann – und verliert nie den Blick auf das Ganze.</p>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Skalierung</p>
+      <h2>Mehr Spiel heißt nicht mehr Objekte</h2>
+    </div>
+    <p class="soft">Die naive Lesart von „alles ist sichtbar“ scheitert bei dreißig Gebäuden. Dreißig
+      Häuser plus dreißig Wagen auf einer Fläche sind kein befriedigendes System, sondern Unordnung – und
+      sie brechen die Regel, dass sich nichts verdeckt. Fellgrund wächst deshalb auf vier Achsen, von
+      denen nur eine die Fläche betrifft.</p>
+
+    <h3>1 · Parzellen statt Einzelgebäude</h3>
+    <p class="soft">Ein Gebäude, das achtmal ausgebaut wird, ist nicht acht Gebäude. Der Glühbeeren-Garten
+      ist auf Stufe 1 ein Beet mit vier Büschen. Auf Stufe 8 ist er eine ummauerte Gartenanlage mit
+      Rankgerüsten, Sortierschuppen, Laternenreihe, drei arbeitenden Tieren und einem internen Förderband –
+      gleiche Grundfläche, ein Vielfaches an Leben. <strong>20 Parzellen mit je 6 Ausbaustufen ergeben 120
+      sichtbare Veränderungen</strong> bei 20 Bauplätzen.</p>
+
+    <h3>2 · Transport wird ruhiger, nicht voller</h3>
+    <p class="soft">Der wichtigste und unintuitivste Punkt: Es kommen keine Wagen dazu. Jede
+      Transportstufe <strong>ersetzt</strong> die vorherige.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Stufe</th><th>Transport</th><th>Was man sieht</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="step">1</td><td>Tier trägt Kiste zu Fuß</td><td>eine Figur auf einem Weg</td></tr>
+          <tr><td class="step">2</td><td>Wurzelwagen auf Schiene</td><td>ein Wagen auf einer Route</td></tr>
+          <tr><td class="step">3</td><td>Schienennetz mit Weichen</td><td>vier bis sechs Wagen – das Maximum</td></tr>
+          <tr><td class="step">4</td><td>Wurzelnetz des Maulwurfs</td><td>ein leuchtender Puls entlang einer Wurzel</td></tr>
+          <tr><td class="step">5</td><td>Hängebahn über dem Platz</td><td>quer über die Lichtung, Boden bleibt frei</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="soft">Ein Wurzelpuls trägt so viel wie zehn Wagen. Spätes Fellgrund sieht dadurch
+      <strong>ordentlicher</strong> aus als mittleres, nicht chaotischer. Genau darin liegt die
+      Befriedigung: eine unelegante Lösung durch eine elegante zu ersetzen und zuzusehen, wie der Platz
+      wieder ruhig wird.</p>
+
+    <h3>3 · Ketten werden länger, nicht breiter</h3>
+    <p class="soft">Nicht zwanzig parallele Ketten, sondern fünf bis sechs Ketten mit je vier bis sechs
+      Stufen, die ineinandergreifen. Glühbeeren speisen die Küche, die Küche speist die Essenzen, die
+      Essenzen speisen die Kristallquelle. Mehr Tiefe bei weniger Objekten.</p>
+
+    <h3>4 · Die Bühne wächst dreimal</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Ausbaustufe</th><th>Lichtung</th><th>Parzellen</th><th>Pixelgröße</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Fellgrund am ersten Tag</td><td class="num">206 × 105</td><td class="num">6–8</td><td class="step">5×</td></tr>
+          <tr><td>Erster Ausbau</td><td class="num">300 × 160</td><td class="num">~14</td><td class="step">4×</td></tr>
+          <tr><td>Zweiter Ausbau</td><td class="num">400 × 210</td><td class="num">~24</td><td class="step">3×</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="soft">Bei 400 Pixeln Breite bleibt auf einem üblichen Monitor eine drei- bis vierfache
+      Pixelvergrößerung – alles bleibt klobig und lesbar. Die Objekte werden dabei kleiner auf dem
+      Bildschirm. Das ist der Preis, und er wird in drei Momenten bezahlt, die sich wie Erfolge anfühlen:
+      Der Wald weicht zurück, die Kamera geht einen Schritt hinaus, und man sieht zum ersten Mal, wie groß
+      Fellgrund geworden ist.</p>
+
+    <div class="rule">
+      <span class="rule-tag">Harte Regel</span>
+      <p><strong>Abstrahiert wird nur der Transport, nie die Produktion.</strong> Ein Wurzelpuls darf eine
+        Kiste ersetzen. Ein Biber, der Holz hackt, darf niemals durch eine Zahl ersetzt werden. Tiere
+        sammeln, verarbeiten und übergeben bis zum letzten Ausbau sichtbar – sonst geht genau das
+        verloren, was Freude macht.</p>
+    </div>
+
+    <div class="rule">
+      <span class="rule-tag">Idee</span>
+      <p><strong>Der Untergrund als Querschnitt.</strong> Wenn der Maulwurf einzieht, wächst Fellgrund
+        nach unten. Statt eines zweiten Bildschirms bekommt die Ansicht einen schmalen Schnittstreifen am
+        unteren Rand – wie eine Ameisenfarm. Man sieht die Wurzelgänge im Querschnitt unter der Lichtung,
+        beides gleichzeitig. Der Ort bekommt eine zweite Ebene, ohne dass man je wegschauen muss.</p>
+    </div>
   </section>
 
   <section>
@@ -790,6 +906,14 @@
       <li>Spitze Ohren mit dunklerem Innenohr – die Silhouette, an der man ihn als Wolf erkennt.</li>
       <li>Der buschige Schwanz als eigene Form neben dem Körper, nicht als Anhängsel.</li>
     </ul>
+    <div class="rule">
+      <span class="rule-tag">Figurenregel für alle Tiere</span>
+      <p>Damit die Besetzung wie eine Familie aussieht, gilt für jeden Bewohner dasselbe:
+        <strong>ein harter, fast schwarzer Umriss</strong>, der die Figur auf jedem Hintergrund und in
+        jeder Größe freistellt; <strong>höchstens fünf Farben</strong> pro Figur; <strong>zwei Pixel
+        Wangenröte</strong> in warmem Orange als gemeinsame Wärmequelle; großer Kopf, kleiner Körper.
+        Was eine Figur unterscheidet, sind Silhouette und Grundfarbe – nie der Detailgrad.</p>
+    </div>
     <div class="rule">
       <span class="rule-tag">Regeln fürs Zeichnen</span>
       <p>Feste Palette statt Verläufe. Harte Kanten statt Weichzeichnung. Ein dunkler Umriss, der die
@@ -993,7 +1117,7 @@
     "..dd..dd.."
   ];
   var BEAVER_PAL = {
-    o: "#3A2614", B: "#9A6E43", L: "#C29464", k: "#140D08",
+    o: "#181016", B: "#9A6E43", L: "#F0885E", k: "#140D08",
     n: "#4A3018", t: "#54381F", d: "#2E1E10"
   };
 
@@ -1005,7 +1129,7 @@
     ".DFHHFDDDFHHFD............",
     ".DFHHFFFFFHHFFD.DDDDDD....",
     "DFHccFFFFFccFFDDFFFFFFFDD.",
-    "DFFFFFFFFFFFFFDFFFFFFFFFFD",
+    "DFBFFFFFFBFFFDFFFFFFFFFFD.",
     "DFFFsssFFFFFFFFFFFFFFFFFFD",
     ".DFFFFFFOOOOOOOOOFFFFFFFFD",
     ".DDFFFFOOOOoOOOOOOFFFFFFFD",
@@ -1019,7 +1143,7 @@
     "......DDDDDDDDDDTTTT......"
   ];
   var WOLF_PAL = {
-    F: "#EE6A9E", H: "#FF97BE", D: "#8E2450", c: "#1B2233", s: "#B03C6C",
+    F: "#EE6A9E", H: "#FF97BE", D: "#181016", c: "#1B2233", s: "#B03C6C", B: "#F0885E",
     f: "#FF9CC0", h: "#FFC4DA", T: "#B03C6C", O: "#2F8F96", o: "#F0BC58"
   };
 
@@ -1040,7 +1164,7 @@
         "..oBBBBo....",
         "...oo.oo...."
       ],
-      pal: { o: "#4A2F16", B: "#C4783A", L: "#EFCBA0", k: "#140D08", n: "#3A2718", T: "#4A2F16", t: "#DFA560" },
+      pal: { o: "#181016", B: "#C4783A", L: "#EFCBA0", k: "#140D08", n: "#F0885E", T: "#181016", t: "#DFA560" },
       w: 12, h: 12
     },
     axolotl: {
@@ -1054,7 +1178,7 @@
         "...PPppppPP.P",
         ".....PPPP...."
       ],
-      pal: { p: "#F2AEC4", P: "#B85F80", g: "#FBD2DF", k: "#2E1520" },
+      pal: { p: "#F2AEC4", P: "#181016", g: "#FBD2DF", k: "#2E1520" },
       w: 13, h: 8
     },
     biene: {
@@ -1068,7 +1192,7 @@
         "..KYYKYYK..",
         "...KKKKK..."
       ],
-      pal: { Y: "#FBCB55", K: "#1F190F", w: "#D9EAF2" },
+      pal: { Y: "#FBCB55", K: "#181016", w: "#D9EAF2" },
       w: 11, h: 8
     },
     maulwurf: {
@@ -1083,7 +1207,7 @@
         ".cmMMMMMMmc.",
         ".cc.mmmm.cc."
       ],
-      pal: { m: "#332B33", M: "#6F6067", k: "#140D08", n: "#E9A2AE", c: "#DED4C6" },
+      pal: { m: "#181016", M: "#6F6067", k: "#140D08", n: "#F0885E", c: "#DED4C6" },
       w: 12, h: 9
     }
   };
@@ -1303,7 +1427,7 @@
   var CW_HALF = [
     "...oo......", "..oiio.....", "..oiiFo....", ".oiiFFFo...", "ooiiFFFFo..",
     "oiFFFFFFFo.", "oFFFFFFFFFo", "oFFFFFFFFFF", "oFFFFFFFFFF", "oFFeeeeFFFF",
-    "oFeFFFFeFFF", "oFFFFFFFFFF", "oFFFFFFLLLL", "oFFFFFLLLnn", "oFFFFFLLLnn",
+    "oFeFFFFeFFF", "oFFFFFFFFFF", "oFFFFFFLLLL", "oFBBFFLLLnn", "oFBBFFLLLnn",
     ".oFFFFLLLLm", ".oFFFFLLmmL", "..oFFFFmLLL", "..ooFFFFFFF", "...oooFFFFF",
     "..oAAoTTTTT", ".oAAAoTTTTT", ".oAAAoTbTTT", ".oAAAoTTTTT", ".oAAAoTTTTT",
     ".oAAAoTTTTT", "..oAAoTTTTT", "...oooDDDDD", "....oDDDDDD", "..oPPPoDDDD",
@@ -1323,7 +1447,7 @@
     ".fFFFfo.", "..fFffo.", "..offo..", "...oo..."
   ];
   var CW_PAL = {
-    o: "#6E1039", F: "#F2609E", L: "#FF95C0", H: "#FFC2DC", q: "#4ABCC2",
+    o: "#181016", F: "#F2609E", L: "#FF95C0", H: "#FFC2DC", q: "#4ABCC2", B: "#F0885E",
     i: "#C43C74", e: "#2A1A2E", n: "#161E38", m: "#8E1C4E",
     T: "#2E8792", D: "#1D5E68", b: "#F0A93C", A: "#EE5896", P: "#FF95C0", f: "#FFAECB"
   };
