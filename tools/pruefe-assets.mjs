@@ -11,7 +11,7 @@
  */
 
 import { readdirSync, statSync, readFileSync } from "node:fs";
-import { join, extname, relative } from "node:path";
+import { join, extname, relative, basename } from "node:path";
 import { PNG } from "pngjs";
 
 /* Palette aus Abschnitt 3 des Auftrags. */
@@ -68,8 +68,10 @@ function naechsteFarbe(farbe) {
   return { farbe: best, abstand: bestD };
 }
 
-function artVon(name) {
-  const n = name.toLowerCase();
+function artVon(pfad) {
+  // Nur der Dateiname zählt. Der Ordner heißt "tilesets" und würde sonst
+  // jede Datei als Kachel einstufen.
+  const n = basename(pfad).toLowerCase();
   if (n.includes("cozywolf") || n.includes("bewohner") || n.includes("eule")) return "figur";
   if (n.includes("boden") || n.includes("kachel") || n.includes("tile")) return "kachel";
   return "blatt";
