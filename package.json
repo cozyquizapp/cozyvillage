@@ -1,0 +1,18 @@
+{
+  "name": "fellgrund",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fellgrund – gemütliches 2D-Pixel-Automationsspiel",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
