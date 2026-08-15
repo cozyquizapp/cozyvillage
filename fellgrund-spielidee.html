@@ -449,9 +449,10 @@
         <div class="status" id="hud-status">Bramble macht sich auf den Weg zum Glühbeerenbeet</div>
       </div>
     </div>
-    <figcaption>So soll die erste Kette im Spiel aussehen. Bramble erntet sichtbar, legt Kisten an der
-      Verladestation ab, der Wurzelwagen fährt auf echten Schienen – und der Bestand im Vorratshaus steigt
-      erst bei der tatsächlichen Ankunft, nie vorher. Alle Figuren sind nach Fußpunkt sortiert.</figcaption>
+    <figcaption>So soll die erste Kette im Spiel aussehen: 3/4-Draufsicht, eine Parzelle, eine Kette.
+      Bramble erntet sichtbar, legt Kisten an der Verladestation ab, der Wurzelwagen fährt auf echten
+      Schienen – und der Bestand im Vorratshaus steigt erst bei der tatsächlichen Ankunft, nie vorher.
+      Jedes stehende Objekt wird nach seinem Fußpunkt sortiert gezeichnet.</figcaption>
   </figure>
 
   <section>
@@ -541,6 +542,34 @@
     </ul>
     <p class="soft">Ein Klick auf ein Gebäude öffnet dessen Zustand, Warteschlange und Upgrades. Die Welt
       arbeitet ansonsten grundsätzlich selbstständig weiter.</p>
+  </section>
+
+  <section>
+    <div class="shead">
+      <p class="eyebrow">Projektion</p>
+      <h2>3/4-Draufsicht, festgelegt</h2>
+    </div>
+    <p class="soft">Diese Entscheidung steht vor jedem Asset, weil sie Art-Pipeline, Wegfindung,
+      Tiefensortierung und Wagenrouten gleichzeitig festlegt. Fellgrund wird in 3/4-Draufsicht gebaut.</p>
+    <ul class="marks is-glow">
+      <li>Das Dorf wächst in alle Richtungen statt nur nach links und rechts – die Voraussetzung dafür,
+        dass Parzellen über Monate dazukommen können.</li>
+      <li>Gebäude lassen sich nebeneinander setzen, ohne sich zu verdecken. Die harte Regel bleibt haltbar.</li>
+      <li>Wagen auf Schienen und Tiere auf Wegen sind aus dieser Kamera am klarsten lesbar.</li>
+      <li>Die Art kostet einen Bruchteil einer isometrischen Welt: keine vier Rotationen pro Objekt,
+        einfachere Kacheln, weniger Sonderfälle beim Sortieren.</li>
+    </ul>
+    <div class="rule">
+      <span class="rule-tag">Verworfen</span>
+      <p><strong>Isometrisch</strong> sieht am schönsten aus und kann Höhenebenen zeigen, kostet aber das
+        Zwei- bis Dreifache an Art und macht Verdeckung unvermeidbar – die Regel „Gebäude verdecken sich
+        nie“ müsste fallen. <strong>Seitenansicht</strong> ist am billigsten und atmosphärischsten, lässt
+        das Dorf aber nur in einer Dimension wachsen. Beides passt nicht zu einem Ort, der über lange Zeit
+        immer weiter ausgebaut wird.</p>
+    </div>
+    <p class="soft">Die Karte ist außerdem größer als ein Bildschirm. Die Kamera folgt ruhig dem
+      Geschehen, statt das ganze Dorf in eine Ansicht zu pressen – ein Dorf, das komplett auf einen
+      Bildschirm passt, ist ein Dorf, das nicht mehr wachsen kann.</p>
   </section>
 
   <section>
@@ -654,11 +683,11 @@
     </div>
     <div class="rule">
       <span class="rule-tag">Sichtreferenz</span>
-      <p><strong>Kingdom</strong> für den Aufbau des Bildes: Seitenansicht, gestaffelte Baum-Silhouetten,
-        ruhige Nachtstimmung und warme Lichtinseln, die zeigen, wo etwas passiert.
-        <strong>Stardew Valley</strong> für die Figuren und Gebäude: warme, gesättigte Farben, klar lesbare
-        Sprites mit weichen Umrissen, jedes Objekt auf einen Blick erkennbar. Fellgrund liegt dazwischen –
-        Kingdoms Tiefe und Licht, Stardews Wärme und Freundlichkeit.</p>
+      <p><strong>Stardew Valley</strong> gibt die Projektion und die Figuren vor: 3/4-Draufsicht, warme
+        gesättigte Farben, klar lesbare Sprites, jedes Objekt auf einen Blick erkennbar.
+        <strong>Kingdom</strong> steuert die Stimmung bei, nicht die Kamera: ruhige Nacht, warme
+        Lichtinseln, die zeigen wo etwas passiert, und ein dunkler Waldrand, der die Parzelle rahmt.
+        Fellgrund ist Stardews Aufbau mit Kingdoms Licht.</p>
     </div>
   </section>
 
@@ -728,7 +757,7 @@
   <footer class="colophon">
     <span>FELLGRUND</span>
     <span>Konzeptstand für die Entwicklung</span>
-    <span>Diorama live gerendert, 232 × 84 Pixel</span>
+    <span>Diorama live gerendert, 208 × 128 Pixel, 3/4-Draufsicht</span>
   </footer>
 
 </div>
@@ -759,7 +788,18 @@
 
   function px(ctx, color, x, y, w, h) {
     ctx.fillStyle = color;
-    ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  }
+
+  // Ellipse in der 3/4-Perspektive: ein Kreis am Boden erscheint gestaucht
+  function ellipse(ctx, color, cx, cy, rx, ry, fromDy, toDy) {
+    var a = (fromDy === undefined) ? -ry : Math.max(-ry, fromDy);
+    var b = (toDy === undefined) ? ry : Math.min(ry, toDy);
+    for (var dy = a; dy <= b; dy++) {
+      var hw = Math.round(rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry))));
+      if (hw <= 0) continue;
+      px(ctx, color, cx - hw, cy + dy, hw * 2, 1);
+    }
   }
 
   function fit(canvas, w, h, maxScale) {
@@ -779,87 +819,37 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Paletten
+   * Palette – Nachtstimmung, aber gesättigte, lesbare Farben
    * ------------------------------------------------------------------ */
-  // Sichtreferenz: Kingdom (Seitenansicht, Parallax-Silhouetten, Lichtstimmung)
-  // trifft Stardew Valley (warme, gut lesbare Pixelfiguren)
-  var SKY = ["#1C2733", "#24313C", "#2D3B42", "#374544"];
-  var FAR = "#283739";       // hinterste Silhouettenschicht
-  var MID = "#22322F";       // mittlere Silhouettenschicht
-  var NEAR = "#1A2724";      // vorderste Silhouette
-  var GROUND = "#3A5140";
-  var GROUND_DK = "#2E4234";
-  var GROUND_LT = "#48604A";
-  var PATH = "#7A6D52";
-  var PATH_LT = "#8E8062";
+  var GRASS = "#3E6B47";
+  var GRASS_LT = "#4E8253";
+  var GRASS_DK = "#325940";
+  var FOREST = "#1E3630";
+  var FOREST_DK = "#16281F";
+  var SOIL = "#5A4430";
+  var SOIL_DK = "#43301F";
+  var PATH_C = "#8A7A5C";
+  var PATH_DK = "#6B5D45";
   var WOOD = "#9A6E44";
   var WOOD_DK = "#63472C";
   var WOOD_LT = "#BC8D57";
-  var RAIL = "#7C6A52";
-  var TIE = "#513F2F";
+  var RAIL = "#8A7758";
+  var TIE = "#57432F";
   var STONE = "#8B917E";
-  var STONE_DK = "#616852";
+  var STONE_DK = "#5E6553";
+  var ROOF = "#9E4E3C";
+  var ROOF_DK = "#77382B";
+  var ROOF_LT = "#BC6349";
   var LEAF = "#4A8B54";
   var LEAF_DK = "#2F6640";
   var BERRY = "#F7C651";
   var LAMP = "#FFD98A";
+  var WATER = "#2E5A72";
+  var WATER_LT = "#3F7793";
 
-  // Cozywolf, zusammengerollt: beide Ohren, Schnauze links, buschiger Schwanz über dem Rücken
-  var WOLF = [
-    "..D..........D..........",
-    "..DD........DD..........",
-    ".DFFD......DFFD.........",
-    ".DFFFD....DFFFD....TTT..",
-    ".DFFFFDDDDFFFFFD.TTfffT.",
-    ".DFFccFFFFFFFFFDTffffffT",
-    "DLLFFFFFFFFFOOOTffffffFT",
-    "DKLFFFFFFFOOOOOOOOFFFFFT",
-    "DKLLFFFFFFOOOoOOOOOFFFFD",
-    "DLLFFFFFFFOOOOOOOOOFFFFD",
-    ".DLFFFFFFFOOOoOOOOOFFFFD",
-    "..DFFFFFFFOOOOOOOOFFFFD.",
-    "...DDFFFFFFOOOOOOFFFFDD.",
-    ".....DDDDDDDDDDDDDD....."
-  ];
-  // Pink + Petrol nach der Charakterreferenz; harte Kanten, feste Palette
-  var WOLF_PAL = {
-    F: "#EE6A9E", D: "#A8305F", L: "#FFC3D9", K: "#1B2233",
-    c: "#1B2233", f: "#FF9CC0", T: "#C44577",
-    O: "#2F8F96", o: "#E8B04A"
-  };
-
-  // Nest in zwei Ebenen, damit Cozywolf sichtbar darin liegt
-  var NEST_BACK = [
-    "....mmmmmmmmmmmmmmmmmmmmmmmm....",
-    "..mmMMMMMMMMMMMMMMMMMMMMMMMMmm..",
-    ".mMMMMMMMMMMMMMMMMMMMMMMMMMMMMm.",
-    "mMMttMMMMttMMMMMMMMttMMMMttMMMMm",
-    "mMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMm"
-  ];
-  var NEST_FRONT = [
-    "mMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMm",
-    "mMMttMMMMMMMMttMMMMMMMMttMMMMMMm",
-    ".mMMMMMMMMMMMMMMMMMMMMMMMMMMMMm.",
-    "..mmMMMMMMMMMMMMMMMMMMMMMMMMmm..",
-    "....mmmmmmmmmmmmmmmmmmmmmmmm...."
-  ];
-  var NEST_PAL = { m: "#33512F", M: "#4B7444", t: "#7A6740" };
-
-  var BUSH = [
-    "......gg....gg......",
-    "....ggGGgg.gGGgg....",
-    "...gGGGGGGgGGGGGg...",
-    "..gGGbGGGGGGGGbGGg..",
-    "..gGGGGGGGGbGGGGGg..",
-    "..gGGGGbGGGGGGGGGg..",
-    "...gGGGGGGGGGbGGg...",
-    "....ggGGGGGGGGgg....",
-    "......gg.ss.gg......",
-    ".........ss.........",
-    "........dddd........"
-  ];
-  var BUSH_PAL = { g: LEAF_DK, G: LEAF, b: BERRY, s: "#5C4229", d: "#2A3B31" };
-
+  /* ------------------------------------------------------------------ *
+   * Figuren
+   * ------------------------------------------------------------------ */
   var BEAVER_A = [
     "...bbbb...",
     "..bBBBBb..",
@@ -887,6 +877,33 @@
     "..dd..dd.."
   ];
   var BEAVER_PAL = { b: "#4E3421", B: "#8A6240", k: "#1C1310", n: "#3A2718", t: "#4A3320", d: "#3A2718" };
+
+  // Cozywolf, zusammengerollt aus der 3/4-Draufsicht: Ohren und geschlossene
+  // Augen oben links, Schwanz legt sich um den Körper nach unten rechts
+  var WOLF = [
+    "...D.......D..............",
+    "..DFD.....DFD.............",
+    "..DFFD...DFFD.............",
+    ".DFFFFDDDFFFFD............",
+    ".DFFFFFFFFFFFFD.DDDDDD....",
+    "DFFccFFFFFccFFDDFFFFFFFDD.",
+    "DFFFFFFFFFFFFFDFFFFFFFFFFD",
+    "DFFFsssFFFFFFFFFFFFFFFFFFD",
+    ".DFFFFFFOOOOOOOOOFFFFFFFFD",
+    ".DDFFFFOOOOoOOOOOOFFFFFFFD",
+    "..DDFFFOOOOOOOOOOOFFFFFFTD",
+    "...DFFFOOOOOOOOOOOFFFFTffT",
+    "...DFFFFOOOOOOOOOFFFFTffff",
+    "..DFFFFFFOOOOOOOFFFFTfffff",
+    "..DFFFFFFFFFFFFFFFTffffffT",
+    "...DFFFFFFFFFFFFDTffffffT.",
+    "....DDFFFFFFFFDDTffffTT...",
+    "......DDDDDDDDDDTTTT......"
+  ];
+  var WOLF_PAL = {
+    F: "#EE6A9E", D: "#A8305F", K: "#1B2233", c: "#1B2233", s: "#C44577",
+    f: "#FF9CC0", T: "#C44577", O: "#2F8F96", o: "#E8B04A"
+  };
 
   var CRITTERS = {
     biber: { rows: BEAVER_A, pal: BEAVER_PAL, w: 10, h: 11 },
@@ -954,105 +971,125 @@
   };
 
   /* ------------------------------------------------------------------ *
-   * Prozedurale Bauwerke
+   * Bauwerke in 3/4-Draufsicht
    * ------------------------------------------------------------------ */
-  // Kiste mit Latten – die Beeren nur als warmer Schimmer am oberen Rand
   function drawCrate(ctx, x, y) {
-    px(ctx, "#63472C", x, y, 6, 6);
-    px(ctx, "#B08350", x + 1, y + 1, 4, 4);
-    px(ctx, "#8A6440", x + 1, y + 2, 4, 1);
-    px(ctx, "#8A6440", x + 1, y + 4, 4, 1);
-    px(ctx, "#E0B45C", x + 2, y + 1, 2, 1);
+    px(ctx, "#63472C", x, y, 7, 7);
+    px(ctx, "#B08350", x + 1, y + 1, 5, 5);
+    px(ctx, "#8A6440", x + 1, y + 3, 5, 1);
+    px(ctx, "#8A6440", x + 3, y + 1, 1, 5);
+    px(ctx, "#E0B45C", x + 2, y + 1, 3, 1);
   }
 
-  // Verladestation: Pfosten, Deck, Kistenplätze, optionales Vordach
+  // Verladestation: Plattform mit Deckfläche, Frontschürze und Kistenplätzen
   function drawStation(ctx, x, baseY, opts) {
     var slots = opts.slots || 2;
     var crates = opts.crates || 0;
-    var w = 4 + slots * 8;
+    var w = 6 + slots * 9;
 
     if (opts.roof) {
-      var ry = baseY - 26;
-      for (var i = 0; i < 5; i++) {
-        px(ctx, i === 0 ? WOOD_LT : WOOD_DK, x - 2 + i, ry + i, w + 4 - i * 2, 1);
+      // Vordach über vier Pfosten
+      px(ctx, WOOD_DK, x + 2, baseY - 24, 2, 14);
+      px(ctx, WOOD_DK, x + w - 4, baseY - 24, 2, 14);
+      for (var r = 0; r < 6; r++) {
+        px(ctx, r < 2 ? ROOF_LT : ROOF, x - 2 + r, baseY - 32 + r, w + 4 - r * 2, 1);
       }
-      px(ctx, WOOD_DK, x + 1, ry + 5, 2, 6);
-      px(ctx, WOOD_DK, x + w - 3, ry + 5, 2, 6);
-      px(ctx, LAMP, x + Math.floor(w / 2) - 1, ry + 5, 2, 2);
+      px(ctx, ROOF_DK, x - 2, baseY - 26, w + 4, 1);
+      px(ctx, LAMP, x + Math.floor(w / 2) - 1, baseY - 25, 2, 2);
+    } else {
+      // Rückengeländer
+      px(ctx, WOOD_DK, x + 1, baseY - 19, w - 2, 2);
+      px(ctx, WOOD_DK, x + 2, baseY - 19, 2, 9);
+      px(ctx, WOOD_DK, x + w - 4, baseY - 19, 2, 9);
     }
 
-    // Rückwand / Ladegeländer – macht aus dem Tisch eine Verladestation
-    if (!opts.roof) {
-      px(ctx, WOOD_DK, x, baseY - 22, w, 1);
-      px(ctx, WOOD_DK, x + 1, baseY - 22, 1, 7);
-      px(ctx, WOOD_DK, x + w - 2, baseY - 22, 1, 7);
+    // Deckfläche (von schräg oben) und Frontschürze
+    px(ctx, WOOD_LT, x, baseY - 11, w, 6);
+    px(ctx, WOOD, x, baseY - 11, w, 1);
+    px(ctx, WOOD_DK, x, baseY - 5, w, 5);
+    for (var p = 0; p < w; p += 5) {
+      px(ctx, WOOD, x + p, baseY - 5, 1, 5);
     }
-
-    // Deck
-    px(ctx, WOOD_LT, x, baseY - 15, w, 2);
-    px(ctx, WOOD_DK, x, baseY - 13, w, 2);
-    // Pfosten
-    px(ctx, WOOD, x + 1, baseY - 11, 2, 11);
-    px(ctx, WOOD, x + w - 3, baseY - 11, 2, 11);
-    px(ctx, WOOD_DK, x + 1, baseY - 1, 2, 1);
-    px(ctx, WOOD_DK, x + w - 3, baseY - 1, 2, 1);
-    // Rampe
-    px(ctx, WOOD_DK, x, baseY - 5, w, 1);
+    px(ctx, "#3C2A1A", x, baseY - 1, w, 1);
 
     for (var c = 0; c < crates && c < slots; c++) {
-      drawCrate(ctx, x + 2 + c * 8, baseY - 21);
+      drawCrate(ctx, x + 3 + c * 9, baseY - 14);
     }
-    // freie Plätze angedeutet
-    for (var s = crates; s < slots; s++) {
-      px(ctx, WOOD_DK, x + 2 + s * 8, baseY - 16, 6, 1);
+    for (var f = crates; f < slots; f++) {
+      px(ctx, WOOD, x + 3 + f * 9, baseY - 8, 7, 1);
     }
     return w;
   }
 
-  // Vorratshaus
-  function drawStorehouse(ctx, x, baseY) {
-    var w = 34, h = 17;
-    var top = baseY - h;
-    px(ctx, STONE_DK, x, top, w, h);
-    px(ctx, STONE, x + 1, top + 1, w - 2, h - 2);
-    // Balken
+  // Vorratshaus: Frontwand mit Tür und Fenstern, darüber ein Ziegeldach
+  function drawStorehouse(ctx, x, baseY, t) {
+    var w = 50, wallH = 18, top = baseY - wallH;
+
+    // Dach von der Traufe nach oben verjüngt
+    for (var i = 0; i < 15; i++) {
+      var rw = (w + 8) - i * 3;
+      if (rw < 6) break;
+      var rx = x - 4 + Math.round(i * 1.5);
+      px(ctx, (i % 3 === 2) ? ROOF_DK : ((i < 2) ? ROOF_LT : ROOF), rx, top - i, rw, 1);
+    }
+    px(ctx, ROOF_DK, x - 5, top, w + 10, 1);
+    px(ctx, ROOF_LT, x + 18, top - 14, 14, 1);
+
+    // Schornstein mit Rauch
+    px(ctx, STONE_DK, x + 34, top - 20, 6, 8);
+    px(ctx, STONE, x + 35, top - 19, 4, 7);
+    if (t !== undefined) {
+      for (var s = 0; s < 3; s++) {
+        var ph = (t * 0.55 + s * 0.33) % 1;
+        px(ctx, "rgba(210,220,215," + (0.30 - ph * 0.26).toFixed(2) + ")",
+          x + 36 + Math.round(Math.sin(ph * 5 + s) * 2), top - 22 - Math.round(ph * 14), 2, 2);
+      }
+    }
+
+    // Wand
+    px(ctx, STONE_DK, x, top, w, wallH);
+    px(ctx, STONE, x + 1, top + 1, w - 2, wallH - 2);
     px(ctx, WOOD_DK, x + 1, top + 7, w - 2, 1);
-    px(ctx, WOOD_DK, x + 8, top + 1, 1, h - 2);
-    px(ctx, WOOD_DK, x + 25, top + 1, 1, h - 2);
-    // Giebeldach, gestuft bis zur Spitze
-    for (var i = 0; i < 10; i++) {
-      var rw = w + 6 - i * 4;
-      if (rw < 2) break;
-      px(ctx, i < 2 ? "#5C7F66" : "#456650", x - 3 + i * 2, top - 1 - i, rw, 1);
-    }
-    px(ctx, "#2C4638", x - 4, top - 1, w + 8, 1);
+    px(ctx, WOOD_DK, x + 12, top + 1, 1, wallH - 2);
+    px(ctx, WOOD_DK, x + 37, top + 1, 1, wallH - 2);
+
     // Tür
-    px(ctx, WOOD_DK, x + 14, baseY - 8, 7, 8);
-    px(ctx, WOOD, x + 15, baseY - 7, 5, 7);
-    // Fenster mit Licht
-    px(ctx, WOOD_DK, x + 3, top + 9, 5, 5);
-    px(ctx, LAMP, x + 4, top + 10, 3, 3);
-    px(ctx, WOOD_DK, x + 27, top + 9, 5, 5);
-    px(ctx, LAMP, x + 28, top + 10, 3, 3);
+    px(ctx, WOOD_DK, x + 20, baseY - 13, 11, 13);
+    px(ctx, WOOD, x + 21, baseY - 12, 9, 12);
+    px(ctx, "#3C2A1A", x + 21, baseY - 12, 9, 1);
+    px(ctx, BERRY, x + 28, baseY - 7, 1, 1);
+
+    // Beleuchtete Fenster
+    px(ctx, WOOD_DK, x + 4, top + 9, 7, 6);
+    px(ctx, LAMP, x + 5, top + 10, 5, 4);
+    px(ctx, WOOD_DK, x + 40, top + 9, 7, 6);
+    px(ctx, LAMP, x + 41, top + 10, 5, 4);
     return w;
   }
 
+  // Wurzelwagen, fährt waagerecht auf der Schiene
   function drawCart(ctx, x, baseY, load) {
-    px(ctx, WOOD_DK, x, baseY - 8, 15, 6);
-    px(ctx, WOOD, x + 1, baseY - 7, 13, 4);
-    px(ctx, WOOD_LT, x + 1, baseY - 7, 13, 1);
-    // Wurzelgeflecht
-    px(ctx, "#4E3A22", x + 3, baseY - 6, 1, 3);
-    px(ctx, "#4E3A22", x + 8, baseY - 6, 1, 3);
-    px(ctx, "#4E3A22", x + 12, baseY - 6, 1, 3);
-    // Räder
-    px(ctx, "#3A2E22", x + 2, baseY - 2, 3, 3);
-    px(ctx, "#3A2E22", x + 10, baseY - 2, 3, 3);
-    px(ctx, "#5C4A36", x + 3, baseY - 1, 1, 1);
-    px(ctx, "#5C4A36", x + 11, baseY - 1, 1, 1);
+    px(ctx, WOOD_DK, x, baseY - 11, 18, 8);
+    px(ctx, WOOD, x + 1, baseY - 10, 16, 6);
+    px(ctx, WOOD_LT, x + 1, baseY - 10, 16, 1);
+    px(ctx, "#4E3A22", x + 4, baseY - 9, 1, 4);
+    px(ctx, "#4E3A22", x + 9, baseY - 9, 1, 4);
+    px(ctx, "#4E3A22", x + 14, baseY - 9, 1, 4);
+    px(ctx, "#33261A", x + 2, baseY - 3, 4, 4);
+    px(ctx, "#33261A", x + 12, baseY - 3, 4, 4);
+    px(ctx, "#5C4A36", x + 3, baseY - 2, 2, 2);
+    px(ctx, "#5C4A36", x + 13, baseY - 2, 2, 2);
     for (var i = 0; i < load; i++) {
-      drawCrate(ctx, x + 1 + i * 7, baseY - 14);
+      drawCrate(ctx, x + 2 + i * 8, baseY - 18);
     }
+  }
+
+  // Baum in 3/4: Stamm plus runde Krone
+  function drawTree(ctx, cx, baseY, size) {
+    px(ctx, "#4A3520", cx - 1, baseY - size - 2, 3, size + 2);
+    ellipse(ctx, LEAF_DK, cx, baseY - size - 7, size + 3, size + 1);
+    ellipse(ctx, LEAF, cx, baseY - size - 8, size + 1, size - 1);
+    ellipse(ctx, "#5EA265", cx - 2, baseY - size - 10, Math.floor(size / 2), Math.floor(size / 3));
   }
 
   function drawBlossom(ctx, x, y, glow) {
@@ -1070,11 +1107,11 @@
     if (!def) return;
     var W = 16, H = 14;
     var ctx = fit(cv, W, H, 3);
-    ctx.fillStyle = "#22302F";
+    ctx.fillStyle = "#25382C";
     ctx.fillRect(0, 0, W, H);
-    px(ctx, "#2A3B31", 0, H - 3, W, 3);
-    drawSprite(ctx, def.rows, def.pal,
-      Math.floor((W - def.w) / 2), H - 2 - def.h);
+    px(ctx, GRASS_DK, 0, H - 4, W, 4);
+    px(ctx, GRASS, 0, H - 4, W, 1);
+    drawSprite(ctx, def.rows, def.pal, Math.floor((W - def.w) / 2), H - 3 - def.h);
   });
 
   /* ------------------------------------------------------------------ *
@@ -1082,101 +1119,109 @@
    * ------------------------------------------------------------------ */
   document.querySelectorAll("canvas[data-station]").forEach(function (cv) {
     var up = cv.getAttribute("data-station") === "upgraded";
-    var W = 44, H = 40;
+    var W = 60, H = 46;
     var ctx = fit(cv, W, H, 4);
-    ctx.fillStyle = "#22302F";
+    ctx.fillStyle = "#25382C";
     ctx.fillRect(0, 0, W, H);
-    px(ctx, GROUND, 0, H - 8, W, 8);
-    px(ctx, GROUND_LT, 0, H - 8, W, 1);
-    var w = up ? 4 + 4 * 8 : 4 + 2 * 8;
-    drawStation(ctx, Math.floor((W - w) / 2), H - 8, {
-      slots: up ? 4 : 2,
-      crates: up ? 4 : 2,
-      roof: up
-    });
+    px(ctx, GRASS, 0, 10, W, H - 10);
+    px(ctx, GRASS_LT, 0, 10, W, 1);
+    for (var d = 0; d < 26; d++) {
+      px(ctx, (d % 2) ? GRASS_DK : GRASS_LT, (d * 17) % W, 12 + (d * 7) % (H - 14), 1, 1);
+    }
+    var slots = up ? 4 : 2;
+    var w = 6 + slots * 9;
+    drawStation(ctx, Math.floor((W - w) / 2), H - 5, { slots: slots, crates: slots, roof: up });
   });
 
   /* ------------------------------------------------------------------ *
-   * Das Diorama
+   * Das Diorama – 3/4-Draufsicht
    * ------------------------------------------------------------------ */
-  var W = 232, H = 84;
+  // Die Komposition ist 208 Pixel breit; die Leinwand wächst darüber hinaus,
+  // damit die Parzelle den Rahmen immer ganz ausfüllt statt zu letterboxen.
+  var BASE_W = 208, H = 128;
   var canvas = document.getElementById("scene");
-  var ctx = fit(canvas, W, H, 4);
+  var W = BASE_W, OX = 0, scale = 4, ctx;
 
-  var GROUND_Y = 46;           // Fußpunkt der hinteren Reihe
-  var BUSH_X = 10;
-  var STATION_X = 56;
-  var STATION_W = 4 + 2 * 8;
-  var STORE_X = 176;
-  var RAIL_A = STATION_X + STATION_W + 2;
-  var RAIL_B = STORE_X - 1;
-  var PATH_Y = 58;             // Fußpunkt Brambles Weg (vordere Ebene)
-  var NEST_X = 96;
-  var NEST_Y = 76;
+  function fitScene() {
+    var host = canvas.parentElement;
+    var avail = host ? host.clientWidth : BASE_W;
+    var s = Math.floor(avail / BASE_W);
+    if (!isFinite(s) || s < 1) s = 1;
+    if (s > 5) s = 5;
+    scale = s;
+    W = Math.max(BASE_W, Math.floor(avail / s));
+    OX = Math.floor((W - BASE_W) / 2);
+    canvas.width = W * s;
+    canvas.height = H * s;
+    canvas.style.width = (W * s) + "px";
+    canvas.style.height = (H * s) + "px";
+    ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.setTransform(s, 0, 0, s, OX * s, 0);
+  }
+  fitScene();
 
-  // statische Streuung, einmal berechnet
-  var speckles = [], stars = [], tufts = [], layers = [];
+  var BEET = { cx: 38, cy: 46, rx: 20, ry: 9, base: 56 };
+  var STATION_X = 72, STATION_Y = 70, STATION_SLOTS = 2;
+  var STATION_W = 6 + STATION_SLOTS * 9;
+  var STORE_X = 148, STORE_Y = 76;
+  var RAIL_Y = 82, RAIL_A = 94, RAIL_B = 182;
+  var CART_HOME = 96, CART_DOCK = 158;
+  var NEST = { cx: 104, cy: 104, rx: 17, ry: 11 };
+  var POND = { cx: 28, cy: 108, rx: 21, ry: 11 };
+  var LAMP_X = 66, LAMP_Y = 74;
+
+  // Brambles Weg: vom Beet zur Verladestation
+  var PATH_A = { x: 44, y: 56 };
+  var PATH_B = { x: 80, y: 76 };
+
+  var speckles = [], flowers = [], trees = [], pathDots = [];
   (function () {
-    var seed = 7;
+    var seed = 11;
     function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 
-    for (var i = 0; i < 80; i++) {
+    var SPREAD = BASE_W + 200, LEFT = -100;
+    for (var i = 0; i < 420; i++) {
       speckles.push({
-        x: Math.floor(rnd() * W),
-        y: 41 + Math.floor(rnd() * (H - 41)),
-        c: rnd() > 0.5 ? GROUND_LT : GROUND_DK
+        x: LEFT + Math.floor(rnd() * SPREAD),
+        y: 20 + Math.floor(rnd() * (H - 20)),
+        c: rnd() > 0.5 ? GRASS_LT : GRASS_DK
       });
     }
-    for (var j = 0; j < 16; j++) {
-      stars.push({ x: Math.floor(rnd() * W), y: Math.floor(rnd() * 26), p: rnd() * 6 });
+    for (var f = 0; f < 42; f++) {
+      flowers.push({
+        x: LEFT + Math.floor(rnd() * SPREAD),
+        y: 26 + Math.floor(rnd() * (H - 30)),
+        c: ["#E8A0C0", "#F2E2A0", "#C0A8E0"][Math.floor(rnd() * 3)]
+      });
     }
-    // Grasbüschel als durchgehender Vordergrundstreifen am unteren Bildrand
-    for (var g = -1; g < W + 2; g += 2) {
-      tufts.push({ x: g, h: 2 + Math.floor(rnd() * 4) });
+    // Bäume am Rand – rahmen die Parzelle, ohne Gebäude zu verdecken
+    var spots = [[10, 34, 5], [62, 28, 4], [128, 26, 5], [200, 44, 4],
+                 [190, 122, 5], [64, 122, 4], [8, 74, 4], [204, 92, 4]];
+    for (var s = 0; s < spots.length; s++) {
+      trees.push({ x: spots[s][0], y: spots[s][1], size: spots[s][2] });
     }
-    // drei Baum-Silhouettenschichten für die Parallaxtiefe
-    var defs = [
-      { color: FAR, base: 34, minH: 6, maxH: 11, step: 8, w: 7 },
-      { color: MID, base: 38, minH: 5, maxH: 9, step: 12, w: 9 },
-      { color: NEAR, base: 41, minH: 4, maxH: 7, step: 19, w: 11 }
-    ];
-    for (var d = 0; d < defs.length; d++) {
-      var def = defs[d], trees = [];
-      for (var x = -6; x < W + 6; x += def.step) {
-        trees.push({
-          x: x + Math.floor(rnd() * 5) - 2,
-          h: def.minH + Math.floor(rnd() * (def.maxH - def.minH + 1)),
-          w: def.w
-        });
-      }
-      layers.push({ color: def.color, base: def.base, trees: trees });
+    // Trampelpfad als Punktespur zwischen Beet und Station
+    for (var p = 0; p <= 22; p++) {
+      var q = p / 22;
+      pathDots.push({
+        x: PATH_A.x + (PATH_B.x - PATH_A.x) * q,
+        y: PATH_A.y + (PATH_B.y - PATH_A.y) * q,
+        r: 2 + Math.round(rnd())
+      });
     }
   })();
 
-  // Nadelbaum-Silhouette: schmale Spitze oben, breite Basis unten
-  function drawTreeSilhouette(ctx, color, x, baseY, w, h) {
-    for (var i = 0; i < h; i++) {
-      var ww = Math.max(1, 1 + Math.round(i * (w - 1) / (h - 1)));
-      px(ctx, color, x + Math.floor((w - ww) / 2), baseY - h + i, ww, 1);
-    }
-    px(ctx, color, x + Math.floor(w / 2), baseY, 1, 2);
-  }
-
   var state = {
     t: 0,
-    beaver: { x: 62, phase: "go", timer: 0, carrying: false },
+    beaver: { p: 1, phase: "go", timer: 0, carrying: false },
     crates: 0,
-    cart: { x: RAIL_A, phase: "idle", load: 0, timer: 0 },
+    cart: { x: CART_HOME, phase: "idle", load: 0, timer: 0 },
     stock: 0,
     react: 0,
     zzz: 0,
     status: "Bramble macht sich auf den Weg zum Glühbeerenbeet"
   };
-
-  var BUSH_STOP = BUSH_X + 16;
-  var STATION_STOP = STATION_X + 2;
-  var CART_HOME = RAIL_A;
-  var CART_DOCK = STORE_X - 17;   // hält vor dem Vorratshaus, nicht darin
 
   var hud = {
     crates: document.getElementById("hud-crates"),
@@ -1191,31 +1236,33 @@
     hud[key].textContent = value;
   }
 
+  function beaverPos() {
+    var q = state.beaver.p;
+    return { x: PATH_A.x + (PATH_B.x - PATH_A.x) * q, y: PATH_A.y + (PATH_B.y - PATH_A.y) * q };
+  }
+
   function update(dt) {
     state.t += dt;
     var b = state.beaver, c = state.cart;
 
-    // --- Bramble ---
     if (b.phase === "go") {
-      b.x -= 26 * dt;
+      b.p -= 0.42 * dt;
       state.status = "Bramble geht zum Glühbeerenbeet";
-      if (b.x <= BUSH_STOP) { b.x = BUSH_STOP; b.phase = "harvest"; b.timer = 0.9; }
+      if (b.p <= 0) { b.p = 0; b.phase = "harvest"; b.timer = 1.0; }
     } else if (b.phase === "harvest") {
       b.timer -= dt;
       state.status = "Bramble erntet Glühbeeren";
       if (b.timer <= 0) { b.phase = "back"; b.carrying = true; }
     } else if (b.phase === "back") {
-      b.x += 26 * dt;
+      b.p += 0.42 * dt;
       state.status = "Bramble trägt eine Kiste zur Verladestation";
-      if (b.x >= STATION_STOP) { b.x = STATION_STOP; b.phase = "drop"; b.timer = 0.45; }
+      if (b.p >= 1) { b.p = 1; b.phase = "drop"; b.timer = 0.5; }
     } else if (b.phase === "drop") {
       b.timer -= dt;
       state.status = "Bramble legt die Kiste an der Verladestation ab";
       if (b.timer <= 0) {
-        if (state.crates < 2) {
-          state.crates++;
-          b.carrying = false;
-          b.phase = "go";
+        if (state.crates < STATION_SLOTS) {
+          state.crates++; b.carrying = false; b.phase = "go";
         } else {
           state.status = "Verladestation voll – Bramble wartet auf den Wurzelwagen";
           b.timer = 0.4;
@@ -1223,15 +1270,10 @@
       }
     }
 
-    // --- Wurzelwagen ---
     if (c.phase === "idle") {
-      if (state.crates >= 2) {
-        c.load = state.crates;
-        state.crates = 0;
-        c.phase = "out";
-      }
+      if (state.crates >= STATION_SLOTS) { c.load = state.crates; state.crates = 0; c.phase = "out"; }
     } else if (c.phase === "out") {
-      c.x += 38 * dt;
+      c.x += 34 * dt;
       state.status = "Wurzelwagen fährt zum Vorratshaus";
       if (c.x >= CART_DOCK) { c.x = CART_DOCK; c.phase = "unload"; c.timer = 1.1; }
     } else if (c.phase === "unload") {
@@ -1239,20 +1281,15 @@
       state.status = "Ankunft – Kisten werden eingelagert";
       if (c.timer <= 0) {
         state.stock += c.load * 6;      // Bestand steigt erst hier
-        c.load = 0;
-        c.phase = "home";
-        state.react = 1.6;              // Cozywolf reagiert
+        c.load = 0; c.phase = "home"; state.react = 1.7;
       }
     } else if (c.phase === "home") {
-      c.x -= 38 * dt;
+      c.x -= 34 * dt;
       state.status = "Wurzelwagen kehrt zur Verladestation zurück";
       if (c.x <= CART_HOME) { c.x = CART_HOME; c.phase = "idle"; }
     }
 
-    if (state.react > 0) {
-      state.react -= dt;
-      state.status = "Cozywolf hebt kurz das Ohr";
-    }
+    if (state.react > 0) { state.react -= dt; state.status = "Cozywolf hebt kurz das Ohr"; }
     state.zzz = (state.zzz + dt) % 4;
 
     setHud("crates", String(state.crates));
@@ -1263,121 +1300,158 @@
 
   function render() {
     var t = state.t;
+    var pulse = (Math.sin(t * 2.2) + 1) / 2;
 
-    // Himmel in Bändern
-    for (var i = 0; i < SKY.length; i++) {
-      px(ctx, SKY[i], 0, i * 8, W, 8);
+    /* --- Boden --- */
+    var L = -OX, R = W - OX;
+    px(ctx, FOREST_DK, L, 0, W, 22);
+    for (var fx = L - 4; fx < R + 8; fx += 11) {
+      ellipse(ctx, FOREST, fx, 18, 8, 6);
+      ellipse(ctx, FOREST_DK, fx + 5, 15, 6, 5);
     }
-    px(ctx, SKY[3], 0, 32, W, 14);
-    // Sterne
-    for (var s = 0; s < stars.length; s++) {
-      var st = stars[s];
-      var tw = (Math.sin(t * 1.6 + st.p) + 1) / 2;
-      px(ctx, tw > 0.55 ? "#CFE0DA" : "#7C9089", st.x, st.y, 1, 1);
-    }
-    // Mond
-    px(ctx, "#E8EFDF", 206, 9, 7, 7);
-    px(ctx, "#DCE6D6", 205, 11, 1, 3);
-    px(ctx, SKY[1], 203, 8, 5, 6);
-
-    // Parallax: drei Silhouettenschichten, von hinten nach vorn dunkler
-    for (var L = 0; L < layers.length; L++) {
-      var lay = layers[L];
-      for (var n = 0; n < lay.trees.length; n++) {
-        var tr = lay.trees[n];
-        drawTreeSilhouette(ctx, lay.color, tr.x, lay.base, tr.w, tr.h);
-      }
-      px(ctx, lay.color, 0, lay.base, W, 42 - lay.base);
-    }
-
-    // Boden
-    px(ctx, GROUND, 0, 41, W, H - 41);
-    px(ctx, GROUND_LT, 0, 41, W, 1);
+    px(ctx, GRASS, L, 20, W, H - 20);
+    px(ctx, GRASS_LT, L, 20, W, 1);
     for (var k = 0; k < speckles.length; k++) {
       px(ctx, speckles[k].c, speckles[k].x, speckles[k].y, 1, 1);
     }
-
-    // Warme Lichtinseln auf dem Boden – zeigen, wo etwas passiert
-    px(ctx, "rgba(255,205,120,0.10)", 40, 44, 18, 6);
-    px(ctx, "rgba(255,205,120,0.08)", 36, 46, 26, 4);
-    px(ctx, "rgba(255,205,120,0.10)", STORE_X - 2, 44, 38, 6);
-    px(ctx, "rgba(255,205,120,0.07)", STORE_X - 6, 46, 46, 5);
-
-    // Weg für Bramble (echter Weg, nur darauf läuft er)
-    for (var wx = BUSH_X + 6; wx < STATION_X + 12; wx += 3) {
-      px(ctx, PATH, wx, PATH_Y - 1, 2, 2);
-      px(ctx, PATH_LT, wx, PATH_Y - 1, 1, 1);
+    for (var fl = 0; fl < flowers.length; fl++) {
+      px(ctx, flowers[fl].c, flowers[fl].x, flowers[fl].y, 1, 1);
     }
 
-    // Schienen (echte Route für den Wagen)
-    for (var rx = RAIL_A - 4; rx < RAIL_B; rx += 4) {
-      px(ctx, TIE, rx, GROUND_Y - 1, 3, 2);
+    /* --- Teich --- */
+    ellipse(ctx, "#2A4A3A", POND.cx, POND.cy, POND.rx + 2, POND.ry + 1);
+    ellipse(ctx, WATER, POND.cx, POND.cy, POND.rx, POND.ry);
+    ellipse(ctx, WATER_LT, POND.cx - 3, POND.cy - 3, POND.rx - 8, POND.ry - 6);
+    for (var wv = 0; wv < 4; wv++) {
+      var wo = Math.sin(t * 1.1 + wv * 1.7) * 4;
+      px(ctx, "#7FB6CE", POND.cx - 10 + wv * 7 + wo, POND.cy - 4 + wv * 3, 3, 1);
     }
-    px(ctx, RAIL, RAIL_A - 4, GROUND_Y - 2, RAIL_B - RAIL_A + 4, 1);
-    px(ctx, RAIL, RAIL_A - 4, GROUND_Y + 1, RAIL_B - RAIL_A + 4, 1);
 
-    // Laterne mit flackerndem, gestuftem Lichtkegel
-    px(ctx, WOOD_DK, 48, GROUND_Y - 14, 1, 14);
-    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2;
-    var halo = flick > 0 ? 0.11 : 0.08;
-    px(ctx, "rgba(255,211,122," + halo + ")", 45, GROUND_Y - 19, 7, 9);
-    px(ctx, "rgba(255,211,122," + halo + ")", 44, GROUND_Y - 17, 9, 5);
-    px(ctx, "rgba(255,211,122," + (halo * 1.7) + ")", 46, GROUND_Y - 18, 5, 6);
-    px(ctx, flick > 0 ? LAMP : "#E0B25C", 47, GROUND_Y - 17, 3, 3);
+    /* --- Weg und Schienen liegen flach auf dem Boden --- */
+    for (var d = 0; d < pathDots.length; d++) {
+      var pd = pathDots[d];
+      ellipse(ctx, PATH_DK, pd.x, pd.y, pd.r + 1, pd.r);
+      ellipse(ctx, PATH_C, pd.x, pd.y - 1, pd.r, pd.r - 1);
+    }
+    px(ctx, "#2F4A38", RAIL_A - 3, RAIL_Y - 4, RAIL_B - RAIL_A + 6, 9);
+    for (var rx = RAIL_A; rx < RAIL_B; rx += 5) {
+      px(ctx, TIE, rx, RAIL_Y - 3, 3, 7);
+    }
+    px(ctx, RAIL, RAIL_A - 2, RAIL_Y - 3, RAIL_B - RAIL_A + 4, 1);
+    px(ctx, RAIL, RAIL_A - 2, RAIL_Y + 3, RAIL_B - RAIL_A + 4, 1);
+    px(ctx, WOOD_DK, RAIL_B, RAIL_Y - 6, 3, 13);
+    px(ctx, WOOD, RAIL_B, RAIL_Y - 5, 3, 2);
 
-    /* --- hintere Reihe (Fußpunkt GROUND_Y) --- */
+    /* --- Warme Lichtinseln --- */
+    var flick = (Math.sin(t * 5.1) + Math.sin(t * 2.3)) / 2 > 0 ? 0.16 : 0.12;
+    function pool(cx, cy, rx, ry, a) {
+      ellipse(ctx, "rgba(255,206,120," + (a * 0.35).toFixed(3) + ")", cx, cy, rx, ry);
+      ellipse(ctx, "rgba(255,206,120," + (a * 0.6).toFixed(3) + ")", cx, cy, rx * 0.68, ry * 0.68);
+      ellipse(ctx, "rgba(255,214,150," + a.toFixed(3) + ")", cx, cy, rx * 0.36, ry * 0.36);
+    }
+    pool(LAMP_X, LAMP_Y + 1, 15, 8, flick);
+    pool(STORE_X + 25, STORE_Y + 3, 26, 11, 0.13);
+
+    /* --- Alles Stehende nach Fußpunkt sortiert --- */
+    var bp = beaverPos();
+    var items = [];
+
+    for (var tr = 0; tr < trees.length; tr++) {
+      (function (o) {
+        items.push({ y: o.y, draw: function () { drawTree(ctx, o.x, o.y, o.size); } });
+      })(trees[tr]);
+    }
+
     // Glühbeerenbeet
-    var pulse = (Math.sin(t * 2.2) + 1) / 2;
-    BUSH_PAL.b = pulse > 0.6 ? "#FFE9A8" : (pulse > 0.3 ? BERRY : "#D9A93C");
-    drawSprite(ctx, BUSH, BUSH_PAL, BUSH_X, GROUND_Y - BUSH.length);
+    items.push({ y: BEET.base, draw: function () {
+      ellipse(ctx, GRASS_DK, BEET.cx, BEET.cy, BEET.rx + 3, BEET.ry + 2);
+      ellipse(ctx, "#5C7A4E", BEET.cx, BEET.cy, BEET.rx + 1, BEET.ry + 1);
+      ellipse(ctx, SOIL_DK, BEET.cx, BEET.cy, BEET.rx, BEET.ry);
+      ellipse(ctx, SOIL, BEET.cx, BEET.cy - 1, BEET.rx - 2, BEET.ry - 2);
+      for (var row = -1; row <= 1; row++) {
+        px(ctx, SOIL_DK, BEET.cx - 14, BEET.cy + row * 4, 28, 1);
+      }
+      var bush = [[-13, 2], [-4, 5], [5, 2], [12, 5], [-8, -3], [3, -4]];
+      for (var i = 0; i < bush.length; i++) {
+        var bx = BEET.cx + bush[i][0], by = BEET.cy + bush[i][1];
+        ellipse(ctx, LEAF_DK, bx, by - 3, 5, 4);
+        ellipse(ctx, LEAF, bx, by - 4, 4, 3);
+        var lit = (Math.sin(t * 2.2 + i) + 1) / 2;
+        px(ctx, lit > 0.55 ? "#FFE9A8" : BERRY, bx - 2, by - 4, 1, 1);
+        px(ctx, lit > 0.3 ? BERRY : "#D9A93C", bx + 1, by - 5, 1, 1);
+        px(ctx, lit > 0.75 ? "#FFE9A8" : BERRY, bx + 2, by - 2, 1, 1);
+      }
+    }});
 
-    drawStation(ctx, STATION_X, GROUND_Y, { slots: 2, crates: state.crates });
-    drawStorehouse(ctx, STORE_X, GROUND_Y);
+    // Laterne
+    items.push({ y: LAMP_Y, draw: function () {
+      px(ctx, WOOD_DK, LAMP_X - 1, LAMP_Y - 16, 2, 16);
+      px(ctx, WOOD_DK, LAMP_X - 3, LAMP_Y - 21, 6, 6);
+      px(ctx, flick > 0.11 ? LAMP : "#E6BC6A", LAMP_X - 2, LAMP_Y - 20, 4, 4);
+    }});
 
-    // Wagen auf der Schiene
-    drawCart(ctx, state.cart.x, GROUND_Y, state.cart.load);
+    items.push({ y: STATION_Y, draw: function () {
+      drawStation(ctx, STATION_X, STATION_Y, { slots: STATION_SLOTS, crates: state.crates });
+    }});
 
-    /* --- mittlere Ebene: Bramble auf dem Weg --- */
-    var b = state.beaver;
-    var moving = (b.phase === "go" || b.phase === "back");
-    var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
-    var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
-    drawSprite(ctx, frame, BEAVER_PAL, b.x, PATH_Y - 11 + bob);
-    if (b.carrying) drawCrate(ctx, b.x + 8, PATH_Y - 10);
+    items.push({ y: STORE_Y, draw: function () { drawStorehouse(ctx, STORE_X, STORE_Y, t); } });
 
-    /* --- vordere Ebene: Nest und Cozywolf --- */
-    drawSprite(ctx, NEST_BACK, NEST_PAL, NEST_X, NEST_Y - 10);
-    var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
-    var lift = state.react > 0 ? -1 : 0;
-    drawSprite(ctx, WOLF, WOLF_PAL, NEST_X + 4, NEST_Y - 19 + breath + lift);
-    drawSprite(ctx, NEST_FRONT, NEST_PAL, NEST_X, NEST_Y - 5);
+    items.push({ y: RAIL_Y + 1, draw: function () {
+      drawCart(ctx, state.cart.x, RAIL_Y + 4, state.cart.load);
+    }});
 
-    // Herzknospe am rechten Nestrand, auf einem Stiel – frei vom Wolf
-    px(ctx, "#3E6440", NEST_X + 30, NEST_Y - 12, 1, 8);
-    drawBlossom(ctx, NEST_X + 29, NEST_Y - 16, pulse > 0.5);
+    // Bramble
+    items.push({ y: bp.y, draw: function () {
+      var b = state.beaver;
+      var moving = (b.phase === "go" || b.phase === "back");
+      var frame = (moving && Math.floor(t * 7) % 2 === 0) ? BEAVER_B : BEAVER_A;
+      var bob = (b.phase === "harvest" && Math.floor(t * 5) % 2 === 0) ? 1 : 0;
+      drawSprite(ctx, frame, BEAVER_PAL, bp.x - 5, bp.y - 11 + bob);
+      if (b.carrying) drawCrate(ctx, bp.x + 3, bp.y - 12);
+    }});
 
-    // Schlaf-Zeichen
-    if (state.react <= 0 && state.zzz < 2) {
-      var zy = NEST_Y - 22 - Math.floor(state.zzz * 3);
-      px(ctx, "#A9BCC6", NEST_X + 7, zy, 3, 1);
-      px(ctx, "#A9BCC6", NEST_X + 8, zy + 1, 1, 1);
-      px(ctx, "#A9BCC6", NEST_X + 7, zy + 2, 3, 1);
-    }
-    // Reaktions-Herz
-    if (state.react > 0) {
-      var hy = NEST_Y - 23 - Math.floor((1.6 - state.react) * 3);
-      px(ctx, "#FF9CC0", NEST_X + 7, hy, 1, 1);
-      px(ctx, "#FF9CC0", NEST_X + 9, hy, 1, 1);
-      px(ctx, "#FF9CC0", NEST_X + 6, hy + 1, 5, 1);
-      px(ctx, "#FF9CC0", NEST_X + 7, hy + 2, 3, 1);
-      px(ctx, "#FF9CC0", NEST_X + 8, hy + 3, 1, 1);
-    }
+    // Nest mit Cozywolf
+    items.push({ y: NEST.cy + NEST.ry, draw: function () {
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx, NEST.ry);
+      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy, NEST.rx - 2, NEST.ry - 2);
+      for (var w = 0; w < 6; w++) {
+        px(ctx, "#7A6740", NEST.cx - 13 + w * 5, NEST.cy - 6 + (w % 3) * 5, 3, 1);
+      }
+      var breath = Math.floor(t * 0.9) % 2 === 0 ? 0 : 1;
+      var lift = state.react > 0 ? -1 : 0;
+      drawSprite(ctx, WOLF, WOLF_PAL, NEST.cx - 13, NEST.cy - 12 + breath + lift);
+      // vorderer Nestrand liegt über dem Wolf – er liegt sichtbar darin
+      ellipse(ctx, "#33512F", NEST.cx, NEST.cy, NEST.rx, NEST.ry, NEST.ry - 3, NEST.ry);
+      ellipse(ctx, "#4B7444", NEST.cx, NEST.cy, NEST.rx - 2, NEST.ry - 2, NEST.ry - 4, NEST.ry);
 
-    // Vordergrund-Silhouette: durchgehendes Gras am unteren Bildrand
-    px(ctx, "#16211D", 0, 81, W, H - 81);
-    for (var g = 0; g < tufts.length; g++) {
-      var tf = tufts[g];
-      px(ctx, "#16211D", tf.x, 81 - tf.h, 2, tf.h);
+      // Herzknospe am Nestrand
+      px(ctx, "#3E6440", NEST.cx + NEST.rx - 3, NEST.cy - 6, 1, 7);
+      drawBlossom(ctx, NEST.cx + NEST.rx - 4, NEST.cy - 10, pulse > 0.5);
+
+      if (state.react <= 0 && state.zzz < 2) {
+        var zy = NEST.cy - 16 - Math.floor(state.zzz * 3);
+        px(ctx, "#CBD8E0", NEST.cx - 10, zy, 3, 1);
+        px(ctx, "#CBD8E0", NEST.cx - 9, zy + 1, 1, 1);
+        px(ctx, "#CBD8E0", NEST.cx - 10, zy + 2, 3, 1);
+      }
+      if (state.react > 0) {
+        var hy = NEST.cy - 17 - Math.floor((1.7 - state.react) * 3);
+        px(ctx, "#FF9CC0", NEST.cx - 10, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 8, hy, 1, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 11, hy + 1, 5, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 10, hy + 2, 3, 1);
+        px(ctx, "#FF9CC0", NEST.cx - 9, hy + 3, 1, 1);
+      }
+    }});
+
+    items.sort(function (a, b) { return a.y - b.y; });
+    for (var it = 0; it < items.length; it++) items[it].draw();
+
+    // Glühwürmchen als letzte Ebene
+    for (var g = 0; g < 7; g++) {
+      var gx = L + 20 + ((g * 31 + t * 6) % (W - 40));
+      var gy = 40 + Math.sin(t * 0.8 + g * 2) * 12 + g * 8;
+      px(ctx, (Math.sin(t * 3 + g) > 0) ? "#FFF0B0" : "#D8C070", gx, gy, 1, 1);
     }
   }
 
@@ -1391,18 +1465,17 @@
   }
 
   window.addEventListener("resize", function () {
-    ctx = fit(canvas, W, H, 4);
+    fitScene();
     if (reduce) render();
   });
 
   if (reduce) {
-    // Ein ruhiger, aussagekräftiger Standbild-Zustand
     state.crates = 1;
     state.cart.x = (CART_HOME + CART_DOCK) / 2;
     state.cart.phase = "out";
     state.cart.load = 2;
     state.stock = 18;
-    state.beaver.x = 34;
+    state.beaver.p = 0.45;
     state.beaver.carrying = true;
     setHud("crates", "1");
     setHud("cart", "2");
