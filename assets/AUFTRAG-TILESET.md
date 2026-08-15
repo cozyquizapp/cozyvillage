@@ -15,9 +15,23 @@ keine Figur, man schaut zu, entscheidet und baut aus.
 Der Ort ist eine **Waldlichtung**, die rundum von Wald geschlossen ist. Sie
 ist immer vollständig auf einem Bildschirm zu sehen und wird nie verlassen.
 
-Gebraucht wird ein Asset-Paket für die Umgebung, die Gebäude und die
-Bewohner. **Die Hauptfigur (ein pinker Wolf in petrolfarbener Latzhose)
-existiert bereits und wird nicht neu gezeichnet.**
+Gebraucht wird ein Asset-Paket für die Umgebung, die Gebäude, die Bewohner
+und die Hauptfigur. Die Hauptfigur ist ein **pinker Wolf in petrolfarbener
+Latzhose**; für sie liegt eine Vorlage bei, nach der sie neu gezeichnet wird
+(siehe 4.7).
+
+### Reihenfolge der Lieferung
+
+Bitte **nicht alles auf einmal** liefern. Zuerst eine kleine **Stilprobe**,
+damit ein Missverständnis über Perspektive, Palette oder Kantenschärfe
+zwanzig Teile kostet und nicht zweihundert:
+
+**Stilprobe (Batch 1):** Graskacheln mit Übergangsset · zwei Laubbäume
+(einer hell, einer dunkel) · Beerenbusch in drei Leuchtstufen · Kiste 8 × 8 ·
+Verladestation Stufe 1 · Wurzelwagen · Schienenstück · Biber, nur Zeile 1
+und Zeile 5 · Wasser-Mitte mit vier Bildern.
+
+Erst nach Freigabe der Stilprobe folgt der Rest.
 
 ---
 
@@ -62,7 +76,10 @@ fellgrund-tileset/
   natur.png                  Bäume, Büsche, Steine, Blumen
   gebaeude.png               Gebäude und Stationen
   gueter.png                 Kisten, Fässer, Güter, Schienen
+  bewegt.png                 Wasser, Licht, Pflanzen als Bildfolgen
   bewohner_<name>.png        je Tier ein Spritesheet
+  bewohner_eule.png          die Eule, abweichender Aufbau
+  cozywolf.png               die Hauptfigur nach beigelegter Vorlage
   vorschau.png               eine Übersichtsgrafik aller Teile
 ```
 
@@ -188,6 +205,32 @@ Stufe 2 ist erkennbar dieselbe Stelle wie Stufe 1, nur weiter gediehen.
   Zusätzlich zwei Radstellungen für eine einfache Fahranimation
 - Wegweiser, Zaunstück, Torbogen — je 16 × 16
 
+### 4.4b Bewegte Teile — Wasser, Licht, Pflanzen
+
+Die Karte darf nie wie ein gemalter Hintergrund wirken. Diese Teile werden
+deshalb **als Bildfolgen** geliefert, nicht als Einzelbild. Jede Folge ist
+eine **nahtlose Schleife**: Das letzte Bild geht ohne Sprung ins erste über.
+
+| Teil | Größe | Bilder | Bewegung |
+|---|---|---|---|
+| Wasseroberfläche, Mitte | 16 × 16 | 4 | ruhiges Glitzern, ein bis zwei Pixel wandern seitlich |
+| Wasser-Ufer, ganzes Übergangsset | 16 × 16 | 4 je Kachel | die Schaumkante am Ufer bewegt sich mit |
+| Wasserfall / Zulaufrinne | 16 × 32 | 4 | senkrecht fallend, Schleife |
+| Wasserspritzer am Auftreffpunkt | 16 × 16 | 4 | |
+| Seerosenblatt | 16 × 16 | 2 | leichtes Wiegen |
+| Schilf am Ufer | 16 × 16 | 3 | Wiegen im Wind |
+| Laterne | 16 × 32 | 3 | Flackern: hell, mittel, schwach |
+| Beerenbusch | 16 × 16 | 3 | Leuchten der Beeren an- und abschwellend |
+| Blüte am Nest | 16 × 16 | 4 | sanftes Funkeln |
+| Grasbüschel im Wind | 16 × 16 | 3 | zwei bis drei Pixel Neigung, mehr nicht |
+| Rauch aus einem Schornstein | 16 × 16 | 4 | aufsteigend |
+
+**Wichtig:** Die Bewegung bleibt klein. Ein bis drei Pixel Versatz reichen.
+Fellgrund ist ein ruhiger Ort — es soll atmen, nicht zappeln.
+
+Die Bilder einer Folge liegen **waagerecht nebeneinander** in derselben
+Datei, in Abspielreihenfolge von links nach rechts.
+
 ### 4.5 `bewohner_<name>.png` — die Tiere
 
 Ein Spritesheet je Tier. **Rasterweite 32 × 32**, Figur mittig, Füße auf der
@@ -208,6 +251,26 @@ Je Tier folgende Zeilen im Spritesheet, jede Zeile eine Blickrichtung:
 
 Nach links wird im Spiel gespiegelt — bitte **keine** eigene Linkszeile.
 
+### 4.6 `bewohner_eule.png` — die Eule, abweichender Aufbau
+
+Die Eule ist **keine Arbeiterin**. Sie hütet das Dorfbuch und bringt neue
+Bewohner in den Ort. Sie sitzt erhöht auf einem Ast oder Pfosten und läuft
+nie am Boden. Deshalb bekommt sie **nicht** das Schema aus 4.5, sondern:
+
+| Zeile | Inhalt | Bilder |
+|---|---|---|
+| 1 | Sitzen, nach vorn, ruhiges Blinzeln | 4 |
+| 2 | Kopf nach rechts drehen und zurück | 4 |
+| 3 | Flügel heben, Auffliegen | 4 |
+| 4 | Fliegen, seitlich | 4 |
+| 5 | Landen | 3 |
+
+Rasterweite ebenfalls **32 × 32**. Im Sitzen sind die Füße auf der unteren
+Rasterkante, im Flug ist die Figur mittig.
+
+Zusätzlich als Einzelbild: **Sitzstange** 16 × 16 (ein kurzer Ast mit
+Halterung), auf der die Eule stehen kann.
+
 **Figurenregel für alle Tiere** (damit die Besetzung wie eine Familie wirkt):
 
 - fast schwarzer Umriss `#181016` rundherum
@@ -217,6 +280,43 @@ Nach links wird im Spiel gespiegelt — bitte **keine** eigene Linkszeile.
 - Augen als einfache dunkle Punkte oder geschlossene Bögen, kein Weiß
 - Was ein Tier unterscheidet, sind **Silhouette und Grundfarbe** — niemals
   ein höherer Detailgrad
+
+### 4.7 `cozywolf.png` — die Hauptfigur
+
+Cozywolf wird **nach einer beigelegten Vorlage neu gezeichnet**, nicht frei
+erfunden und nicht aus der Vorlage verkleinert. Die Vorlage ist eine
+hochaufgelöste Zeichnung mit weichen Kanten; gebraucht wird eine
+handgezeichnete Fassung auf Spritegröße, die dieselbe Figur zeigt.
+
+**Diese Merkmale sind nicht verhandelbar** — an ihnen wird die Figur erkannt:
+
+- **pinkes Fell** in genau drei Werten: `#FF95C0` `#F2609E` `#C43C74`
+- **petrolfarbene Latzhose** `#2E8792` mit dunkler Kante `#1D5E68`
+- **zwei goldene Knöpfe** `#F0A93C` an den Trägern
+- **dunkelblaue Nase** `#161E38`, klein und rundlich
+- **geschlossene Augen als Bögen** und ein Lächeln aus wenigen Pixeln
+- **spitze Ohren** mit dunklerem Innenohr `#C43C74`
+- **buschiger Schwanz** als eigene Form neben dem Körper, heller als das Fell
+- Wangenröte `#F0885E` wie bei allen anderen Tieren
+
+Rasterweite **32 × 32**, Figurenhöhe etwa 32 Pixel.
+
+| Zeile | Inhalt | Bilder |
+|---|---|---|
+| 1 | **Schlafen, eingerollt**, von schräg oben — nur ruhiges Atmen | 2 |
+| 2 | **Ohr heben und wieder ablegen** (die Reaktion auf eine Lieferung) | 4 |
+| 3 | Aufsetzen, gähnen, wieder einrollen | 5 |
+| 4 | Sitzen nach vorn, blinzeln | 3 |
+| 5 | Gehen nach vorn | 4 |
+| 6 | Gehen nach rechts | 4 |
+| 7 | Gehen nach hinten | 4 |
+| 8 | Freude (kurzes Hüpfen, Ohren nach oben) | 4 |
+
+**Wichtig zur Schlafhaltung:** Die eingerollte Figur muss in eine Nestmulde
+von **40 × 24** passen, und der *vordere Rand* der Mulde (siehe 4.3) wird im
+Spiel **über** die Figur gelegt. Die unteren drei bis vier Pixelzeilen der
+schlafenden Figur dürfen also verdeckt werden — dort bitte nichts
+Wesentliches platzieren.
 
 ---
 
@@ -229,7 +329,8 @@ Nach links wird im Spiel gespiegelt — bitte **keine** eigene Linkszeile.
 - Keine isometrischen Kacheln
 - Keine weichgezeichneten oder „HD"-Fassungen
 - Keine Rahmen, Schlagschatten-Effekte oder Wasserzeichen im Bild
-- Keine Hauptfigur (der pinke Wolf existiert bereits)
+- Keine frei erfundene Hauptfigur — Cozywolf wird ausschließlich nach der
+  beigelegten Vorlage gezeichnet (siehe 4.7)
 
 ---
 
@@ -245,7 +346,12 @@ Nach links wird im Spiel gespiegelt — bitte **keine** eigene Linkszeile.
    mehreren Größen?
 7. Ist die 8 × 8-Kiste sowohl auf `#487646` (Gras) als auch auf `#96693C`
    (Holz) klar erkennbar?
-8. Liegt `LIZENZ.txt` bei?
+8. Läuft jede Bildfolge **nahtlos** — geht das letzte Bild ohne Sprung ins
+   erste über?
+9. Bleibt die Bewegung überall bei ein bis drei Pixeln?
+10. Trägt Cozywolf alle nicht verhandelbaren Merkmale aus 4.7, und bleibt
+    seine Schlafhaltung in den unteren vier Pixelzeilen frei von Wichtigem?
+11. Liegt `LIZENZ.txt` bei?
 
 ---
 
