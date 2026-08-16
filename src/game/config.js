@@ -72,13 +72,17 @@ export const PLACES = {
  * deutlicher als jede Zahl.
  */
 export const REGAL = {
-  reihen: [-48, -33, -15],
-  spalten: [-40, -20, 0, 20, 40],
-  // Der Haufen liegt vor dem Stand, nicht rechts daneben – dort stand er
-  // halb im Wald.
-  haufen: { x: -30, y: 14, dx: 20, dy: 13, proReihe: 4 }
+  // Sechs sichtbare Plätze auf den beiden oberen Brettern – nicht mehr.
+  //
+  // Vorher zeigte das Regal jede einzelne Kiste, bis zu sechsunddreißig. Das
+  // ergab eine massive braune Wand, die alles andere erschlug und eher nach
+  // Debug-Anzeige aussah als nach einem Dorfgebäude. Die Zahl der Kisten war
+  // ohnehin nie ablesbar – man zählt sie nicht, man sieht nur, wie voll es
+  // ist. Genau das zeigen jetzt sechs Plätze, anteilig gefüllt.
+  reihen: [-48, -33],
+  spalten: [-28, 0, 28],
+  sichtbar: 6
 };
-
 /**
  * Die Ladefläche des Wurzelwagens, gemessen an `gueter_64x32.png`.
  *

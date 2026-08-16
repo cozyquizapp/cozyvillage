@@ -604,29 +604,30 @@ export default class GladeScene extends Phaser.Scene {
    * gelagert sind, und ist voll, wenn der Vorrat voll ist – deshalb steht
    * nirgends eine Zahl, die man sonst glauben müsste.
    */
-  /** Der Platz einer Kiste: erst die Bretter, dann der Haufen daneben. */
+  /** Platz einer sichtbaren Kiste im Regal. */
   regalPlatz(i) {
     const s = PLACES.store;
-    const bretter = REGAL.reihen.length * REGAL.spalten.length;
-    if (i < bretter) {
-      const reihe = Math.floor(i / REGAL.spalten.length);
-      const spalte = i % REGAL.spalten.length;
-      return {
-        x: s.x + REGAL.spalten[spalte],
-        y: s.y + REGAL.reihen[reihe],
-        tiefe: s.y + 1 + (REGAL.reihen.length - reihe)
-      };
-    }
-    const h = REGAL.haufen, j = i - bretter;
+    const spalte = i % REGAL.spalten.length;
+    const reihe = Math.floor(i / REGAL.spalten.length);
     return {
-      x: s.x + h.x + (j % h.proReihe) * h.dx,
-      y: s.y + h.y - Math.floor(j / h.proReihe) * h.dy,
-      tiefe: s.y + 2
+      x: s.x + REGAL.spalten[spalte],
+      y: s.y + REGAL.reihen[Math.min(reihe, REGAL.reihen.length - 1)],
+      tiefe: s.y + 1 + (REGAL.reihen.length - reihe)
     };
   }
 
+  /**
+   * Das Regal zeigt, wie voll der Vorrat ist – nicht, wie viele Kisten er hat.
+   *
+   * Sechs Plätze, anteilig belegt. Ein halbvoller Vorrat zeigt drei Kisten,
+   * ein voller sechs. Die genaue Zahl liest ohnehin niemand ab; man sieht nur,
+   * ob noch Platz ist. Alles darüber hinaus bleibt im Gebäude.
+   */
   aktualisiereRegal() {
-    const anzahl = Math.min(regalPlaetze(), Math.floor(state.beeren / beerenProKiste()));
+    const anteil = Math.min(1, state.beeren / Math.max(1, lagerKapazitaet()));
+    const anzahl = state.beeren > 0
+      ? Math.max(1, Math.round(anteil * REGAL.sichtbar))
+      : 0;
     while (this.regalKisten.length > anzahl) this.regalKisten.pop().destroy();
     while (this.regalKisten.length < anzahl) {
       const i = this.regalKisten.length;
@@ -725,7 +726,7 @@ export default class GladeScene extends Phaser.Scene {
     bus.emit("oeffne", {
       titel: PLACES.store.label,
       zeilen: [
-        `Im Regal: ${this.regalKisten.length} von ${regalPlaetze()} Kisten`,
+        `Vorrat: ${Math.round(state.beeren / Math.max(1, lagerKapazitaet()) * 100)} % des Lagers`,
         `Glühbeeren: ${state.beeren} von ${lagerKapazitaet()}`,
         state.stau.lager
           ? "Das Regal ist voll – der Wagen kann nicht abladen. Etwas ausgeben schafft Platz."
