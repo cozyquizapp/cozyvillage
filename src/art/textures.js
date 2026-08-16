@@ -183,6 +183,31 @@ function drawBackground(ctx, scene) {
     }
   }
 
+  // Der Dorfplatz um Cozywolfs Nest.
+  //
+  // Cozywolf war bisher eine Figur am Rand. Ein Dorf hat aber eine Mitte,
+  // und die Mitte ist ein Platz: ein festgetretener Rund aus denselben
+  // Wegflecken, aus denen auch der Weg besteht. Er sagt ohne ein Wort,
+  // dass hier der Ort ist, um den herum alles andere gebaut wird.
+  const wegBlatt = scene && scene.textures.get("blatt-wege");
+  if (wegBlatt && wegBlatt.key !== "__MISSING") {
+    const bild = wegBlatt.getSourceImage();
+    const h = bild.height;
+    const rnd2 = makeRandom(97);
+    const n = PLACES.nest;
+    for (const [radX, radY, anzahl] of [[46, 24, 16], [26, 13, 8], [0, 0, 1]]) {
+      for (let i = 0; i < anzahl; i++) {
+        const a = (i / Math.max(1, anzahl)) * Math.PI * 2 + rnd2();
+        const px_ = s(n.x + Math.cos(a) * radX);
+        const py_ = s(n.y - 6 + Math.sin(a) * radY);
+        const br = rnd2() > 0.5 ? 64 : 32;
+        const fx = br === 64 ? 128 + Math.floor(rnd2() * 3) * 64 : Math.floor(rnd2() * 4) * 32;
+        ctx.drawImage(bild, fx, 0, br, h,
+          px_ - br / (2 * K), py_ - h / (2 * K), br / K, h / K);
+      }
+    }
+  }
+
   // Schienenstrecke
   const rf = s(RAIL.from), rt = s(RAIL.to), rY = s(RAIL.y);
   const schiene = scene && scene.textures.get("schiene");

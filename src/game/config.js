@@ -40,33 +40,55 @@ export function insideGlade(x, y) {
   return hw > 0 && Math.abs(x - GLADE.cx) < hw;
 }
 
-/** Bauplätze. Jeder Ort ist eine Parzelle, die über Stufen ausgebaut wird. */
+/**
+ * Bauplätze.
+ *
+ * Die Aufteilung ist am gelieferten Waldrahmen ausgemessen, nicht geschätzt:
+ * Die Lichtung öffnet sich bei y = 110, ist zwischen y = 180 und y = 250 am
+ * breitesten (x 50 bis 570) und schließt sich unten ab y = 300 rasch wieder.
+ * Jeder Ort liegt vollständig in diesem Bereich – auch bei vollem Ausbau.
+ *
+ * In der Mitte steht das Nest. Cozywolf gehört auf den Dorfplatz, nicht an
+ * den Rand; alles andere ordnet sich um ihn herum an.
+ */
 export const PLACES = {
-  beet:    { x: 112 * K, y: 70 * K,  label: "Glühbeerenbeet" },
-  station: { x: 150 * K, y: 125 * K, label: "Verladestation" },
-  store:   { x: 245 * K, y: 127 * K, label: "Vorratsstand" },
-  nest:    { x: 142 * K, y: 160 * K, label: "Cozywolfs Nest" },
-  // Das Becken war so groß, dass Brambles Weg mitten hindurchführte – die
-  // Tiere liefen über das Wasser. Es liegt jetzt kleiner und weiter westlich.
-  pond:    { x: 85 * K,  y: 103 * K, label: "Wasserbecken", rx: 64, ry: 33 }
+  beet:    { x: 185, y: 160, label: "Glühbeerenbeet" },
+  station: { x: 300, y: 262, label: "Verladestation" },
+  store:   { x: 470, y: 248, label: "Vorratsstand" },
+  nest:    { x: 320, y: 322, label: "Cozywolfs Nest" },
+  pond:    { x: 150, y: 232, label: "Wasserbecken", rx: 44, ry: 22 }
 };
 
 /**
- * Regalbretter des Vorratsstands, gemessen am gelieferten Bild.
+ * Regalbretter des Vorratsstands.
  *
- * Was darüber hinausgeht, stapelt sich als Haufen neben dem Stand. Ein volles
- * Regal mit einem wachsenden Haufen davor sagt "hier passt nichts mehr rein"
- * deutlicher als jede Zahl – und es ist die Vorlage für den Lagerschuppen.
+ * Die Werte sind aus `vorratsstand_1_128x96.png` gemessen: Brettoberkanten
+ * liegen 48, 33 und 15 px über dem Fuß. Die Fächer sind allerdings nur 15,
+ * 12 und 14 px hoch, die Kiste ist 16 px – sie ragt oben leicht heraus.
+ * Das ist ein Fehler im Bild, nicht in dieser Rechnung; er ist gemeldet.
+ *
+ * Was nicht mehr ins Regal passt, stapelt sich neben dem Stand. Ein volles
+ * Regal mit einem wachsenden Haufen daneben sagt "hier geht nichts mehr rein"
+ * deutlicher als jede Zahl.
  */
 export const REGAL = {
-  reihen: [-60, -36, -12],
-  spalten: [-33, -11, 11, 33],
-  haufen: { x: 56, y: -4, dx: 20, dy: 14, proReihe: 3 }
+  reihen: [-48, -33, -15],
+  spalten: [-40, -20, 0, 20, 40],
+  haufen: { x: 66, y: -8, dx: 16, dy: 13, proReihe: 2 }
 };
+
+/**
+ * Die Ladefläche des Wurzelwagens, gemessen an `gueter_64x32.png`.
+ *
+ * Der Wagen ist 40 × 32 px groß; die Innenfläche liegt zwischen 14 px links
+ * und 14 px rechts der Mitte und 16 bis 25 px über dem Fuß. Vorher lagen die
+ * Kisten daneben statt darin.
+ */
+export const WAGEN_BETT = { dx: 7, dy: -17, reihe: 2, stapel: 9 };
 
 /** Brambles Weg – Tiere laufen ausschließlich auf echten Wegen. */
 export const PATH = {
-  from: { x: 120 * K, y: 78 * K }, to: { x: 141 * K, y: 120 * K }
+  from: { x: 225, y: 205 }, to: { x: 285, y: 250 }
 };
 
 /**
@@ -80,9 +102,9 @@ export const PATH = {
  * lässt statt nur eine Zahl zu erhöhen.
  */
 export const BEET_PLAETZE = [
-  [-16, -6], [-6, 2], [4, -4], [14, 3], [-10, 8], [8, 8],
-  [24, -8], [33, 1], [23, 9], [34, 10],
-  [-26, -2], [-22, -12], [-32, 7], [16, 13], [27, 15]
+  [-20, -4], [-8, 2], [4, -6], [16, 0], [-14, 8], [8, 10],
+  [26, -8], [34, 2], [24, 10], [36, 12],
+  [-30, -6], [-24, 4], [-32, 12], [2, 18], [20, 20]
 ].map(([dx, dy]) => ({ dx: dx * K, dy: dy * K }));
 
 /** Die Tiere, die nacheinander einziehen. Reihenfolge = Reihenfolge der Ausbauten. */
@@ -93,9 +115,18 @@ export const ARBEITER = [
   { id: "kiesel",  name: "Kiesel" }
 ];
 
-/** Die Schienenstrecke des Wurzelwagens. */
+/**
+ * Die Schienenstrecke des Wurzelwagens.
+ *
+ * `home` liegt jetzt genau unter der Verladestation und `dock` genau vor dem
+ * Vorratsstand – vorher begann die Schiene erst rechts der Station, sodass
+ * der Wagen nirgends sichtbar etwas abholte. An beiden Enden steht ein
+ * Prellbock, damit die Strecke nicht im Nichts aufhört.
+ */
 export const RAIL = {
-  y: 144 * K, from: 175 * K, to: 280 * K, home: 178 * K, dock: 235 * K
+  // `home` liegt rechts neben der Station statt darunter – direkt darunter
+  // verschwand der Wagen hinter dem Gebäude und man sah ihn nie warten.
+  y: 272, from: 250, to: 535, home: 366, dock: 470
 };
 
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */
@@ -113,10 +144,16 @@ export const PROPS = [
   { kind: "shrub", x: 205 * K, y: 60 * K, size: 4 * K }
 ];
 
-/** Freie Flächen zeigen Potential, aber keine sterilen Platzhalter. */
+/**
+ * Freie Flächen zeigen Potential, aber keine sterilen Platzhalter.
+ *
+ * Beide lagen vorher halb unter etwas anderem: die Küche hinter dem
+ * Vorratsstand, die Werkstatt in der unteren Waldkante. Jetzt liegen sie
+ * frei auf offenem Rasen.
+ */
 export const FUTURE_PARCELS = [
-  { x: 260 * K, y: 90 * K, rx: 18 * K, ry: 9 * K, label: "Küche" },
-  { x: 215 * K, y: 155 * K, rx: 17 * K, ry: 9 * K, label: "Holz- und Wurzelwerkstatt" }
+  { x: 375, y: 172, rx: 36, ry: 18, label: "Küche" },
+  { x: 215, y: 285, rx: 36, ry: 18, label: "Holz- und Wurzelwerkstatt" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */

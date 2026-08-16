@@ -19,7 +19,8 @@
 import Phaser from "phaser";
 import {
   VIEW, GLADE, gladeHalf, PLACES, PATH, RAIL, PROPS, FUTURE_PARCELS,
-  TREE_RING, RULES, UPGRADES, BEET_PLAETZE, ARBEITER, REGAL, ausbautenFuer, K
+  TREE_RING, RULES, UPGRADES, BEET_PLAETZE, ARBEITER, REGAL, WAGEN_BETT,
+  ausbautenFuer, K
 } from "../game/config.js";
 import {
   state, bus, melde, speichern, istFreigeschaltet,
@@ -42,6 +43,7 @@ export default class GladeScene extends Phaser.Scene {
     this.baueStation();
     this.baueVorratsstand();
     this.baueNest();
+    this.baueEndanschlaege();
     this.baueWagen();
     this.baueArbeiter();
     this.baueLaterne();
@@ -83,6 +85,38 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   /**
+   * Macht ein Objekt anklickbar – und zeigt das auch.
+   *
+   * Vorher war nirgends zu erkennen, worauf man klicken kann; man musste die
+   * Lichtung mit dem Mauszeiger abtasten. Jetzt hebt sich alles Anklickbare
+   * beim Überfahren leicht an, wird wärmer und bekommt einen weichen Schein
+   * am Fußpunkt. Der Schein liegt unter dem Objekt, damit er es nicht
+   * überdeckt.
+   */
+  machAnklickbar(obj, handler) {
+    obj.setInteractive({ useHandCursor: true });
+    const ruheY = obj.y;
+    let schein = null;
+    obj.on("pointerover", () => {
+      obj.setTint(0xfff0c8);
+      obj.y = ruheY - 1 * K;
+      if (!schein) {
+        schein = this.add.ellipse(obj.x, ruheY + 2, obj.displayWidth * 0.9, 10 * K, 0xffd05c, 0.16)
+          .setDepth(Math.max(4, obj.depth - 0.5))
+          .setBlendMode(Phaser.BlendModes.ADD);
+      }
+      schein.setVisible(true).setPosition(obj.x, ruheY + 2);
+    });
+    obj.on("pointerout", () => {
+      obj.clearTint();
+      obj.y = ruheY;
+      if (schein) schein.setVisible(false);
+    });
+    obj.on("pointerup", handler);
+    return obj;
+  }
+
+  /**
    * Der Waldrahmen liegt in zwei Ebenen: hinten hinter allem, vorn über den
    * Figuren – nur so kann ein Tier hinter einem Baum verschwinden.
    * Ohne Lieferung fällt der prozedurale Baumkranz ein.
@@ -118,8 +152,7 @@ export default class GladeScene extends Phaser.Scene {
   baueParzellen() {
     for (const p of FUTURE_PARCELS) {
       const bild = this.add.image(p.x, p.y, "parcel").setOrigin(0.5, 0.6).setDepth(5);
-      bild.setInteractive({ useHandCursor: true });
-      bild.on("pointerup", () => bus.emit("oeffne", {
+      this.machAnklickbar(bild, () => bus.emit("oeffne", {
         titel: p.label,
         zeilen: ["Diese Fläche ist vorbereitet, aber noch nicht bebaut.",
                  "Sie wird frei, sobald die erste Kette zuverlässig läuft."],
@@ -192,16 +225,10 @@ export default class GladeScene extends Phaser.Scene {
       });
     }
 
-    // Glanzlichter auf der Oberfläche
-    for (let i = 0; i < 3; i++) {
-      const glanz = this.add.rectangle(
-        p.x - 30 + i * 26, p.y - 12 + i * 9, 10, 2, 0x93cfe0, 0.7
-      ).setDepth(2.9);
-      this.tweens.add({
-        targets: glanz, x: glanz.x + 12, alpha: 0.25,
-        duration: 1800 + i * 400, yoyo: true, repeat: -1, ease: "Sine.easeInOut"
-      });
-    }
+    // Früher lagen hier drei harte Rechtecke als Glanzlichter. Sie sahen aus
+    // wie Schnitte im Bild, weil sie eine Kante hatten, die das Wasser nicht
+    // hat. Die gelieferten Wasserbilder bewegen sich bereits von selbst –
+    // eine zusätzliche Bewegung braucht es nicht.
 
     const flaeche = this.add.rectangle(p.x, p.y, rx * 2, ry * 2, 0x000000, 0)
       .setDepth(3).setInteractive({ useHandCursor: true });
@@ -238,8 +265,7 @@ export default class GladeScene extends Phaser.Scene {
       const x = b.x + dx, y = b.y + dy;
       const bild = this.add.image(x, y, "bush-2").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, y);
-      bild.setInteractive({ useHandCursor: true });
-      bild.on("pointerup", () => this.oeffneBeet());
+      this.machAnklickbar(bild, () => this.oeffneBeet());
       return { bild, x, y, reife: 1, aktiv: false, belegt: null, index: i };
     });
     this.aktualisiereBeetplaetze();
@@ -261,8 +287,7 @@ export default class GladeScene extends Phaser.Scene {
     const s = PLACES.station;
     this.station = this.add.image(s.x, s.y, "station-1").setOrigin(0.5, 1);
     this.tiefeSetzen(this.station, s.y);
-    this.station.setInteractive({ useHandCursor: true });
-    this.station.on("pointerup", () => this.oeffneStation());
+    this.machAnklickbar(this.station, () => this.oeffneStation());
     this.stationKisten = [];
   }
 
@@ -270,8 +295,7 @@ export default class GladeScene extends Phaser.Scene {
     const s = PLACES.store;
     this.stand = this.add.image(s.x, s.y, "store").setOrigin(0.5, 1);
     this.tiefeSetzen(this.stand, s.y);
-    this.stand.setInteractive({ useHandCursor: true });
-    this.stand.on("pointerup", () => this.oeffneStand());
+    this.machAnklickbar(this.stand, () => this.oeffneStand());
     this.regalKisten = [];
   }
 
@@ -291,8 +315,7 @@ export default class GladeScene extends Phaser.Scene {
       });
     }
 
-    this.wolf.setInteractive({ useHandCursor: true });
-    this.wolf.on("pointerup", () => this.oeffneNest());
+    this.machAnklickbar(this.wolf, () => this.oeffneNest());
 
     // Atmen: entweder über gelieferte Bilder oder als leichte Bewegung
     if (this.textures.exists("wolf-sleep-1")) {
@@ -311,12 +334,28 @@ export default class GladeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Prellböcke.
+   *
+   * Die Strecke hörte an beiden Enden einfach auf – sie sah aus wie ein
+   * gemalter Streifen, nicht wie eine Schiene, die irgendwohin führt. Zwei
+   * Balken aus Wagenholz beenden sie sichtbar.
+   */
+  baueEndanschlaege() {
+    for (const [x, richtung] of [[RAIL.from, -1], [RAIL.to, 1]]) {
+      const g = this.add.graphics().setDepth(9 + RAIL.y);
+      g.fillStyle(0x453017, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 4, 18);
+      g.fillStyle(0x6b4f33, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 3, 17);
+      g.fillStyle(0x8a6942, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 3, 2);
+      g.fillStyle(0x453017, 1).fillRect(x + richtung * 6 - 2, RAIL.y - 3, 5, 7);
+    }
+  }
+
   baueWagen() {
-    this.wagenBild = this.add.image(RAIL.home, RAIL.y + 4 * K, "cart").setOrigin(0.5, 1);
-    this.tiefeSetzen(this.wagenBild, RAIL.y + 4 * K);
+    this.wagenBild = this.add.image(RAIL.home, RAIL.y + 8, "cart").setOrigin(0.5, 1);
+    this.tiefeSetzen(this.wagenBild, RAIL.y + 8);
     this.wagenKisten = [];
-    this.wagenBild.setInteractive({ useHandCursor: true });
-    this.wagenBild.on("pointerup", () => bus.emit("oeffne", {
+    this.machAnklickbar(this.wagenBild, () => bus.emit("oeffne", {
       titel: "Wurzelwagen",
       zeilen: [
         `Ladung pro Fahrt: ${wagenKapazitaet()} Kisten`,
@@ -394,10 +433,12 @@ export default class GladeScene extends Phaser.Scene {
    * Dreieck – eine Sprechblase, die sagt: hier fehlt gerade etwas.
    */
   baueStauzeichen() {
+    // Jede Blase steht rund zwölf Pixel über der Oberkante ihres Gebäudes –
+    // nah genug, dass die Zuordnung ohne Nachdenken klappt.
     const orte = {
-      beet: { x: PLACES.beet.x, y: PLACES.beet.y - 26 * K },
-      station: { x: PLACES.station.x, y: PLACES.station.y - 46 * K },
-      lager: { x: PLACES.store.x, y: PLACES.store.y - 52 * K }
+      beet: { x: PLACES.beet.x, y: PLACES.beet.y - 30 },
+      station: { x: PLACES.station.x, y: PLACES.station.y - 92 },
+      lager: { x: PLACES.store.x, y: PLACES.store.y - 104 }
     };
     this.stauZeichen = {};
     for (const [id, p] of Object.entries(orte)) {
@@ -493,11 +534,21 @@ export default class GladeScene extends Phaser.Scene {
     this.setzeWagenKisten();
   }
 
+  /**
+   * Die Kisten liegen in der Ladefläche, nicht daneben.
+   *
+   * Die Maße stammen aus dem gelieferten Wagenbild: Innenfläche 28 px breit,
+   * Boden 17 px über dem Fuß. Vorher hingen die Kisten hinter dem Wagen in
+   * der Luft, was aussah, als würde er sie hinterherziehen.
+   */
   setzeWagenKisten() {
-    const x = this.wagenBild.x;
+    const x = this.wagenBild.x, fuss = this.wagenBild.y;
     this.wagenKisten.forEach((k, i) => {
-      k.x = x - 14 + (i % 3) * 14;
-      k.y = RAIL.y - 14 - Math.floor(i / 3) * 16;
+      const spalte = i % 2, reihe = Math.floor(i / 2);
+      k.x = x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2;
+      k.y = fuss + WAGEN_BETT.dy - reihe * WAGEN_BETT.stapel;
+      // Weiter hinten liegende Kisten verschwinden hinter der Bordwand
+      k.setDepth(11 + RAIL.y + reihe * 0.1);
     });
   }
 
