@@ -86,7 +86,17 @@ export const REGAL = {
  * und 14 px rechts der Mitte und 16 bis 25 px über dem Fuß. Vorher lagen die
  * Kisten daneben statt darin.
  */
-export const WAGEN_BETT = { dx: 7, dy: -17, reihe: 2, stapel: 9 };
+/*
+ * Zeilenweise ausgemessen: Der Wagen ist oben 4 px breit, in der Mitte 40 und
+ * unten wieder 4 – er ist also **isometrisch** gezeichnet, während Gleise,
+ * Station und Vorratsstand orthogonal von oben stehen. Das ist der Grund,
+ * warum er schräg auf der Schiene sitzt; als Bild lässt sich das hier nicht
+ * beheben, es ist an ChatGPT gemeldet.
+ *
+ * Die Ladefläche ist zwischen 8 und 14 px über dem Fuß am tiefsten. Die
+ * Kisten liegen jetzt dort, nicht mehr darüber in der Luft.
+ */
+export const WAGEN_BETT = { dx: 6, dy: -13, reihe: 2, stapel: 7 };
 
 /** Brambles Weg – Tiere laufen ausschließlich auf echten Wegen. */
 export const PATH = {
@@ -227,7 +237,7 @@ export const UPGRADES = {
   },
   bewaesserung: {
     id: "bewaesserung", ort: "beet", name: "Bewässerungsrinne",
-    cost: 160, unlockAfterDeliveries: 11,
+    cost: 110, unlockAfterDeliveries: 10,
     beschreibung:
       "Eine Holzrinne führt vom Wasserbecken zum Beet. Die Büsche leuchten " +
       "deutlich schneller nach – das Beet hält damit mehr Tiere aus.",
@@ -235,7 +245,7 @@ export const UPGRADES = {
   },
   beetdrei: {
     id: "beetdrei", ort: "beet", name: "Drittes Beet",
-    cost: 780, unlockAfterDeliveries: 26,
+    cost: 195, unlockAfterDeliveries: 24,
     beschreibung:
       "Das Beet greift nun um den ganzen westlichen Rand der Lichtung.",
     wirkung: ["Büsche 10 → 15", "Das Beet umschließt den Weg"]
@@ -243,7 +253,7 @@ export const UPGRADES = {
 
   wagenlager: {
     id: "wagenlager", ort: "station", name: "Wagenlager",
-    cost: 36, unlockAfterDeliveries: 3,
+    cost: 40, unlockAfterDeliveries: 3,
     beschreibung:
       "Die Verladestation bekommt ein Vordach und zwei zusätzliche Kistenplätze. " +
       "Der Wurzelwagen nimmt vier Kisten pro Fahrt statt zwei.",
@@ -251,7 +261,7 @@ export const UPGRADES = {
   },
   schnellschiene: {
     id: "schnellschiene", ort: "station", name: "Geölte Schiene",
-    cost: 380, unlockAfterDeliveries: 18,
+    cost: 175, unlockAfterDeliveries: 20,
     beschreibung:
       "Die Schiene wird abgezogen und gefettet. Der Wurzelwagen läuft spürbar " +
       "leichter und ist schneller zurück, bevor die Station volläuft.",
@@ -259,7 +269,7 @@ export const UPGRADES = {
   },
   verladehof: {
     id: "verladehof", ort: "station", name: "Verladehof",
-    cost: 1500, unlockAfterDeliveries: 35,
+    cost: 310, unlockAfterDeliveries: 36,
     beschreibung:
       "Aus der Station wird ein kleiner Hof mit zwei weiteren Plätzen.",
     wirkung: ["Kistenplätze 4 → 6", "Ladung pro Fahrt 4 → 6"]
@@ -267,22 +277,22 @@ export const UPGRADES = {
 
   regalreihe: {
     id: "regalreihe", ort: "store", name: "Zweite Regalreihe",
-    cost: 100, unlockAfterDeliveries: 8,
+    cost: 86, unlockAfterDeliveries: 7,
     beschreibung:
       "Der Vorratsstand bekommt eine zweite Reihe Bretter. Es passen mehr " +
       "Kisten hinein, bevor der Wagen nicht mehr abladen kann.",
-    wirkung: ["Regalplätze 12 → 20"]
+    wirkung: ["Regalplätze 15 → 24"]
   },
   lagerschuppen: {
     id: "lagerschuppen", ort: "store", name: "Lagerschuppen",
-    cost: 560, unlockAfterDeliveries: 22,
+    cost: 140, unlockAfterDeliveries: 16,
     beschreibung:
       "Hinter dem Stand entsteht ein gedeckter Schuppen für den Winter.",
-    wirkung: ["Regalplätze 20 → 32"]
+    wirkung: ["Regalplätze 24 → 36"]
   },
   grossbehaelter: {
     id: "grossbehaelter", ort: "store", name: "Tiefe Kisten",
-    cost: 2200, unlockAfterDeliveries: 40,
+    cost: 210, unlockAfterDeliveries: 28,
     beschreibung:
       "Die Werkstatt baut tiefere Kisten. Jede einzelne Kiste fasst mehr " +
       "Glühbeeren – das Regal fasst dadurch weit mehr, ohne größer zu werden.",
@@ -291,7 +301,7 @@ export const UPGRADES = {
 
   pfote2: {
     id: "pfote2", ort: "nest", name: "Fern zieht ein",
-    cost: 60, unlockAfterDeliveries: 5,
+    cost: 64, unlockAfterDeliveries: 5,
     beschreibung:
       "Eine zweite Biberin klopft an. Sie erntet am selben Beet und trägt " +
       "zur selben Station – zu zweit ist die Station doppelt so schnell voll.",
@@ -299,14 +309,14 @@ export const UPGRADES = {
   },
   pfote3: {
     id: "pfote3", ort: "nest", name: "Moos zieht ein",
-    cost: 260, unlockAfterDeliveries: 14,
+    cost: 130, unlockAfterDeliveries: 13,
     beschreibung:
       "Ein dritter Biber. Achte darauf, ob das Beet noch nachkommt.",
     wirkung: ["Drittes Tier auf dem Weg"]
   },
   pfote4: {
     id: "pfote4", ort: "nest", name: "Kiesel zieht ein",
-    cost: 1100, unlockAfterDeliveries: 30,
+    cost: 265, unlockAfterDeliveries: 32,
     beschreibung:
       "Der vierte Biber. Ohne ausgebautes Beet stehen jetzt Tiere herum.",
     wirkung: ["Viertes Tier auf dem Weg"]

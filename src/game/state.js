@@ -11,7 +11,8 @@
  */
 
 import Phaser from "phaser";
-import { SAVE_KEY, UPGRADES, RULES, ARBEITER, BEET_PLAETZE } from "./config.js";
+import { SAVE_KEY, UPGRADES } from "./config.js";
+import * as W from "./wirtschaft.js";
 
 export const bus = new Phaser.Events.EventEmitter();
 
@@ -34,62 +35,23 @@ export const state = {
 
 /* --------------------------------------------------------------- *
  * Abgeleitete Regeln
- * --------------------------------------------------------------- */
-
-const gebaut = (id) => !!state.ausbauten[id];
-
-/** Kistenplätze an der Verladestation. Voll heißt: die Tiere warten. */
-export function kistenPlaetze() {
-  return gebaut("verladehof") ? 6 : gebaut("wagenlager") ? 4 : 2;
-}
-
-/** Was der Wurzelwagen pro Fahrt mitnimmt. */
-export function wagenKapazitaet() {
-  return kistenPlaetze();
-}
-
-/** Glühbeeren in einer Kiste. */
-export function beerenProKiste() {
-  return gebaut("grossbehaelter") ? 9 : RULES.berriesPerCrate;
-}
-
-/** Kisten, die ins Regal des Vorratsstands passen. */
-export function regalPlaetze() {
-  return gebaut("lagerschuppen") ? 32 : gebaut("regalreihe") ? 20 : 12;
-}
-
-/**
- * Der Vorrat ist genau so groß, wie das Regal Kisten fasst. Läuft er über,
- * kann der Wagen nicht abladen – und die ganze Kette steht still, bis
- * Cozywolf etwas ausbaut. Ausgeben ist damit das Ventil.
+ * --------------------------------------------------------------- *
+ *
+ * Die Formeln stehen in `wirtschaft.js` und kennen nur die gebauten
+ * Ausbauten – keinen Spielzustand, kein Phaser. Nur so kann
+ * `tools/pruefe-wirtschaft.mjs` mit denselben Zahlen rechnen wie das Spiel.
+ * Hier werden sie an den laufenden Zustand gebunden.
  */
-export function lagerKapazitaet() {
-  return regalPlaetze() * beerenProKiste();
-}
 
-/** Aktive Büsche im Beet. */
-export function beetBuesche() {
-  const n = gebaut("beetdrei") ? 15 : gebaut("beetzwei") ? 10 : 6;
-  return Math.min(n, BEET_PLAETZE.length);
-}
-
-/** Sekunden, bis ein abgeernteter Busch wieder trägt. */
-export function reifeSekunden() {
-  return gebaut("bewaesserung") ? 7 : RULES.reifeSekunden;
-}
-
-/** Tiere, die gerade auf dem Weg arbeiten. */
-export function arbeiterZahl() {
-  let n = 1;
-  if (gebaut("pfote2")) n++;
-  if (gebaut("pfote3")) n++;
-  if (gebaut("pfote4")) n++;
-  return Math.min(n, ARBEITER.length);
-}
-
-export function wagenTempo() {
-  return RULES.cartSpeed * (gebaut("schnellschiene") ? 1.6 : 1);
-}
+export const kistenPlaetze     = () => W.kistenPlaetze(state.ausbauten);
+export const wagenKapazitaet   = () => W.wagenKapazitaet(state.ausbauten);
+export const beerenProKiste    = () => W.beerenProKiste(state.ausbauten);
+export const regalPlaetze      = () => W.regalPlaetze(state.ausbauten);
+export const lagerKapazitaet   = () => W.lagerKapazitaet(state.ausbauten);
+export const beetBuesche       = () => W.beetBuesche(state.ausbauten);
+export const reifeSekunden     = () => W.reifeSekunden(state.ausbauten);
+export const arbeiterZahl      = () => W.arbeiterZahl(state.ausbauten);
+export const wagenTempo        = () => W.wagenTempo(state.ausbauten);
 
 /* --------------------------------------------------------------- *
  * Ausbauten

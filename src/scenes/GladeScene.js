@@ -222,14 +222,17 @@ export default class GladeScene extends Phaser.Scene {
       }
     });
 
-    // Schilf und Seerosen liegen über dem Wasser, nicht darunter
-    if (this.textures.exists("ufer-bewuchs-0")) {
-      const bewuchs = [[-44, -18], [32, -22], [-24, 22], [46, 10], [4, 25]];
-      bewuchs.forEach(([dx, dy], i) => {
-        this.add.image(p.x + dx, p.y + dy, `ufer-bewuchs-${i}`)
-          .setOrigin(0.5, 0.8).setDepth(3.1);
-      });
-    }
+    /*
+     * Die Schilf- und Seerosenflecken liegen zurzeit nicht auf dem Wasser.
+     *
+     * Jeder von ihnen trägt einen rund zwanzig Pixel langen, hellen
+     * Waagerechtbalken als Glanzlicht. Über die Beckenfläche gestempelt
+     * ergeben fünf davon genau den Eindruck, den die erste Fassung meiner
+     * eigenen Glanzlichter machte: Schnitte im Bild statt Wasser. Sobald
+     * die Flecken ohne diesen Balken vorliegen, kommen sie zurück – der
+     * Aufruf steht auskommentiert direkt hier.
+     */
+    // if (this.textures.exists("ufer-bewuchs-0")) { … }
 
     // Früher lagen hier drei harte Rechtecke als Glanzlichter. Sie sahen aus
     // wie Schnitte im Bild, weil sie eine Kante hatten, die das Wasser nicht
@@ -605,7 +608,7 @@ export default class GladeScene extends Phaser.Scene {
     const x = this.wagenBild.x, fuss = this.wagenBild.y;
     this.wagenKisten.forEach((k, i) => {
       const spalte = i % 2, reihe = Math.floor(i / 2);
-      k.x = x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2;
+      k.x = x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2 + reihe * 3;
       k.y = fuss + WAGEN_BETT.dy - reihe * WAGEN_BETT.stapel;
       // Weiter hinten liegende Kisten verschwinden hinter der Bordwand
       k.setDepth(11 + RAIL.y + reihe * 0.1);
@@ -775,9 +778,11 @@ export default class GladeScene extends Phaser.Scene {
   update(zeit, deltaMs) {
     const dt = Math.min(deltaMs / 1000, 0.05);
     state.stau.beet = false;
-    state.stau.station = false;
     this.reifeBeet(dt);
     for (const a of this.arbeiter) this.laufeArbeiter(a, dt);
+    // Ein Tier blockiert, solange es mit voller Kiste an der Station steht –
+    // nicht nur in dem Bild, in dem es erfolglos nachfasst.
+    state.stau.station = this.arbeiter.some((a) => a.blockiert && a.phase === "abgeben");
     this.fahreWagen(dt);
     // Der Wagen merkt sich seine Blockade über mehrere Bilder hinweg, sonst
     // würde das Wartezeichen im Takt des Nachfassens flackern.
@@ -861,13 +866,16 @@ export default class GladeScene extends Phaser.Scene {
       if (a.timer <= 0) {
         if (state.kisten < kistenPlaetze()) {
           state.kisten++;
+          a.blockiert = false;
           a.traegt = false;
           a.phase = "hin";
           this.aktualisiereStation();
           this.funken.emitParticleAt(PLACES.station.x, PLACES.station.y - 12 * K, 4);
           bus.emit("aendert");
         } else {
-          state.stau.station = true;
+          // Merken, nicht nur in diesem Bild setzen: sonst blinkt das
+          // Wartezeichen im Takt des Nachfassens.
+          a.blockiert = true;
           a.timer = 0.3;
         }
       }
