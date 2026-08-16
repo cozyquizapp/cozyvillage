@@ -26,6 +26,10 @@ const BLAETTER = {
   "blatt-parzelle": "parzelle_80x48.png",
   "blatt-gueter": "gueter_64x32.png",
   "blatt-schienen": "schienen_32.png",
+  "blatt-werkstatt": "werkstatt_96x80.png",
+  "blatt-nutzbaum": "nutzbaum_64x96.png",
+  "blatt-holz": "holzkette_64x32.png",
+  "blatt-eichhorn": "bewohner_eichhoernchen.png",
   "blatt-prellbock": "prellbock_32.png",
   "blatt-bewegt": "bewegt.png",
   "blatt-uferflecken": "wasser_uferflecken.png",
@@ -179,6 +183,35 @@ export function setzeTileset(scene) {
     const k = pb.h;
     nimm("blatt-prellbock", "prellbock-links", 0, 0, k, k, { trimmen: false });
     nimm("blatt-prellbock", "prellbock-rechts", k, 0, k, k, { trimmen: false });
+  }
+
+  // Holzkette – Werkstatt in drei Stufen, Nutzbaum in drei Erntestufen
+  const wk = masse(scene, "blatt-werkstatt");
+  if (wk) {
+    const zw = wk.w / 3;
+    for (let i = 0; i < 3; i++) nimm("blatt-werkstatt", `werkstatt-${i}`, i * zw, 0, zw, wk.h);
+  }
+  const nb = masse(scene, "blatt-nutzbaum");
+  if (nb) {
+    const zw = nb.w / 3;
+    for (let i = 0; i < 3; i++) nimm("blatt-nutzbaum", `nutzbaum-${i}`, i * zw, 0, zw, nb.h);
+  }
+  // holzkette_64x32: Scheit, Stapel leer/halb/voll, Bretterstapel
+  const hz = masse(scene, "blatt-holz");
+  if (hz) {
+    const zw = hz.w / 5;
+    nimm("blatt-holz", "scheit", 0, 0, zw, hz.h);
+    for (let i = 0; i < 3; i++) nimm("blatt-holz", `holzstapel-${i}`, (1 + i) * zw, 0, zw, hz.h);
+    nimm("blatt-holz", "bretter", zw * 4, 0, zw, hz.h);
+  }
+  // Eichhörnchen – 4×6: vorn, rechts, hinten, Arbeiten, Tragen, Ruhen
+  const eich = masse(scene, "blatt-eichhorn");
+  if (eich) {
+    const zw = eich.w / 4, zh = 64;
+    const reihen = ["eich", "eich-rechts", "eich-hinten", "eich-arbeit", "eich-carry", "eich-ruhe"];
+    reihen.forEach((name, r) => {
+      for (let i = 0; i < 4; i++) nimm("blatt-eichhorn", `${name}-${i}`, i * zw, r * zh, zw, zh);
+    });
   }
 
   // Wasser – vier Bilder

@@ -52,11 +52,31 @@ export function insideGlade(x, y) {
  * den Rand; alles andere ordnet sich um ihn herum an.
  */
 export const PLACES = {
-  beet:    { x: 185, y: 160, label: "Glühbeerenbeet" },
-  station: { x: 310, y: 244, label: "Verladestation" },
-  store:   { x: 470, y: 238, label: "Vorratsstand" },
-  nest:    { x: 320, y: 326, label: "Cozywolfs Nest" },
-  pond:    { x: 150, y: 232, label: "Wasserbecken", rx: 44, ry: 22 }
+  beet:      { x: 185, y: 160, label: "Glühbeerenbeet" },
+  station:   { x: 310, y: 244, label: "Verladestation" },
+  werkstatt: { x: 390, y: 214, label: "Holz- und Wurzelwerkstatt" },
+  store:     { x: 500, y: 244, label: "Vorratsstand" },
+  nest:      { x: 320, y: 326, label: "Cozywolfs Nest" },
+  pond:      { x: 150, y: 232, label: "Wasserbecken", rx: 44, ry: 22 }
+};
+
+/**
+ * Die Nutzbäume der Holzkette.
+ *
+ * Ein Nutzbaum ist die Umkehrung des Beerenbuschs: Er wird beim Abernten
+ * sichtbar **kleiner** – voll, halb abgeerntet, Stumpf – und wächst danach
+ * wieder nach. Damit gilt die Konzeptregel „Ressourcen dürfen nie nur als
+ * Zahl erscheinen" auch für die Quelle, nicht nur für das Ziel.
+ */
+export const NUTZBAEUME = [
+  { x: 150, y: 292 },
+  { x: 205, y: 302 },
+  { x: 258, y: 312 }
+];
+
+/** Der Weg des Eichhörnchens: von den Nutzbäumen zur Verladestation. */
+export const HOLZWEG = {
+  from: { x: 208, y: 296 }, to: { x: 274, y: 256 }
 };
 
 /**
@@ -166,17 +186,17 @@ export const GLEISPLAN = {
   knoten: [
     { id: "westende",  x: 258, y: 262, art: "ende" },
     { id: "station",   x: 310, y: 262, art: "halt" },
-    { id: "weiche",    x: 416, y: 262, art: "durch" },
-    { id: "lager",     x: 470, y: 262, art: "halt" },
-    { id: "ostende",   x: 524, y: 262, art: "ende" },
-    { id: "werkstatt", x: 416, y: 326, art: "halt" }
+    { id: "weiche",    x: 390, y: 262, art: "durch" },
+    { id: "werkstatt", x: 390, y: 218, art: "halt" },
+    { id: "lager",     x: 500, y: 262, art: "halt" },
+    { id: "ostende",   x: 540, y: 262, art: "ende" }
   ],
   kanten: [
     ["westende", "station"],
     ["station", "weiche"],
+    ["weiche", "werkstatt"],
     ["weiche", "lager"],
-    ["lager", "ostende"],
-    ["weiche", "werkstatt"]
+    ["lager", "ostende"]
   ]
 };
 
@@ -203,10 +223,7 @@ export const PROPS = [
  * frei auf offenem Rasen.
  */
 export const FUTURE_PARCELS = [
-  { x: 375, y: 172, rx: 36, ry: 18, label: "Küche" },
-  // Liegt am Ende der Stichstrecke – der Wagen kann sie schon anfahren,
-  // lange bevor dort etwas steht.
-  { x: 416, y: 330, rx: 36, ry: 18, label: "Holz- und Wurzelwerkstatt" }
+  { x: 452, y: 176, rx: 30, ry: 15, label: "Küche" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */
@@ -219,7 +236,19 @@ export const RULES = {
   unloadSeconds: 1.1,
   autosaveSeconds: 5,
   /** Sekunden, bis ein abgeernteter Busch wieder leuchtet. */
-  reifeSekunden: 12
+  reifeSekunden: 12,
+
+  /* Holzkette */
+  /** Erntestufen je Nutzbaum, bis er ein Stumpf ist. */
+  scheitProBaum: 2,
+  /** Sekunden je Stufe, bis ein Nutzbaum wieder nachgewachsen ist. */
+  baumReifeSekunden: 20,
+  /** Sekunden, die das Eichhörnchen an einem Baum arbeitet. */
+  faellSekunden: 1.6,
+  /** Sekunden, die die Werkstatt für ein Brett aus einem Scheit braucht. */
+  brettSekunden: 6,
+  /** Scheite, die im Holzstapel der Werkstatt Platz haben. */
+  holzstapel: 6
 };
 
 /**
@@ -269,6 +298,7 @@ export const UPGRADES = {
     beschreibung:
       "Die Schiene wird abgezogen und gefettet. Der Wurzelwagen läuft spürbar " +
       "leichter und ist schneller zurück, bevor die Station volläuft.",
+    bretter: 6,
     wirkung: ["Wagen 60 % schneller", "Blanke Schiene statt stumpfem Holz"]
   },
   verladehof: {
@@ -276,6 +306,7 @@ export const UPGRADES = {
     cost: 310, unlockAfterDeliveries: 36,
     beschreibung:
       "Aus der Station wird ein kleiner Hof mit zwei weiteren Plätzen.",
+    bretter: 10,
     wirkung: ["Kistenplätze 4 → 6", "Ladung pro Fahrt 4 → 6"]
   },
 
@@ -292,6 +323,7 @@ export const UPGRADES = {
     cost: 140, unlockAfterDeliveries: 16,
     beschreibung:
       "Hinter dem Stand entsteht ein gedeckter Schuppen für den Winter.",
+    bretter: 4,
     wirkung: ["Regalplätze 24 → 36"]
   },
   grossbehaelter: {
@@ -301,6 +333,26 @@ export const UPGRADES = {
       "Die Werkstatt baut tiefere Kisten. Jede einzelne Kiste fasst mehr " +
       "Glühbeeren – das Regal fasst dadurch weit mehr, ohne größer zu werden.",
     wirkung: ["Glühbeeren pro Kiste 6 → 9"]
+  },
+
+  werkstatt: {
+    id: "werkstatt", ort: "werkstatt", name: "Werkstatt bauen",
+    cost: 80, unlockAfterDeliveries: 6,
+    beschreibung:
+      "Am Ende der Stichstrecke entsteht eine Werkbank unter offenem Dach. " +
+      "Nussa das Eichhörnchen zieht ein, fällt Holz an den Nutzbäumen und " +
+      "bringt Scheite zur Verladestation. Der Wurzelwagen fährt sie zur " +
+      "Werkstatt, dort werden Bretter daraus.",
+    wirkung: ["Nussa zieht ein", "Nutzbäume werden abgeerntet",
+              "Der Wagen bekommt ein zweites Ziel", "Bretter als neuer Baustoff"]
+  },
+  saege: {
+    id: "saege", ort: "werkstatt", name: "Zugsäge",
+    cost: 150, unlockAfterDeliveries: 18,
+    beschreibung:
+      "Eine lange Säge über der Werkbank. Aus einem Scheit wird deutlich " +
+      "schneller ein Brett – die Werkstatt hält mit mehr Nachschub Schritt.",
+    wirkung: ["Brett in 6 s → 3,5 s", "Holzstapel 6 → 10 Scheite"]
   },
 
   pfote2: {

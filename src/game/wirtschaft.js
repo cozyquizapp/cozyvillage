@@ -72,6 +72,25 @@ export function arbeiterZahl(a) {
   return Math.min(n, ARBEITER.length);
 }
 
+/* --------------------------------------------------------------- *
+ * Holzkette
+ * --------------------------------------------------------------- */
+
+/** Steht die Werkstatt? Erst dann gibt es Holz, Nussa und Bretter. */
+export function werkstattSteht(a) {
+  return gebaut(a, "werkstatt");
+}
+
+/** Scheite, die im Holzstapel der Werkstatt warten können. */
+export function holzstapel(a) {
+  return gebaut(a, "saege") ? 10 : RULES.holzstapel;
+}
+
+/** Sekunden, die die Werkstatt für ein Brett braucht. */
+export function brettSekunden(a) {
+  return gebaut(a, "saege") ? 3.5 : RULES.brettSekunden;
+}
+
 export function wagenTempo(a) {
   return RULES.cartSpeed * (gebaut(a, "schnellschiene") ? 1.6 : 1);
 }

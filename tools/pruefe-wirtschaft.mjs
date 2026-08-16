@@ -44,6 +44,7 @@ for (const up of folge) {
     kosten: up.cost,
     kapazitaet,
     lieferungen: up.unlockAfterDeliveries,
+    bretter: up.bretter || 0,
     passt
   });
   if (!passt) {
@@ -57,6 +58,22 @@ for (const up of folge) {
   gekauft[up.id] = true;
 }
 
+/* Bretter sind die zweite Währung. Sie entstehen erst, wenn die Werkstatt
+   steht – ein Ausbau, der Bretter kostet und vor ihr freigeschaltet wird,
+   wäre genauso unbezahlbar wie ein zu teurer. */
+const werk = UPGRADES.werkstatt;
+for (const up of alle) {
+  if (!up.bretter) continue;
+  if (!werk || up.unlockAfterDeliveries <= werk.unlockAfterDeliveries) {
+    fehler.push(
+      `„${up.name}" kostet ${up.bretter} Bretter, wird aber nach ` +
+      `${up.unlockAfterDeliveries} Lieferungen sichtbar – die Werkstatt erst ` +
+      `nach ${werk ? werk.unlockAfterDeliveries : "nie"}. Bis dahin gibt es ` +
+      `keine Bretter.`
+    );
+  }
+}
+
 const breite = Math.max(...zeilen.map((z) => z.name.length));
 console.log("\nAusbaubaum in Kaufreihenfolge\n");
 console.log(`  ${"Ausbau".padEnd(breite)}   ab Lief.   Kosten   Lager fasst`);
@@ -64,7 +81,7 @@ for (const z of zeilen) {
   console.log(
     `  ${z.passt ? "✓" : "✗"} ${z.name.padEnd(breite - 2)}   ` +
     `${String(z.lieferungen).padStart(7)}   ${String(z.kosten).padStart(6)}   ` +
-    `${String(z.kapazitaet).padStart(11)}`
+    `${String(z.kapazitaet).padStart(11)}${z.bretter ? `   + ${z.bretter} Bretter` : ""}`
   );
 }
 console.log("");

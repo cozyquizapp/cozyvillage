@@ -122,6 +122,10 @@ export function starteOberflaeche() {
       <rect x="2" y="4" width="12" height="6" fill="#8A6942" stroke="#453017" stroke-width="1.4"/>
       <circle cx="5" cy="12.4" r="2" fill="#453017"/><circle cx="11" cy="12.4" r="2" fill="#453017"/>
       <circle cx="5" cy="12.4" r=".8" fill="#B5A177"/><circle cx="11" cy="12.4" r=".8" fill="#B5A177"/></svg>`;
+  const brett = `<svg viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="1" y="4" width="14" height="3" fill="#B5A177" stroke="#6B4F33" stroke-width="1"/>
+      <rect x="1" y="8" width="14" height="3" fill="#9A8862" stroke="#6B4F33" stroke-width="1"/>
+      <rect x="2" y="4.6" width="12" height="1" fill="#D2A468"/></svg>`;
   const bluete = `<svg viewBox="0 0 16 16" aria-hidden="true">
       <path d="M7 8h2v7H7z" fill="#3E6440"/>
       <circle cx="8" cy="5.5" r="4.2" fill="#F5E9C0" stroke="#453017" stroke-width="1.2"/>
@@ -132,6 +136,7 @@ export function starteOberflaeche() {
       <div class="wert gold">${beere}<div class="zahl"><b id="w-beeren">0</b><span>Glühbeeren</span></div></div>
       <div class="wert">${kiste}<div class="zahl"><b id="w-kisten">0</b><span>Station</span></div></div>
       <div class="wert">${wagen}<div class="zahl"><b id="w-wagen">0</b><span>im Wagen</span></div></div>
+      <div class="wert">${brett}<div class="zahl"><b id="w-bretter">0</b><span>Bretter</span></div></div>
       <div class="wert">${bluete}<div class="zahl"><b id="w-lief">0</b><span>Lieferungen</span></div></div>
     </div>
     <div class="hinweis">Fahre über die Lichtung – was leuchtet, lässt sich anklicken.</div>
@@ -149,6 +154,7 @@ export function starteOberflaeche() {
     beeren: document.getElementById("w-beeren"),
     kisten: document.getElementById("w-kisten"),
     wagen: document.getElementById("w-wagen"),
+    bretter: document.getElementById("w-bretter"),
     lief: document.getElementById("w-lief"),
     status: document.getElementById("status"),
     panel: document.getElementById("panel"),
@@ -183,6 +189,7 @@ function zeichne() {
   }
   el.kisten.textContent = state.kisten;
   el.wagen.textContent = state.wagenLadung;
+  el.bretter.textContent = state.bretter;
   el.lief.textContent = state.lieferungen;
   for (const id of offeneAusbauten) setzeKnopf(id);
 }
@@ -213,7 +220,7 @@ function oeffne(daten) {
       <p>${a.beschreibung}</p>
       <ul>${a.wirkung.map((w) => `<li>${w}</li>`).join("")}</ul>
       ${a.freigeschaltet
-        ? `<button data-kauf="${a.id}">Für ${a.kosten} Glühbeeren bauen</button>`
+        ? `<button data-kauf="${a.id}">bauen</button>`
         : `<p class="sperre">${a.hinweis}</p>`}`;
     el.ausbau.appendChild(block);
     if (a.freigeschaltet) {
@@ -234,9 +241,10 @@ function setzeKnopf(id) {
   const up = UPGRADES[id];
   const moeglich = istKaufbar(id);
   knopf.disabled = !moeglich;
-  knopf.textContent = moeglich
-    ? `Für ${up.cost} Glühbeeren bauen`
-    : `Noch ${up.cost - state.beeren} Glühbeeren nötig`;
+  const preis = up.bretter ? `${up.cost} Glühbeeren und ${up.bretter} Bretter` : `${up.cost} Glühbeeren`;
+  if (moeglich) knopf.textContent = `Für ${preis} bauen`;
+  else if (state.beeren < up.cost) knopf.textContent = `Noch ${up.cost - state.beeren} Glühbeeren nötig`;
+  else knopf.textContent = `Noch ${(up.bretter || 0) - state.bretter} Bretter nötig`;
 }
 
 // Für die Konsole, damit man den Slice von vorn spielen kann.

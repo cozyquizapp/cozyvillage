@@ -25,11 +25,18 @@ function leereAusbauten() {
 export const state = {
   beeren: 0,
   kisten: 0,
+  /* Holzkette: Scheite warten an der Station, Holz liegt im Stapel der
+     Werkstatt, Bretter sind das fertige Ergebnis und die zweite Währung. */
+  scheite: 0,
+  werkHolz: 0,
+  bretter: 0,
   wagenLadung: 0,
+  /** Was der Wagen gerade fährt: "beeren" oder "holz". */
+  wagenArt: "beeren",
   lieferungen: 0,
   ausbauten: leereAusbauten(),
   /** Wo die Kette gerade klemmt. Wird jeden Bild neu bestimmt. */
-  stau: { beet: false, station: false, lager: false },
+  stau: { beet: false, station: false, lager: false, wald: false, werk: false },
   meldung: "Bramble macht sich auf den Weg zum Glühbeerenbeet"
 };
 
@@ -52,6 +59,9 @@ export const beetBuesche       = () => W.beetBuesche(state.ausbauten);
 export const reifeSekunden     = () => W.reifeSekunden(state.ausbauten);
 export const arbeiterZahl      = () => W.arbeiterZahl(state.ausbauten);
 export const wagenTempo        = () => W.wagenTempo(state.ausbauten);
+export const werkstattSteht    = () => W.werkstattSteht(state.ausbauten);
+export const holzstapel        = () => W.holzstapel(state.ausbauten);
+export const brettSekunden     = () => W.brettSekunden(state.ausbauten);
 
 /* --------------------------------------------------------------- *
  * Ausbauten
@@ -65,12 +75,14 @@ export function istFreigeschaltet(id) {
 
 export function istKaufbar(id) {
   const up = UPGRADES[id];
-  return !!up && !state.ausbauten[id] && istFreigeschaltet(id) && state.beeren >= up.cost;
+  if (!up || state.ausbauten[id] || !istFreigeschaltet(id)) return false;
+  return state.beeren >= up.cost && state.bretter >= (up.bretter || 0);
 }
 
 export function kaufen(id) {
   if (!istKaufbar(id)) return false;
   state.beeren -= UPGRADES[id].cost;
+  state.bretter -= UPGRADES[id].bretter || 0;
   state.ausbauten[id] = true;
   bus.emit("ausbau", id);
   bus.emit("aendert");
@@ -95,6 +107,9 @@ export function speichern() {
       beeren: state.beeren,
       kisten: state.kisten,
       lieferungen: state.lieferungen,
+      scheite: state.scheite,
+      werkHolz: state.werkHolz,
+      bretter: state.bretter,
       ausbauten: state.ausbauten
     }));
   } catch (e) {
@@ -109,6 +124,9 @@ export function laden() {
     const daten = JSON.parse(roh);
     state.beeren = Number(daten.beeren) || 0;
     state.lieferungen = Number(daten.lieferungen) || 0;
+    state.scheite = Number(daten.scheite) || 0;
+    state.werkHolz = Number(daten.werkHolz) || 0;
+    state.bretter = Number(daten.bretter) || 0;
     // Alte Stände kannten nur "wagenlager"; unbekannte Schlüssel fallen weg.
     state.ausbauten = leereAusbauten();
     for (const id of Object.keys(state.ausbauten)) {
@@ -125,9 +143,12 @@ export function laden() {
 export function zuruecksetzen() {
   state.beeren = 0;
   state.kisten = 0;
+  state.scheite = 0;
+  state.werkHolz = 0;
+  state.bretter = 0;
   state.wagenLadung = 0;
   state.lieferungen = 0;
   state.ausbauten = leereAusbauten();
-  state.stau = { beet: false, station: false, lager: false };
+  state.stau = { beet: false, station: false, lager: false, wald: false, werk: false };
   try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* egal */ }
 }
