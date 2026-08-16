@@ -23,7 +23,7 @@
  */
 
 import { UPGRADES } from "../src/game/config.js";
-import { lagerKapazitaet } from "../src/game/wirtschaft.js";
+import { lagerKapazitaet, plaetzeFuer, werkstattSteht } from "../src/game/wirtschaft.js";
 
 const alle = Object.values(UPGRADES);
 const fehler = [];
@@ -57,6 +57,24 @@ for (const up of folge) {
     );
   }
   gekauft[up.id] = true;
+
+  /*
+   * Zweite Falle, in die das Spiel gelaufen ist: Ab einem gewissen Punkt
+   * kostet **jeder** verbliebene Ausbau Bretter. Bretter entstehen nur, wenn
+   * Nussa ihre Scheite an der Verladestation loswird. Teilen sich Beeren und
+   * Holz dort alle Plätze, drängen die Beeren das Holz vollständig heraus –
+   * und dann gibt es nie wieder etwas zu kaufen, egal wie lange man wartet.
+   *
+   * Deshalb: Sobald die Werkstatt steht, muss mindestens ein Platz an der
+   * Station für Holz reserviert bleiben.
+   */
+  if (werkstattSteht(gekauft) && plaetzeFuer(gekauft, "holz") < 1) {
+    fehler.push(
+      `Nach „${up.name}" bleibt an der Verladestation kein Platz mehr für Holz. ` +
+      `Nussa kann nichts ablegen, es entstehen keine Bretter – und alles, was ` +
+      `dann noch zu kaufen wäre, kostet Bretter.`
+    );
+  }
 }
 
 /* Bretter sind die zweite Währung. Sie entstehen erst, wenn die Werkstatt

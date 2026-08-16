@@ -1352,14 +1352,28 @@ export default class GladeScene extends Phaser.Scene {
       const beerenVoll = state.kisten >= plaetzeFuer("beeren");
       const holzVoll = plaetzeFuer("holz") > 0 && state.scheite >= plaetzeFuer("holz");
 
+      /*
+       * Erst prüfen, ob es für Beeren überhaupt einen Abnehmer gibt.
+       *
+       * Vorher lud der Wagen Beeren auf, sobald welche dastanden – auch bei
+       * randvollem Regal. Dann hing er dort fest, konnte nie wieder Holz
+       * fahren, und ohne Holz gab es keine Bretter, keine Küche und damit
+       * nichts mehr zu kaufen: ein Stillstand, den auch Geduld nicht löst.
+       * Ein Wagen fährt nur los, wenn am Ziel Platz ist.
+       */
+      const lagerPlatz = Math.floor((lagerKapazitaet() - state.beeren) / beerenProKiste());
+      const kuecheBraucht = kuecheSteht()
+        && kuechenkorb() - state.kuechenBeeren >= RULES.beerenProGlas;
+      const beerenFahrt = beerenWartet && (lagerPlatz > 0 || kuecheBraucht);
+
       if (beerenVoll || holzVoll) {
         // Die volle Seite zuerst – sonst bliebe die andere Ware liegen.
-        const nimmHolz = holzWartet && (holzVoll || !beerenWartet);
+        const nimmHolz = holzWartet && (holzVoll || !beerenFahrt);
         if (nimmHolz) {
           w.art = "holz";
           w.ladung = Math.min(state.scheite, wagenKapazitaet(), platzImWerk);
           state.scheite -= w.ladung;
-        } else if (beerenWartet) {
+        } else if (beerenFahrt) {
           w.art = "beeren";
           w.ladung = Math.min(state.kisten, wagenKapazitaet());
           state.kisten -= w.ladung;
@@ -1403,6 +1417,21 @@ export default class GladeScene extends Phaser.Scene {
               return;
             }
           }
+          /*
+           * Bleibt das Ziel dicht, fährt der Wagen die Ladung zur Station
+           * zurück, statt bis zum Spielende am vollen Regal zu hängen.
+           *
+           * Das ist die zweite Hälfte derselben Regel: Ein Wagen, der nichts
+           * mehr abladen kann, muss wieder frei werden – sonst steht die
+           * Holzkette still, obwohl an ihr gar nichts voll ist.
+           */
+          if (w.modell.knoten !== "station" && w.modell.fahreZu("station")) {
+            w.gibtZurueck = true;
+            w.phase = "zurueck";
+            w.blockiert = false;
+            melde("Am Ziel ist kein Platz – der Wagen bringt die Ladung zurück");
+            return;
+          }
           w.blockiert = true; w.timer = 0.4;
         }
         else {
@@ -1412,7 +1441,22 @@ export default class GladeScene extends Phaser.Scene {
       }
     } else if (w.phase === "zurueck") {
       w.modell.tick(dt, tempo);
-      if (w.modell.amZiel) w.phase = "wartet";
+      if (w.modell.amZiel) {
+        if (w.gibtZurueck && w.ladung > 0) {
+          // Zurückgebrachte Kisten dürfen die Station kurz überfüllen: Sie
+          // standen vorher hier, und ein Wagen, der sie nicht loswird, wäre
+          // dauerhaft blockiert. Aufnehmen darf die Station trotzdem nur bis
+          // zu ihren Plätzen – die Überfüllung baut sich also wieder ab.
+          if (w.art === "holz") state.scheite += w.ladung;
+          else state.kisten += w.ladung;
+          w.ladung = 0;
+          w.gibtZurueck = false;
+          this.aktualisiereStation();
+          this.aktualisiereWagenkisten(w);
+          bus.emit("aendert");
+        }
+        w.phase = "wartet";
+      }
     }
     this.zeichneWagen(w);
   }
