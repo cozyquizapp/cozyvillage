@@ -33,3 +33,8 @@ Verladestationen und Wagen, Verladepunkt, Signale, Dorfplatz, Platzlaterne
 und reine Uferkanten – wurden speziell für Fellgrund direkt im Zielraster
 und reproduzierbar konstruiert. Verwendet wurden ausschließlich Motive aus
 diesem CC0-Paket und die festgelegte Projektpalette; keine Fremdquellen.
+
+Die Batch-6-Motive – artspezifische Unterkünfte, Küche, Marmeladengläser
+und Dorfdetails – wurden speziell für Fellgrund direkt im Zielraster und
+reproduzierbar konstruiert. Verwendet wurden ausschließlich die festgelegte
+Projektpalette und selbst gezeichnete Formen; keine Fremdquellen.

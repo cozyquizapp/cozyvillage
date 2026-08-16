@@ -37,3 +37,9 @@ OK wurzelwagen_64x48.png: 448x48, orthogonale Draufsicht, sieben Füllstände
 OK uferkante_64x32.png: 384x32, sechs reine Uferstreifen ohne Wasserfläche
 OK dorfplatz_192x96.png: 192x96, gepflasterter Rund mit freier Nestmitte
 OK platzlaterne_32x64.png: 96x64, drei Flackerstufen
+OK bau_biber_96x80.png: 288x160, drei Stufen in unbewohnt/bewohnt, Alpha 0/255
+OK kobel_eichhorn_64x96.png: 192x192, drei Stufen in unbewohnt/bewohnt, Alpha 0/255
+OK sitzstange_eule_64x96.png: 192x192, drei Stufen in unbewohnt/bewohnt, Alpha 0/255
+OK kueche_96x80.png: 288x80, drei Ausbaustufen, Alpha 0/255
+OK marmeladenglas_32.png: 96x32, drei Füllstände, Alpha 0/255
+OK dorfkram_32.png: 256x32, acht Dorfdetails, Alpha 0/255

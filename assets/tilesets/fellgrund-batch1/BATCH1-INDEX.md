@@ -62,3 +62,14 @@ Die Cozywolf-Farben `#FF95C0`, `#F2609E` und `#C43C74` kommen ausschließlich in
 - `platzlaterne_32x64.png`: 3×1 Zellen à 32×64; drei Flackerstufen.
 - `batch5-vorschau.png`: 1600×896-Kompositionsnachweis; nicht als Laufzeit-Spritesheet gedacht.
 - `tools/zeichne-batch5.mjs`: reproduzierbare Konstruktion aller Batch-5-Dateien direkt im Zielraster.
+
+## Batch 6 – Zellaufbau
+
+- `bau_biber_96x80.png`: 3×2 Zellen à 96×80. Spalten: Reisighaufen, Eingang mit Steg, Kamin und Fenster. Obere Zeile unbewohnt, untere Zeile bewohnt.
+- `kobel_eichhorn_64x96.png`: 3×2 Zellen à 64×96. Spalten: Nest in Astgabel, Dach, Leiter und Vorratsluke. Obere Zeile unbewohnt, untere Zeile bewohnt.
+- `sitzstange_eule_64x96.png`: 3×2 Zellen à 64×96. Spalten: hohler Ast, Windschutz, Laterne und Dorfbuchbrett. Obere Zeile unbewohnt, untere Zeile bewohnt.
+- `kueche_96x80.png`: 3×1 Zellen à 96×80; einfacher Kessel, Rauchfang, zweiter großer Kessel.
+- `marmeladenglas_32.png`: 3×1 Zellen à 32×32; ein Glas, drei Gläser, volles Regalbrett.
+- `dorfkram_32.png`: 8×1 Zellen à 32×32; Wäscheleine, Feuerstelle, Bank, Brunnen, Blumenkasten, Schubkarre, Fass, Wegweiser.
+- `batch6-vorschau.png`: native 640×360-Kompositionsvorschau; nicht als Laufzeit-Spritesheet gedacht.
+- `tools/zeichne-batch6.mjs`: reproduzierbare Konstruktion aller Batch-6-Dateien direkt im Zielraster.
