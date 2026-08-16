@@ -42,21 +42,21 @@ export function insideGlade(x, y) {
 
 /** Bauplätze. Jeder Ort ist eine Parzelle, die über Stufen ausgebaut wird. */
 export const PLACES = {
-  beet:    { x: 135 * K, y: 75 * K,  label: "Glühbeerenbeet" },
-  station: { x: 165 * K, y: 120 * K, label: "Verladestation" },
-  store:   { x: 232 * K, y: 125 * K, label: "Vorratsstand" },
-  nest:    { x: 160 * K, y: 155 * K, label: "Cozywolfs Nest" },
-  pond:    { x: 92 * K,  y: 117 * K, label: "Wasserbecken" }
+  beet:    { x: 112 * K, y: 70 * K,  label: "Glühbeerenbeet" },
+  station: { x: 150 * K, y: 125 * K, label: "Verladestation" },
+  store:   { x: 245 * K, y: 127 * K, label: "Vorratsstand" },
+  nest:    { x: 142 * K, y: 160 * K, label: "Cozywolfs Nest" },
+  pond:    { x: 92 * K,  y: 108 * K, label: "Wasserbecken" }
 };
 
 /** Brambles Weg – Tiere laufen ausschließlich auf echten Wegen. */
 export const PATH = {
-  from: { x: 139 * K, y: 81 * K }, to: { x: 158 * K, y: 114 * K }
+  from: { x: 120 * K, y: 78 * K }, to: { x: 141 * K, y: 120 * K }
 };
 
 /** Die Schienenstrecke des Wurzelwagens. */
 export const RAIL = {
-  y: 136 * K, from: 190 * K, to: 265 * K, home: 195 * K, dock: 235 * K
+  y: 144 * K, from: 175 * K, to: 280 * K, home: 178 * K, dock: 235 * K
 };
 
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */
@@ -64,20 +64,20 @@ export const TREE_RING = { stepY: 10 * K, stepX: 15 * K, margin: 5 * K };
 
 /** Kleine Streuobjekte, damit der Boden nicht überall gleich aussieht. */
 export const PROPS = [
-  { kind: "rock", x: 178 * K, y: 68 * K, size: 4 * K },
-  { kind: "rock", x: 62 * K, y: 100 * K, size: 3 * K },
-  { kind: "rock", x: 262 * K, y: 110 * K, size: 5 * K },
-  { kind: "shrub", x: 198 * K, y: 150 * K, size: 5 * K },
-  { kind: "shrub", x: 58 * K, y: 122 * K, size: 4 * K },
-  { kind: "shrub", x: 272 * K, y: 128 * K, size: 5 * K },
-  { kind: "rock", x: 108 * K, y: 78 * K, size: 3 * K },
-  { kind: "shrub", x: 122 * K, y: 146 * K, size: 4 * K }
+  { kind: "rock", x: 75 * K, y: 88 * K, size: 4 * K },
+  { kind: "rock", x: 200 * K, y: 75 * K, size: 3 * K },
+  { kind: "rock", x: 280 * K, y: 115 * K, size: 5 * K },
+  { kind: "shrub", x: 125 * K, y: 150 * K, size: 5 * K },
+  { kind: "shrub", x: 60 * K, y: 120 * K, size: 4 * K },
+  { kind: "shrub", x: 277 * K, y: 145 * K, size: 5 * K },
+  { kind: "rock", x: 50 * K, y: 127 * K, size: 3 * K },
+  { kind: "shrub", x: 205 * K, y: 60 * K, size: 4 * K }
 ];
 
 /** Freie Flächen zeigen Potential, aber keine sterilen Platzhalter. */
 export const FUTURE_PARCELS = [
-  { x: 96 * K, y: 138 * K, rx: 17 * K, ry: 9 * K, label: "Holz- und Wurzelwerkstatt" },
-  { x: 214 * K, y: 92 * K, rx: 18 * K, ry: 9 * K, label: "Küche" }
+  { x: 260 * K, y: 90 * K, rx: 18 * K, ry: 9 * K, label: "Küche" },
+  { x: 215 * K, y: 155 * K, rx: 17 * K, ry: 9 * K, label: "Holz- und Wurzelwerkstatt" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */

@@ -93,6 +93,51 @@ Die Zeilen **Gehen nach rechts**, **Gehen nach hinten** und **Arbeiten**.
 Bramble läuft im Spiel schräg über die Lichtung und erntet sichtbar am Beet;
 zurzeit zeigt er dabei immer nach vorn.
 
+### Batch 3 — die zweite Kette
+
+Batch 2 hat den ersten Bildschirm vollständig gemacht. Batch 3 macht ihn
+**tiefer**: eine zweite Produktionskette, ein zweiter Bewohner, und die Eule,
+die ihn bringt. Danach ist die rechte Bildhälfte kein leerer Rasen mehr.
+
+Derselbe Grundsatz wie zuvor: nur, wofür es im Spiel einen Ort gibt.
+
+**A · Die Holzkette**
+
+| Teil | Größe | Stufen | Beschreibung |
+|---|---|---|---|
+| Werkstatt | 96 × 80 | 3 | Werkbank unter offenem Dach, Werkzeug an der Rückwand. Bramble arbeitet sichtbar davor |
+| Nutzbaum | 64 × 96 | 3 | derselbe Baum voll, halb abgeerntet, als Stumpf. Er steht in der Lichtung und wird sichtbar kleiner |
+| Holzscheit | 32 × 32 | 1 | wird getragen wie die Kiste |
+| Holzstapel | 64 × 32 | 3 | füllt sich sichtbar: leer, halb, voll |
+| Bretterstapel | 64 × 32 | 1 | das verarbeitete Ergebnis |
+
+**B · Der zweite Bewohner**
+
+Das **Eichhörnchen** als vollständiges Blatt nach Abschnitt 4.5 — Gehen vorn,
+rechts, hinten, Arbeiten, Tragen, Ruhen. Es kümmert sich um Samen, Nüsse und
+Lagerlogistik; sein Werkzeug ist ein Sammelkorb.
+
+**C · Die Eule**
+
+Sie hütet das Dorfbuch und bringt neue Bewohner — der sichtbare Lohn dafür,
+dass der Ort etwas Neues gebaut hat. Aufbau nach Abschnitt 4.6: Sitzen,
+Kopfdrehen, Auffliegen, Fliegen, Landen. Dazu die **Sitzstange** 32 × 32.
+
+**D · Cozywolf vervollständigen**
+
+Die noch fehlenden Zeilen aus 4.7: **Aufsetzen und gähnen** (5 Bilder),
+**Sitzen und blinzeln** (3), **Freude** (4). Die Freude-Zeile spielt, wenn ein
+neuer Bewohner einzieht.
+
+**E · Nachbesserungen**
+
+- **Uferflecken** statt des 9er-Satzes, siehe Korrektur oben: vier runde à
+  64 × 64, drei längliche à 96 × 64, drei Schilf- und zwei Seerosenflecken.
+- **Vorratsstand Stufe 2** — mehr Regalbretter, damit der Ausbau sichtbar wird.
+
+**Ausdrücklich nicht in Batch 3:** Küche, Kristallquelle, Axolotl, Biene,
+Maulwurf, Ausbaustufe 3 der Verladestation. Sie kommen mit der dritten Kette.
+
 **Ausdrücklich nicht in Batch 2:** Werkstatt, Küche, Kristallquelle,
 Ausbaustufe 3, Fass, Sack, Korb, Zaun, Torbogen, Wegweiser, die übrigen
 Bewohner. Für all das gibt es im Spiel noch keinen Ort. Sie kommen, sobald
