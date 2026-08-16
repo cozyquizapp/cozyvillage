@@ -138,6 +138,70 @@ neuer Bewohner einzieht.
 **Ausdrücklich nicht in Batch 3:** Küche, Kristallquelle, Axolotl, Biene,
 Maulwurf, Ausbaustufe 3 der Verladestation. Sie kommen mit der dritten Kette.
 
+### Batch 4 — was die Reibung sichtbar macht
+
+Das Spiel hat seit Commit `a104905` echte Engstellen: Das Beet ist endlich,
+die Station läuft voll, das Regal läuft über. Batch 4 liefert genau die
+Bilder, die diese drei Zustände lesbar machen. Alles darin ist bereits im
+Code verdrahtet oder wartet auf genau eine Datei.
+
+**A · Der Glühbeerenbusch — das wichtigste Teil dieses Batches**
+
+Bisher leihen wir uns dafür drei Zellen aus `natur_64x96.png`. Das sind
+blühende Ziersträucher; im Spiel liegt ein grauer Farbfilter darüber, wenn
+ein Busch abgeerntet ist. Das ist ein Notbehelf und der Grund, warum die
+wichtigste Engstelle des Spiels im Bild fast nicht zu sehen ist.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `gluehbeerenbusch_32.png` | 32 × 32 | 4 | abgeerntet → knospend → halbreif → reif |
+
+Entscheidend ist der **Abstand zwischen Zelle 1 und Zelle 4**. Zelle 4 trägt
+dicke, deutlich leuchtende Glühbeeren; Zelle 1 hat gar keine, nur Blattwerk
+mit leeren Stielansätzen. Man muss aus fünf Metern Abstand erkennen, ob ein
+Beet abgeerntet ist — ohne hinzusehen, ohne Zahl, ohne Farbfilter.
+
+**B · Die beiden fehlenden Ausbaustufen**
+
+Beide sind im Code als Ausbau gekauft, aber es fehlt das Bild:
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `verladestation_3_96x80.png` | 96 × 80 | 1 | Stufe 3 „Verladehof": sechs leere Kistenplätze statt vier |
+| `vorratsstand_3_128x96.png` | 128 × 96 | 1 | Stufe 3 „Lagerschuppen": überdacht, Bretter nach hinten verlängert |
+
+Wichtig bei beiden: **Kistenplätze bleiben leer.** Das Spiel setzt die Kisten
+selbst. Und die Regalbretter des Vorratsstands müssen auf denselben Höhen
+liegen wie in Stufe 1 und 2 — das Spiel hat sie ausgemessen und stellt seine
+Kisten auf feste Höhen.
+
+**C · Die Bewässerungsrinne**
+
+Der Ausbau „Bewässerungsrinne" führt Wasser vom Becken zum Beet. Im Spiel ist
+sie zurzeit mit drei gezeichneten Linien angedeutet.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `rinne_32.png` | 32 × 32 | 4 | gerades Stück, Diagonalstück, Einlauf am Becken, Auslauf über dem Beet |
+
+Holzrinne auf niedrigen Böcken, im Inneren eine schmale Wasserlinie in den
+Beckenfarben. Die Stücke werden aneinandergesetzt wie die Schiene.
+
+**D · Nachbesserungen aus Batch 3**
+
+- `holzkette_64x32.png`, Zelle 2: der leere Holzstapel ist mit Cozywolfs
+  Fellrosa gefüllt. Als Holz neu zeichnen.
+- `nutzbaum_64x96.png`, Zelle 2 und 3: dasselbe Rosa in kleineren Mengen.
+
+Neue Regel, ab sofort im Prüfwerkzeug: **die drei Cozywolf-Rosatöne
+`#FF95C0`, `#F2609E` und `#C43C74` dürfen nur in Dateien vorkommen, deren
+Name `cozywolf` enthält.** In Fellgrund gibt es genau eine pinke Figur; wo
+dieses Rosa sonst auftaucht, ordnet das Auge es sofort dem Wolf zu.
+
+**Ausdrücklich nicht in Batch 4:** Küche, Kristallquelle, Axolotl, Biene,
+Maulwurf, Tag- und Nachtfassungen. Die Küche kommt, sobald die Holzkette im
+Spiel läuft.
+
 **Ausdrücklich nicht in Batch 2:** Werkstatt, Küche, Kristallquelle,
 Ausbaustufe 3, Fass, Sack, Korb, Zaun, Torbogen, Wegweiser, die übrigen
 Bewohner. Für all das gibt es im Spiel noch keinen Ort. Sie kommen, sobald
