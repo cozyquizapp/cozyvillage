@@ -8,19 +8,32 @@ OK gueter_64x32.png: 256x32, Alpha 0/255, Palette eingehalten
 OK bewegt.png: 128x32, Alpha 0/255, Palette eingehalten
 OK bewohner_biber.png: 256x320, fünf Zeilen im 64px-Raster, höchstens zehn Farben je Figurenzelle
 OK wasser_uferflecken.png: 384x160, 4 runde + 3 längliche + 3 Schilf- + 2 Seerosenflecken, Alpha 0/255
-OK vorratsstand_1_128x96.png: 128x96, drei Regalbretter leer
+OK vorratsstand_1_128x96.png: 768x96, sechs integrierte Füllstände, Fächer mindestens 18 px
 OK nest_80x48.png + nest_rand_vorn_80x48.png: getrennte Ebenen
 OK laterne_32x64.png: 96x64, drei Flackerstufen
 OK herzknospe_32.png: 128x32, vier Bilder
 OK parzelle_80x48.png: 80x48
 OK natur_batch2_32.png: 192x32, sechs Varianten
-OK verladestation_2_96x80.png: 96x80, Vordach und vier Plätze
+OK verladestation_2_96x80.png: 480x80, fünf integrierte Füllstände
 OK cozywolf.png: 256x128, höchstens zehn Farben je Figurenzelle
 OK werkstatt_96x80.png: 288x80, drei Stufen, Alpha 0/255
 OK nutzbaum_64x96.png: 192x96, drei Erntestufen, Alpha 0/255
 OK holzkette_64x32.png: 320x32, fünf Zellen, Alpha 0/255
-OK vorratsstand_2_128x96.png: 128x96, Regalbretter leer
+OK vorratsstand_2_128x96.png: 768x96, sechs integrierte Füllstände, Fächer mindestens 18 px
 OK bewohner_eichhoernchen.png: 256x384, sechs Zeilen, zehn Farben, Alpha 0/255
 OK bewohner_eule.png: 256x320, fünf Zeilen, zehn Farben, Alpha 0/255
 OK sitzstange_32.png: 32x32, Alpha 0/255
 OK cozywolf_batch3.png: 320x192, drei Zeilen, zehn Farben, Alpha 0/255
+OK gluehbeerenbusch_32.png: 128x32, vier klar getrennte Wachstumsstufen, Alpha 0/255
+OK verladestation_1_96x80.png: 288x80, drei integrierte Füllstände, volle Gebäudehöhe
+OK verladestation_3_96x80.png: 672x80, sieben integrierte Füllstände, volle Gebäudehöhe
+OK vorratsstand_3_128x96.png: 768x96, sechs integrierte Füllstände, Fächer mindestens 18 px
+OK rinne_32.png: 128x32, vier anschließbare Zellen, Alpha 0/255
+OK globale Cozywolf-Farbregel: keine reservierten Rosatöne in Nicht-Wolf-Dateien
+OK waldrahmen_2_hinten.png + waldrahmen_2_vorn.png: je 1600x900, große organische Lichtung
+OK verladepunkt_64x32.png: 192x32, drei sichtbare Umladezustände
+OK signal_32.png: 96x32, frei/belegt/gesperrt
+OK wurzelwagen_64x48.png: 448x48, orthogonale Draufsicht, sieben Füllstände
+OK uferkante_64x32.png: 384x32, sechs reine Uferstreifen ohne Wasserfläche
+OK dorfplatz_192x96.png: 192x96, gepflasterter Rund mit freier Nestmitte
+OK platzlaterne_32x64.png: 96x64, drei Flackerstufen

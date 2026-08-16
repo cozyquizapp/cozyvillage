@@ -14,11 +14,23 @@
  */
 export const K = 2;
 
-export const VIEW = { width: 320 * K, height: 180 * K };
+/**
+ * Die Leinwand. 1600 × 900 seit dem zweiten Waldrahmen.
+ *
+ * Die Pixel bleiben gleich groß – eine Figur ist weiterhin 64 px. Nachgemessen
+ * hat sich damit nur die Bühne vergrößert: Die freie Lichtung ist von 80 987
+ * auf 922 597 Pixel gewachsen (35,2 % → 64,1 % der Bildfläche, Faktor 11,4).
+ * Eine Figur belegt jetzt 0,44 % der Lichtung statt 5,06 % – genug Raum für
+ * einen Sortierring, mehrere Bauplätze und Luft dazwischen.
+ */
+export const VIEW = { width: 1600, height: 900 };
 
-/** Die Lichtung – klare Kante, rundum von Wald geschlossen. */
+/**
+ * Die Lichtung, am gelieferten Rahmen ausgemessen: offen von y = 110 bis
+ * y = 800, an der breitesten Stelle 1435 px bei y = 356.
+ */
 export const GLADE = {
-  cx: 160 * K, top: 26 * K, bottom: 176 * K, corner: 34 * K, halfWidth: 152 * K
+  cx: 800, top: 110, bottom: 800, corner: 150, halfWidth: 720
 };
 
 /** Halbe Breite der Lichtung auf Höhe y, mit organischer Welle. */
@@ -52,12 +64,12 @@ export function insideGlade(x, y) {
  * den Rand; alles andere ordnet sich um ihn herum an.
  */
 export const PLACES = {
-  beet:      { x: 185, y: 160, label: "Glühbeerenbeet" },
-  station:   { x: 310, y: 244, label: "Verladestation" },
-  werkstatt: { x: 390, y: 214, label: "Holz- und Wurzelwerkstatt" },
-  store:     { x: 500, y: 244, label: "Vorratsstand" },
-  nest:      { x: 320, y: 326, label: "Cozywolfs Nest" },
-  pond:      { x: 150, y: 232, label: "Wasserbecken", rx: 44, ry: 22 }
+  beet:      { x: 300,  y: 258, label: "Glühbeerenbeet" },
+  station:   { x: 470,  y: 428, label: "Verladestation" },
+  werkstatt: { x: 800,  y: 232, label: "Holz- und Wurzelwerkstatt" },
+  store:     { x: 1140, y: 428, label: "Vorratsstand" },
+  nest:      { x: 800,  y: 470, label: "Cozywolfs Nest" },
+  pond:      { x: 250,  y: 528, label: "Wasserbecken", rx: 112, ry: 56 }
 };
 
 /**
@@ -69,14 +81,14 @@ export const PLACES = {
  * Zahl erscheinen" auch für die Quelle, nicht nur für das Ziel.
  */
 export const NUTZBAEUME = [
-  { x: 150, y: 292 },
-  { x: 205, y: 302 },
-  { x: 258, y: 312 }
+  { x: 236, y: 672 },
+  { x: 340, y: 706 },
+  { x: 446, y: 668 }
 ];
 
 /** Der Weg des Eichhörnchens: von den Nutzbäumen zur Verladestation. */
 export const HOLZWEG = {
-  from: { x: 208, y: 296 }, to: { x: 274, y: 256 }
+  from: { x: 340, y: 648 }, to: { x: 408, y: 452 }
 };
 
 /**
@@ -124,9 +136,8 @@ export const WAGEN_BETT = { dx: 6, dy: -13, reihe: 2, stapel: 7 };
 
 /** Brambles Weg – Tiere laufen ausschließlich auf echten Wegen. */
 export const PATH = {
-  // Das Wegende liegt links vor der Station, nicht darauf. Vorher stand das
-  // abliefernde Tier mitten im Gebäude.
-  from: { x: 225, y: 205 }, to: { x: 255, y: 250 }
+  // Das Wegende liegt links vor der Station, nicht darauf.
+  from: { x: 316, y: 316 }, to: { x: 400, y: 424 }
 };
 
 /**
@@ -143,7 +154,7 @@ export const BEET_PLAETZE = [
   [-20, -4], [-8, 2], [4, -6], [16, 0], [-14, 8], [8, 10],
   [26, -8], [34, 2], [24, 10], [36, 12],
   [-30, -6], [-24, 4], [-32, 12], [2, 18], [20, 20]
-].map(([dx, dy]) => ({ dx: dx * K, dy: dy * K }));
+].map(([dx, dy]) => ({ dx: dx * K * 2.1, dy: dy * K * 2.1 }));
 
 /** Die Tiere, die nacheinander einziehen. Reihenfolge = Reihenfolge der Ausbauten. */
 export const ARBEITER = [
@@ -161,14 +172,16 @@ export const ARBEITER = [
  * der Wagen nirgends sichtbar etwas abholte. An beiden Enden steht ein
  * Prellbock, damit die Strecke nicht im Nichts aufhört.
  */
-export const RAIL = {
+/** Nur noch für die Tiefensortierung des Wagens gebraucht. */
+export const RAIL_ALT = {
   // Die Strecke liegt zwischen den Gebäuden und dem Dorfplatz: unter der
   // Station und dem Vorratsstand, aber sechzehn Pixel über Cozywolfs Nest.
   // Vorher lief sie mitten durch den Platz – das Herz des Dorfes lag auf
   // dem Gleis. `home` liegt rechts neben der Station statt darunter, wo
   // der wartende Wagen hinter dem Gebäude verschwand.
-  y: 262, from: 250, to: 535, home: 380, dock: 470
+  y: 470
 };
+export const RAIL = RAIL_ALT;
 
 /**
  * Der Streckenplan.
@@ -183,36 +196,50 @@ export const RAIL = {
  * `halt` heißt: hier hält ein Wagen und lädt. `ende` bekommt einen Prellbock.
  */
 export const GLEISPLAN = {
+  /*
+   * Der Sortierring.
+   *
+   * Acht Knoten bilden einen geschlossenen Ring um Cozywolfs Dorfplatz; von
+   * drei Seiten führen kurze Stichstrecken zu den Gebäuden. Damit gibt es
+   * erstmals **zwei Wege** zu jedem Ziel – der Wagen wählt den kürzeren, und
+   * bei belegtem Abschnitt kann der zweite Wagen außen herum.
+   *
+   * Aus derselben Beschreibung entstehen später die acht Speichen zu den
+   * Bezirken: mehr Knoten, mehr Kanten, kein anderer Code.
+   */
   knoten: [
-    { id: "westende",  x: 258, y: 262, art: "ende" },
-    { id: "station",   x: 310, y: 262, art: "halt" },
-    { id: "weiche",    x: 390, y: 262, art: "durch" },
-    { id: "werkstatt", x: 390, y: 218, art: "halt" },
-    { id: "lager",     x: 500, y: 262, art: "halt" },
-    { id: "ostende",   x: 540, y: 262, art: "ende" }
+    { id: "ring-nw", x: 620,  y: 330, art: "durch" },
+    { id: "ring-n",  x: 800,  y: 330, art: "durch" },
+    { id: "ring-no", x: 980,  y: 330, art: "durch" },
+    { id: "ring-o",  x: 980,  y: 470, art: "durch" },
+    { id: "ring-so", x: 980,  y: 610, art: "durch" },
+    { id: "ring-s",  x: 800,  y: 610, art: "durch" },
+    { id: "ring-sw", x: 620,  y: 610, art: "durch" },
+    { id: "ring-w",  x: 620,  y: 470, art: "durch" },
+
+    { id: "station",   x: 470,  y: 470, art: "halt" },
+    { id: "werkstatt", x: 800,  y: 268, art: "halt" },
+    { id: "lager",     x: 1140, y: 470, art: "halt" }
   ],
   kanten: [
-    ["westende", "station"],
-    ["station", "weiche"],
-    ["weiche", "werkstatt"],
-    ["weiche", "lager"],
-    ["lager", "ostende"]
+    ["ring-nw", "ring-n"], ["ring-n", "ring-no"],
+    ["ring-no", "ring-o"], ["ring-o", "ring-so"],
+    ["ring-so", "ring-s"], ["ring-s", "ring-sw"],
+    ["ring-sw", "ring-w"], ["ring-w", "ring-nw"],
+    ["ring-w", "station"], ["ring-n", "werkstatt"], ["ring-o", "lager"]
   ]
 };
-
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */
 export const TREE_RING = { stepY: 10 * K, stepX: 15 * K, margin: 5 * K };
 
 /** Kleine Streuobjekte, damit der Boden nicht überall gleich aussieht. */
 export const PROPS = [
-  { kind: "rock", x: 75 * K, y: 88 * K, size: 4 * K },
-  { kind: "rock", x: 200 * K, y: 75 * K, size: 3 * K },
-  { kind: "rock", x: 280 * K, y: 115 * K, size: 5 * K },
-  { kind: "shrub", x: 125 * K, y: 150 * K, size: 5 * K },
-  { kind: "shrub", x: 60 * K, y: 120 * K, size: 4 * K },
-  { kind: "shrub", x: 277 * K, y: 145 * K, size: 5 * K },
-  { kind: "rock", x: 50 * K, y: 127 * K, size: 3 * K },
-  { kind: "shrub", x: 205 * K, y: 60 * K, size: 4 * K }
+  { kind: "rock",  x: 560,  y: 210 }, { kind: "shrub", x: 1010, y: 200 },
+  { kind: "rock",  x: 1290, y: 300 }, { kind: "shrub", x: 190,  y: 340 },
+  { kind: "rock",  x: 1400, y: 520 }, { kind: "shrub", x: 1330, y: 640 },
+  { kind: "rock",  x: 540,  y: 700 }, { kind: "shrub", x: 640,  y: 760 },
+  { kind: "shrub", x: 960,  y: 770 }, { kind: "rock",  x: 150,  y: 620 },
+  { kind: "shrub", x: 1180, y: 210 }, { kind: "rock",  x: 700,  y: 180 }
 ];
 
 /**
@@ -223,7 +250,8 @@ export const PROPS = [
  * frei auf offenem Rasen.
  */
 export const FUTURE_PARCELS = [
-  { x: 452, y: 176, rx: 30, ry: 15, label: "Küche" }
+  { x: 800,  y: 730, rx: 46, ry: 23, label: "Küche" },
+  { x: 1180, y: 690, rx: 46, ry: 23, label: "Kristallquelle" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */

@@ -17,6 +17,22 @@ import {
 } from "./sprites.js";
 import { VIEW, GLADE, gladeHalf, insideGlade, PATH, RAIL, PLACES, K } from "../game/config.js";
 
+/**
+ * Wie `tex`, aber ohne Maßstabsumrechnung: Die Zeichenbefehle stehen bereits
+ * in Weltkoordinaten. Der Hintergrund entsteht so 1:1 – vorher wurde er im
+ * halben Maßstab gezeichnet und verdoppelt, wodurch die gelieferten
+ * 32er-Bodenkacheln als 64er-Klötze erschienen.
+ */
+function texVoll(scene, key, w, h, draw) {
+  if (scene.textures.exists(key)) scene.textures.remove(key);
+  const canvas = scene.textures.createCanvas(key, w, h);
+  const ctx = canvas.getContext();
+  ctx.imageSmoothingEnabled = false;
+  draw(ctx);
+  canvas.refresh();
+  return canvas;
+}
+
 /** Legt eine Leinwandtextur an und ruft die Zeichenfunktion darauf auf. */
 function tex(scene, key, w, h, draw) {
   if (scene.textures.exists(key)) scene.textures.remove(key);
@@ -105,10 +121,10 @@ function kacheleBoden(ctx, scene, s) {
   const bild = t.getSourceImage();
   const kh = bild.height;
   const anzahl = Math.floor(bild.width / kh);
-  const zeichen = kh / K;
+  const zeichen = kh;
   const rnd = makeRandom(53);
 
-  const W = VIEW.width / K;
+  const W = VIEW.width;
   for (let y = s(GLADE.top) - zeichen * 2; y <= s(GLADE.bottom) + zeichen * 2; y += zeichen) {
     for (let x = -zeichen; x < W + zeichen; x += zeichen) {
       const wahl = Math.floor(rnd() * anzahl);
@@ -137,8 +153,7 @@ function stempleWeg(ctx, scene, s) {
     const px_ = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
     const py_ = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
     const f = flecken[Math.floor(rnd() * 7)];        // nur runde und längliche
-    ctx.drawImage(bild, f.x, 0, f.br, h,
-      px_ - f.br / (2 * K), py_ - h / (2 * K), f.br / K, h / K);
+    ctx.drawImage(bild, f.x, 0, f.br, h, px_ - f.br / 2, py_ - h / 2, f.br, h);
   }
   // ein paar Trittsteine obenauf
   for (let i = 2; i < schritte; i += 7) {
@@ -146,15 +161,15 @@ function stempleWeg(ctx, scene, s) {
     const px_ = s(PATH.from.x + (PATH.to.x - PATH.from.x) * q);
     const py_ = s(PATH.from.y + (PATH.to.y - PATH.from.y) * q);
     const f = flecken[7 + Math.floor(rnd() * 3)];
-    ctx.drawImage(bild, f.x, 0, f.br, h, px_ - 8 / K, py_ - 8 / K, f.br / K, h / K);
+    ctx.drawImage(bild, f.x, 0, f.br, h, px_ - f.br / 2, py_ - h / 2, f.br, h);
   }
   return true;
 }
 
 function drawBackground(ctx, scene) {
-  const s = (v) => v / K;
+  const s = (v) => v;                       // 1:1, siehe texVoll
   const rnd = makeRandom(31);
-  const W = VIEW.width / K, H = VIEW.height / K;
+  const W = VIEW.width, H = VIEW.height;
 
   // Grundfläche. Der Waldrahmen liegt später als eigene Ebene darüber.
   rect(ctx, PAL.grass, 0, 0, W, H);
@@ -183,30 +198,8 @@ function drawBackground(ctx, scene) {
     }
   }
 
-  // Der Dorfplatz um Cozywolfs Nest.
-  //
-  // Cozywolf war bisher eine Figur am Rand. Ein Dorf hat aber eine Mitte,
-  // und die Mitte ist ein Platz: ein festgetretener Rund aus denselben
-  // Wegflecken, aus denen auch der Weg besteht. Er sagt ohne ein Wort,
-  // dass hier der Ort ist, um den herum alles andere gebaut wird.
-  const wegBlatt = scene && scene.textures.get("blatt-wege");
-  if (wegBlatt && wegBlatt.key !== "__MISSING") {
-    const bild = wegBlatt.getSourceImage();
-    const h = bild.height;
-    const rnd2 = makeRandom(97);
-    const n = PLACES.nest;
-    for (const [radX, radY, anzahl] of [[46, 24, 16], [26, 13, 8], [0, 0, 1]]) {
-      for (let i = 0; i < anzahl; i++) {
-        const a = (i / Math.max(1, anzahl)) * Math.PI * 2 + rnd2();
-        const px_ = s(n.x + Math.cos(a) * radX);
-        const py_ = s(n.y - 6 + Math.sin(a) * radY);
-        const br = rnd2() > 0.5 ? 64 : 32;
-        const fx = br === 64 ? 128 + Math.floor(rnd2() * 3) * 64 : Math.floor(rnd2() * 4) * 32;
-        ctx.drawImage(bild, fx, 0, br, h,
-          px_ - br / (2 * K), py_ - h / (2 * K), br / K, h / K);
-      }
-    }
-  }
+  // Der Dorfplatz ist seit Batch 5 ein eigenes Bild und wird in der Szene
+  // gelegt, nicht mehr aus Wegflecken gestempelt.
 
   // Die Schienenstrecke wird nicht mehr hier gezeichnet.
   //
@@ -222,7 +215,9 @@ function drawBackground(ctx, scene) {
  * Alle Texturen anlegen
  * --------------------------------------------------------------- */
 export function makeTextures(scene) {
-  tex(scene, "bg", VIEW.width / K, VIEW.height / K, (ctx) => drawBackground(ctx, scene));
+  // Der Hintergrund entsteht in voller Größe, nicht im halben Entwurfsmaßstab:
+  // Bodenkacheln und Wegflecken sind bereits in Zielauflösung geliefert.
+  texVoll(scene, "bg", VIEW.width, VIEW.height, (ctx) => drawBackground(ctx, scene));
 
   // Beerenbusch, drei Leuchtstufen
   for (let g = 0; g < 3; g++) {

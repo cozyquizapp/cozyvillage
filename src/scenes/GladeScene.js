@@ -69,13 +69,10 @@ export default class GladeScene extends Phaser.Scene {
     bus.on("ausbau", this.beiAusbau, this);
     this.events.once("shutdown", () => bus.off("ausbau", this.beiAusbau, this));
 
-    // Ein geladener Spielstand muss die Welt sofort im richtigen Zustand zeigen
-    if (state.ausbauten.wagenlager) this.station.setTexture("station-2");
+    // Ein geladener Spielstand muss die Welt sofort im richtigen Zustand
+    // zeigen. Station und Vorratsstand ergeben sich jetzt allein aus Stufe
+    // und Füllstand – dafür genügen die beiden Aktualisierungen unten.
     if (state.ausbauten.bewaesserung) this.zeigeRinne();
-    if ((state.ausbauten.regalreihe || state.ausbauten.lagerschuppen)
-        && this.textures.exists("store-2")) {
-      this.stand.setTexture("store-2");
-    }
     if (state.ausbauten.saege && this.textures.exists("werkstatt-1")) {
       this.werkstatt.setTexture("werkstatt-1");
     }
@@ -349,7 +346,8 @@ export default class GladeScene extends Phaser.Scene {
     const b = PLACES.beet;
     this.buesche = BEET_PLAETZE.map(({ dx, dy }, i) => {
       const x = b.x + dx, y = b.y + dy;
-      const bild = this.add.image(x, y, "bush-2").setOrigin(0.5, 1);
+      const bild = this.add.image(x, y,
+        this.textures.exists("beere-3") ? "beere-3" : "bush-2").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, y);
       this.machAnklickbar(bild, () => this.oeffneBeet(), { pixelgenau: true });
       return { bild, x, y, reife: 1, aktiv: false, belegt: null, index: i };
@@ -371,7 +369,8 @@ export default class GladeScene extends Phaser.Scene {
 
   baueStation() {
     const s = PLACES.station;
-    this.station = this.add.image(s.x, s.y, "station-1").setOrigin(0.5, 1);
+    this.station = this.add.image(s.x, s.y,
+      this.textures.exists("station-1-0") ? "station-1-0" : "station-1").setOrigin(0.5, 1);
     this.tiefeSetzen(this.station, s.y);
     this.machAnklickbar(this.station, () => this.oeffneStation());
     this.stationKisten = [];
@@ -379,7 +378,8 @@ export default class GladeScene extends Phaser.Scene {
 
   baueVorratsstand() {
     const s = PLACES.store;
-    this.stand = this.add.image(s.x, s.y, "store").setOrigin(0.5, 1);
+    this.stand = this.add.image(s.x, s.y,
+      this.textures.exists("store-1-0") ? "store-1-0" : "store").setOrigin(0.5, 1);
     this.tiefeSetzen(this.stand, s.y);
     this.machAnklickbar(this.stand, () => this.oeffneStand());
     this.regalKisten = [];
@@ -387,6 +387,23 @@ export default class GladeScene extends Phaser.Scene {
 
   baueNest() {
     const n = PLACES.nest;
+    // Der gelieferte Dorfplatz ersetzt den gestempelten Rund aus Wegflecken.
+    if (this.textures.exists("dorfplatz")) {
+      this.add.image(n.x, n.y - 6, "dorfplatz").setOrigin(0.5, 0.5).setDepth(3);
+      // Vier Platzlaternen an den Ecken, damit die Mitte abends trägt
+      for (const [dx, dy] of [[-108, -26], [108, -26], [-92, 34], [92, 34]]) {
+        const l = this.add.image(n.x + dx, n.y + dy, "platzlaterne-0").setOrigin(0.5, 1);
+        this.tiefeSetzen(l, n.y + dy);
+        const schein = this.add.ellipse(n.x + dx, n.y + dy - 2, 90, 40, 0xffb85c, 0.10)
+          .setDepth(6).setBlendMode(Phaser.BlendModes.ADD);
+        this.tweens.add({ targets: schein, alpha: 0.17, duration: 1100 + Math.abs(dx),
+          yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+        if (this.textures.exists("platzlaterne-1")) {
+          this.time.addEvent({ delay: 240, loop: true, callback: () =>
+            l.setTexture(`platzlaterne-${[0,1,2,1][Math.floor(this.time.now / 240) % 4]}`) });
+        }
+      }
+    }
     // Das ganze Nest ist anklickbar, nicht nur der Wolf darin: Er ist klein,
     // und wer auf sein Zuhause zeigt, meint ihn.
     const mulde = this.add.image(n.x, n.y, "nest").setOrigin(0.5, 1);
@@ -459,6 +476,16 @@ export default class GladeScene extends Phaser.Scene {
       }
     }
 
+    // Verladepunkte an jedem Halt: eine sichtbare Rampe zwischen Gebäude und
+    // Gleis. Vorher sprang die Kiste vom Stapel in den Wagen.
+    for (const k of this.netz.knoten.values()) {
+      if (k.art === KNOTENART.HALT && this.textures.exists("verladepunkt-0")) {
+        const r = this.add.image(k.x, k.y - 12, "verladepunkt-0").setOrigin(0.5, 1).setDepth(5);
+        this.verladepunkte = this.verladepunkte || {};
+        this.verladepunkte[k.id] = r;
+      }
+    }
+
     // Knoten: Kreuzung, Weiche oder Prellbock
     for (const k of this.netz.knoten.values()) {
       const grad = k.kanten.length;
@@ -469,6 +496,12 @@ export default class GladeScene extends Phaser.Scene {
       } else if (grad >= 4) {
         lege(k.x, k.y, "gleis-x");
       } else if (grad === 3) {
+        if (this.textures.exists("signal-0")) {
+          const sig = this.add.image(k.x + 20, k.y - 6, "signal-0").setOrigin(0.5, 1);
+          this.tiefeSetzen(sig, k.y);
+          this.signale = this.signale || [];
+          this.signale.push({ bild: sig, knoten: k });
+        }
         // Abzweig: das Weichenteil zeigt von Haus aus nach rechts unten
         const abzweig = k.kanten
           .map((id) => this.netz.knoten.get(id))
@@ -509,7 +542,8 @@ export default class GladeScene extends Phaser.Scene {
       const i = this.wagen.length;
       const modell = new Wagen(this.netz, `wagen-${i}`, i === 0 ? "station" : "weiche");
       const p = modell.position();
-      const bild = this.add.image(p.x, p.y + 8, "cart").setOrigin(0.5, 1);
+      const bild = this.add.image(p.x, p.y + 8,
+        this.textures.exists("wagen-0") ? "wagen-0" : "cart").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, p.y + 8);
       this.machAnklickbar(bild, () => this.oeffneWagen());
       this.wagen.push({
@@ -710,91 +744,50 @@ export default class GladeScene extends Phaser.Scene {
    * Sichtbare Güter
    * ----------------------------------------------------------- */
 
+  /** Welche Ausbaustufe die Verladestation gerade zeigt. */
+  stationStufe() {
+    if (state.ausbauten.verladehof && this.textures.exists("station-3-0")) return "station-3";
+    if (state.ausbauten.wagenlager && this.textures.exists("station-2-0")) return "station-2";
+    return "station-1";
+  }
+
+  /**
+   * Die Verladestation zeigt ihre Ladung als eigenes Bild.
+   *
+   * Vorher setzte das Spiel einzelne Kisten auf eine gemessene Höhe. Das
+   * konnte nie ganz stimmen – wie eine Kiste in einem Fach sitzt, mit
+   * Schatten und Überschneidung, entscheidet der zeichnende Blick. Jetzt
+   * liefert jede Stufe ihre Füllstände mit, und das Spiel wählt die Zelle.
+   */
   aktualisiereStation() {
-    const plaetze = kistenPlaetze();
-    const s = PLACES.station;
-    const breite = plaetze * 22;
-    const links = s.x - breite / 2 + 11;
-    const gesamt = state.kisten + state.scheite;
-    while (this.stationKisten.length > gesamt) this.stationKisten.pop().destroy();
-    while (this.stationKisten.length < gesamt) {
-      const i = this.stationKisten.length;
-      // Erst die Beerenkisten, dann die Holzscheite – man sieht auf einen
-      // Blick, worauf der Wagen als Nächstes reagieren wird.
-      // Ein Scheit ist als Bild 40 px breit, eine Kiste 16. Nebeneinander auf
-      // derselben Ladefläche muss beides gleich schwer wirken.
-      const key = i < state.kisten ? "crate" : "scheit";
-      const kiste = this.add.image(links + i * 22, s.y + this.deckHoehe(), key)
-        .setOrigin(0.5, 1).setScale(key === "scheit" ? 0.5 : 1);
-      this.tiefeSetzen(kiste, s.y + 1);
-      this.stationKisten.push(kiste);
-      // Die Kiste landet mit einem kurzen Stauchen, statt zu erscheinen.
-      kiste.setScale(1.5, 0.5);
-      this.tweens.add({ targets: kiste, scaleX: 1, scaleY: 1, duration: 220, ease: "Back.easeOut" });
-    }
-    // Nach einem Ausbau stehen die alten Kisten falsch
-    const hoehe = this.deckHoehe();
-    this.stationKisten.forEach((k, i) => {
-      k.x = links + i * 22;
-      k.y = s.y + hoehe;
-      const soll = i < state.kisten ? "crate" : "scheit";
-      if (this.textures.exists(soll) && k.texture.key !== soll) {
-        k.setTexture(soll).setScale(soll === "scheit" ? 0.5 : 1);
-      }
-    });
+    const stufe = this.stationStufe();
+    const belegt = Math.min(state.kisten + state.scheite, kistenPlaetze());
+    const key = `${stufe}-${belegt}`;
+    if (this.textures.exists(key)) this.station.setTexture(key);
+    else if (this.textures.exists(`${stufe}-0`)) this.station.setTexture(`${stufe}-0`);
+  }
+
+  /** Welche Ausbaustufe der Vorratsstand gerade zeigt. */
+  standStufe() {
+    if (state.ausbauten.lagerschuppen && this.textures.exists("store-3-0")) return "store-3";
+    if (state.ausbauten.regalreihe && this.textures.exists("store-2-0")) return "store-2";
+    return "store-1";
   }
 
   /**
-   * Höhe der Ladefläche über dem Fuß der Verladestation, am Bild gemessen.
+   * Das Regal zeigt, wie voll der Vorrat ist – als eines von sechs Bildern.
    *
-   * Stufe 1 ist ein flaches Podest (Mulde 2 px über dem Fuß), Stufe 2 hat ein
-   * Vordach und eine erhöhte Ladefläche (15 px). Vorher stand hier ein fester
-   * Wert, weshalb die Kisten auf Stufe 2 oben auf dem Dachbalken lagen.
-   */
-  deckHoehe() {
-    return this.station && this.station.texture.key === "station-1" ? -3 : -15;
-  }
-
-  /**
-   * Das Regal ist der Bestand. Es zeigt genau so viele Kisten, wie wirklich
-   * gelagert sind, und ist voll, wenn der Vorrat voll ist – deshalb steht
-   * nirgends eine Zahl, die man sonst glauben müsste.
-   */
-  /** Platz einer sichtbaren Kiste im Regal. */
-  regalPlatz(i) {
-    const s = PLACES.store;
-    const spalte = i % REGAL.spalten.length;
-    const reihe = Math.floor(i / REGAL.spalten.length);
-    return {
-      x: s.x + REGAL.spalten[spalte],
-      y: s.y + REGAL.reihen[Math.min(reihe, REGAL.reihen.length - 1)],
-      tiefe: s.y + 1 + (REGAL.reihen.length - reihe)
-    };
-  }
-
-  /**
-   * Das Regal zeigt, wie voll der Vorrat ist – nicht, wie viele Kisten er hat.
-   *
-   * Sechs Plätze, anteilig belegt. Ein halbvoller Vorrat zeigt drei Kisten,
-   * ein voller sechs. Die genaue Zahl liest ohnehin niemand ab; man sieht nur,
-   * ob noch Platz ist. Alles darüber hinaus bleibt im Gebäude.
+   * Die genaue Kistenzahl liest ohnehin niemand ab; man sieht nur, ob noch
+   * Platz ist. Sechs Stufen genügen dafür, und sie sind gezeichnet statt
+   * zusammengesetzt.
    */
   aktualisiereRegal() {
+    const stufe = this.standStufe();
     const anteil = Math.min(1, state.beeren / Math.max(1, lagerKapazitaet()));
-    const anzahl = state.beeren > 0
-      ? Math.max(1, Math.round(anteil * REGAL.sichtbar))
-      : 0;
-    while (this.regalKisten.length > anzahl) this.regalKisten.pop().destroy();
-    while (this.regalKisten.length < anzahl) {
-      const i = this.regalKisten.length;
-      const p = this.regalPlatz(i);
-      const kiste = this.add.image(p.x, p.y, "crate").setOrigin(0.5, 1);
-      this.tiefeSetzen(kiste, p.tiefe);
-      this.regalKisten.push(kiste);
-      kiste.y -= 8 * K;
-      kiste.setAlpha(0);
-      this.tweens.add({ targets: kiste, y: p.y, alpha: 1, duration: 260, ease: "Back.easeOut" });
-    }
+    const bild = state.beeren > 0 ? Math.max(1, Math.round(anteil * 5)) : 0;
+    const key = `${stufe}-${bild}`;
+    if (this.textures.exists(key)) this.stand.setTexture(key);
+    else if (this.textures.exists(`${stufe}-0`)) this.stand.setTexture(`${stufe}-0`);
   }
 
   /* ----------------------------------------------------------- *
@@ -925,12 +918,10 @@ export default class GladeScene extends Phaser.Scene {
 
     switch (id) {
       case "wagenlager":
-        this.station.setTexture("station-2");
         this.bluete.setVisible(true).setScale(0);
         this.tweens.add({ targets: this.bluete, scale: 1, duration: 420, ease: "Back.easeOut" });
         break;
       case "verladehof":
-        this.station.setTexture("station-2");
         this.tweens.add({
           targets: this.station, scaleX: 1.12, scaleY: 1.12,
           duration: 260, yoyo: true, ease: "Sine.easeOut"
@@ -962,7 +953,6 @@ export default class GladeScene extends Phaser.Scene {
         break;
       case "regalreihe":
       case "lagerschuppen":
-        if (this.textures.exists("store-2")) this.stand.setTexture("store-2");
         this.tweens.add({
           targets: this.stand, scaleX: 1.08, scaleY: 1.08,
           duration: 260, yoyo: true, ease: "Sine.easeOut"
@@ -1037,15 +1027,19 @@ export default class GladeScene extends Phaser.Scene {
       if (b.reife < 1) {
         b.reife = Math.min(1, b.reife + dt / sek);
       }
-      const stufe = b.reife >= 1 ? 2 : b.reife >= 0.45 ? 1 : 0;
-      const key = `bush-${stufe}`;
+      // Vier gezeichnete Reifestufen statt drei Ziersträuchern mit Farbfilter.
+      const eigen = this.textures.exists("beere-0");
+      const stufe = eigen
+        ? (b.reife >= 1 ? 3 : b.reife >= 0.66 ? 2 : b.reife >= 0.33 ? 1 : 0)
+        : (b.reife >= 1 ? 2 : b.reife >= 0.45 ? 1 : 0);
+      const key = eigen ? `beere-${stufe}` : `bush-${stufe}`;
       if (b.bild.texture.key !== key) b.bild.setTexture(key);
+      b.bild.clearTint();
       if (b.reife >= 1) {
-        b.bild.clearTint();
         // Reife Büsche atmen leicht – das Beet lebt, wenn es voll ist
         b.bild.y = b.y + Math.sin(this.time.now / 620 + b.index) * 0.8 * K;
       } else {
-        b.bild.setTint(0x93a58d);
+        if (!eigen) b.bild.setTint(0x93a58d);
         b.bild.y = b.y;
       }
     }
@@ -1229,21 +1223,16 @@ export default class GladeScene extends Phaser.Scene {
     w.bild.setPosition(p.x, p.y + 8);
     w.bild.setDepth(10 + p.y + 8);
     w.bild.setFlipX(p.dx < -0.3);
-    w.kisten.forEach((k, i) => {
-      const spalte = i % 2, reihe = Math.floor(i / 2);
-      k.x = p.x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2 + reihe * 3;
-      k.y = p.y + 8 + WAGEN_BETT.dy - reihe * WAGEN_BETT.stapel;
-      k.setDepth(11 + RAIL.y + reihe * 0.1);
-    });
   }
 
+  /**
+   * Der Wagen zeigt seine Ladung als eigenes Bild – leer bis sechs Stück.
+   * Das gelieferte Blatt ist orthogonal gezeichnet wie die Schiene; der
+   * frühere Wagen war isometrisch und saß deshalb schräg auf dem Gleis.
+   */
   aktualisiereWagenkisten(w) {
-    while (w.kisten.length) w.kisten.pop().destroy();
-    const key = w.art === "holz" && this.textures.exists("scheit") ? "scheit" : "crate";
-    for (let i = 0; i < w.ladung; i++) {
-      w.kisten.push(this.add.image(0, 0, key).setOrigin(0.5, 1)
-        .setScale(key === "scheit" ? 0.5 : 1));
-    }
+    const key = `wagen-${Math.min(6, w.ladung)}`;
+    if (this.textures.exists(key)) w.bild.setTexture(key);
     this.zeichneWagen(w);
   }
 

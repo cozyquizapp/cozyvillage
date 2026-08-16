@@ -20,4 +20,16 @@ entworfen. Die gelieferten PNG-Dateien wurden lokal auf die im Auftrag
 festgelegten Zielzellen, die Projektpalette und binäre Transparenz verarbeitet.
 Die organischen Uferflecken wurden lokal und reproduzierbar konstruiert.
 
+Die Batch-4-Motive Glühbeerenbusch, Verladehof, Lagerschuppen und
+Bewässerungsrinne wurden speziell für Fellgrund mit OpenAI-Bildgenerierung
+entworfen und lokal auf Zielmaß, Projektpalette, binäre Transparenz und die
+festen Spielkoordinaten verarbeitet. Die globale Rosa-Korrektur ist eine
+deterministische Farbabbildung innerhalb der bereits freigegebenen Palette.
+
 Zusätzliche Farben: keine; ausschließlich die Palette aus assets/AUFTRAG-TILESET.md.
+
+Die Batch-5-Motive – großer Waldrahmen, integrierte Füllstände für Lager,
+Verladestationen und Wagen, Verladepunkt, Signale, Dorfplatz, Platzlaterne
+und reine Uferkanten – wurden speziell für Fellgrund direkt im Zielraster
+und reproduzierbar konstruiert. Verwendet wurden ausschließlich Motive aus
+diesem CC0-Paket und die festgelegte Projektpalette; keine Fremdquellen.

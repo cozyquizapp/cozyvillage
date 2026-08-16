@@ -15,10 +15,20 @@ const BLAETTER = {
   "blatt-wege": "wege.png",
   "blatt-natur": "natur_64x96.png",
   "blatt-natur2": "natur_batch2_32.png",
-  "blatt-station1": "gebaeude_96x80.png",
+  "blatt-beerenbusch": "gluehbeerenbusch_32.png",
+  "blatt-rinne": "rinne_32.png",
+  "blatt-station1": "verladestation_1_96x80.png",
   "blatt-station2": "verladestation_2_96x80.png",
+  "blatt-station3": "verladestation_3_96x80.png",
   "blatt-vorratsstand": "vorratsstand_1_128x96.png",
   "blatt-vorratsstand2": "vorratsstand_2_128x96.png",
+  "blatt-vorratsstand3": "vorratsstand_3_128x96.png",
+  "blatt-wurzelwagen": "wurzelwagen_64x48.png",
+  "blatt-uferkante": "uferkante_64x32.png",
+  "blatt-verladepunkt": "verladepunkt_64x32.png",
+  "blatt-signal": "signal_32.png",
+  "blatt-dorfplatz": "dorfplatz_192x96.png",
+  "blatt-platzlaterne": "platzlaterne_32x64.png",
   "blatt-nest": "nest_80x48.png",
   "blatt-nestrand": "nest_rand_vorn_80x48.png",
   "blatt-laterne": "laterne_32x64.png",
@@ -35,8 +45,8 @@ const BLAETTER = {
   "blatt-uferflecken": "wasser_uferflecken.png",
   "blatt-biber": "bewohner_biber.png",
   "blatt-wolf": "cozywolf.png",
-  "wald-hinten": "waldrahmen_1_hinten.png",
-  "wald-vorn": "waldrahmen_1_vorn.png"
+  "wald-hinten": "waldrahmen_2_hinten.png",
+  "wald-vorn": "waldrahmen_2_vorn.png"
 };
 
 /**
@@ -124,6 +134,23 @@ export function setzeTileset(scene) {
     for (const k of ["tree-1-d", "tree-2-d"]) nimm("blatt-natur", k, zw, 0, zw, zh);
   }
 
+  /*
+   * Der Glühbeerenbusch mit vier Reifestufen: abgeerntet, knospend, halbreif,
+   * reif. Bis Batch 4 lieh sich das Spiel dafür Ziersträucher aus dem
+   * Naturblatt und legte einen grauen Filter darüber – die wichtigste
+   * Engstelle war dadurch im Bild kaum zu sehen.
+   */
+  const bb = masse(scene, "blatt-beerenbusch");
+  if (bb) {
+    const zw = bb.w / 4;
+    for (let i = 0; i < 4; i++) nimm("blatt-beerenbusch", `beere-${i}`, i * zw, 0, zw, bb.h);
+  }
+  const ri = masse(scene, "blatt-rinne");
+  if (ri) {
+    const zw = ri.w / 4;
+    for (let i = 0; i < 4; i++) nimm("blatt-rinne", `rinne-${i}`, i * zw, 0, zw, ri.h);
+  }
+
   // natur_batch2_32 – Busch A/B, Findling A/B, Baumstumpf A/B
   const n2 = masse(scene, "blatt-natur2");
   if (n2) {
@@ -136,10 +163,33 @@ export function setzeTileset(scene) {
     nimm("blatt-natur2", "stumpf-b", zw * 5, 0, zw, zh);
   }
 
-  ganz("blatt-station1", "station-1");
-  ganz("blatt-station2", "station-2");
-  ganz("blatt-vorratsstand", "store");
-  ganz("blatt-vorratsstand2", "store-2");
+  /*
+   * Füllstandsblätter statt leerer Gebäude plus gesetzter Kisten.
+   *
+   * Ein Regalfach ist zwanzig Pixel hoch, eine Kiste sechzehn – aber wie eine
+   * Kiste im Fach *sitzt*, mit Schatten und Überschneidung, kann nur der
+   * zeichnende Blick entscheiden. Deshalb liefert jede Stufe ihre Füllstände
+   * mit, und das Spiel wählt nur noch die Zelle.
+   */
+  const stufenblatt = (blatt, praefix, zw, zh) => {
+    const m = masse(scene, blatt);
+    if (!m) return 0;
+    const n = Math.round(m.w / zw);
+    for (let i = 0; i < n; i++) nimm(blatt, `${praefix}-${i}`, i * zw, 0, zw, zh);
+    return n;
+  };
+  stufenblatt("blatt-station1", "station-1", 96, 80);
+  stufenblatt("blatt-station2", "station-2", 96, 80);
+  stufenblatt("blatt-station3", "station-3", 96, 80);
+  stufenblatt("blatt-vorratsstand", "store-1", 128, 96);
+  stufenblatt("blatt-vorratsstand2", "store-2", 128, 96);
+  stufenblatt("blatt-vorratsstand3", "store-3", 128, 96);
+  stufenblatt("blatt-wurzelwagen", "wagen", 64, 48);
+  stufenblatt("blatt-verladepunkt", "verladepunkt", 64, 32);
+  stufenblatt("blatt-signal", "signal", 32, 32);
+  stufenblatt("blatt-uferkante", "uferkante", 64, 32);
+  stufenblatt("blatt-platzlaterne", "platzlaterne", 32, 64);
+  ganz("blatt-dorfplatz", "dorfplatz");
   ganz("blatt-nest", "nest");
   ganz("blatt-nestrand", "nest-rim");
   ganz("blatt-parzelle", "parcel");
