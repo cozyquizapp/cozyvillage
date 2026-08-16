@@ -14,4 +14,10 @@ speziell für Fellgrund mit OpenAI-Bildgenerierung entworfen und anschließend
 lokal auf Zielmaß, feste Palette, harte Deckkraft und eindeutige Rasterzellen
 verarbeitet.
 
+Die Motive aus Batch 3 – Holzkette, Eichhörnchen, Eule und die fehlenden
+Cozywolf-Zustände – wurden speziell für Fellgrund mit OpenAI-Bildgenerierung
+entworfen. Die gelieferten PNG-Dateien wurden lokal auf die im Auftrag
+festgelegten Zielzellen, die Projektpalette und binäre Transparenz verarbeitet.
+Die organischen Uferflecken wurden lokal und reproduzierbar konstruiert.
+
 Zusätzliche Farben: keine; ausschließlich die Palette aus assets/AUFTRAG-TILESET.md.

@@ -18,6 +18,7 @@ const BLAETTER = {
   "blatt-station1": "gebaeude_96x80.png",
   "blatt-station2": "verladestation_2_96x80.png",
   "blatt-vorratsstand": "vorratsstand_1_128x96.png",
+  "blatt-vorratsstand2": "vorratsstand_2_128x96.png",
   "blatt-nest": "nest_80x48.png",
   "blatt-nestrand": "nest_rand_vorn_80x48.png",
   "blatt-laterne": "laterne_32x64.png",
@@ -25,7 +26,7 @@ const BLAETTER = {
   "blatt-parzelle": "parzelle_80x48.png",
   "blatt-gueter": "gueter_64x32.png",
   "blatt-bewegt": "bewegt.png",
-  "blatt-ufer": "wasser_ufer_32.png",
+  "blatt-uferflecken": "wasser_uferflecken.png",
   "blatt-biber": "bewohner_biber.png",
   "blatt-wolf": "cozywolf.png",
   "wald-hinten": "waldrahmen_1_hinten.png",
@@ -124,6 +125,7 @@ export function setzeTileset(scene) {
   ganz("blatt-station1", "station-1");
   ganz("blatt-station2", "station-2");
   ganz("blatt-vorratsstand", "store");
+  ganz("blatt-vorratsstand2", "store-2");
   ganz("blatt-nest", "nest");
   ganz("blatt-nestrand", "nest-rim");
   ganz("blatt-parzelle", "parcel");
@@ -163,15 +165,19 @@ export function setzeTileset(scene) {
     }
   }
 
-  // wasser_ufer_32 – neun Positionen, je vier Bilder hintereinander
-  const ufer = masse(scene, "blatt-ufer");
-  if (ufer) {
-    const k = ufer.h;
-    for (let pos = 0; pos < 9; pos++) {
-      for (let f = 0; f < 4; f++) {
-        nimm("blatt-ufer", `ufer-${pos}-${f}`, (pos * 4 + f) * k, 0, k, k, { trimmen: false });
-      }
-    }
+  /*
+   * Uferflecken statt Kachelsatz.
+   *
+   * Ein 9er-Satz kann nur rechteckige Becken erzeugen – das war der Fehler
+   * der ersten Fassung. Die Flecken werden stattdessen überlappend um das
+   * Wasser gestempelt, wie bei den Wegen. Layout: vier runde 64×64, drei
+   * längliche 96×64, dann fünf Bewuchsflecken à 64×32.
+   */
+  const uf = masse(scene, "blatt-uferflecken");
+  if (uf) {
+    for (let i = 0; i < 4; i++) nimm("blatt-uferflecken", `ufer-rund-${i}`, i * 64, 0, 64, 64);
+    for (let i = 0; i < 3; i++) nimm("blatt-uferflecken", `ufer-lang-${i}`, i * 96, 64, 96, 64);
+    for (let i = 0; i < 5; i++) nimm("blatt-uferflecken", `ufer-bewuchs-${i}`, i * 64, 128, 64, 32);
   }
 
   // Bodenkacheln

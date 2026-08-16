@@ -7,7 +7,7 @@ OK gebaeude_96x80.png: 96x80, Alpha 0/255, Palette eingehalten
 OK gueter_64x32.png: 256x32, Alpha 0/255, Palette eingehalten
 OK bewegt.png: 128x32, Alpha 0/255, Palette eingehalten
 OK bewohner_biber.png: 256x320, fünf Zeilen im 64px-Raster, höchstens zehn Farben je Figurenzelle
-OK wasser_ufer_32.png: 1152x32, 9 Positionen × 4 Bilder, Alpha 0/255
+OK wasser_uferflecken.png: 384x160, 4 runde + 3 längliche + 3 Schilf- + 2 Seerosenflecken, Alpha 0/255
 OK vorratsstand_1_128x96.png: 128x96, drei Regalbretter leer
 OK nest_80x48.png + nest_rand_vorn_80x48.png: getrennte Ebenen
 OK laterne_32x64.png: 96x64, drei Flackerstufen
@@ -16,3 +16,11 @@ OK parzelle_80x48.png: 80x48
 OK natur_batch2_32.png: 192x32, sechs Varianten
 OK verladestation_2_96x80.png: 96x80, Vordach und vier Plätze
 OK cozywolf.png: 256x128, höchstens zehn Farben je Figurenzelle
+OK werkstatt_96x80.png: 288x80, drei Stufen, Alpha 0/255
+OK nutzbaum_64x96.png: 192x96, drei Erntestufen, Alpha 0/255
+OK holzkette_64x32.png: 320x32, fünf Zellen, Alpha 0/255
+OK vorratsstand_2_128x96.png: 128x96, Regalbretter leer
+OK bewohner_eichhoernchen.png: 256x384, sechs Zeilen, zehn Farben, Alpha 0/255
+OK bewohner_eule.png: 256x320, fünf Zeilen, zehn Farben, Alpha 0/255
+OK sitzstange_32.png: 32x32, Alpha 0/255
+OK cozywolf_batch3.png: 320x192, drei Zeilen, zehn Farben, Alpha 0/255

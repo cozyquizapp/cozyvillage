@@ -399,4 +399,16 @@ export function makeTextures(scene) {
 
   // Einzelne Funkenpixel für Quittungen
   tex(scene, "spark", 2, 2, (ctx) => rect(ctx, "#FFF6D0", 0, 0, 2, 2));
+
+  // Wartezeichen: eine kleine Sprechblase mit drei Punkten. Sie sagt "hier
+  // klemmt es", ohne zu alarmieren – kein rotes Warndreieck, keine Zahl.
+  tex(scene, "stau", 14, 13, (ctx) => {
+    rect(ctx, PAL.ink, 1, 0, 12, 9);
+    rect(ctx, PAL.ink, 0, 1, 14, 7);
+    rect(ctx, "#F5E9C0", 2, 1, 10, 7);
+    rect(ctx, "#F5E9C0", 1, 2, 12, 5);
+    rect(ctx, PAL.ink, 4, 9, 4, 2);
+    rect(ctx, "#F5E9C0", 4, 9, 3, 1);
+    for (let d = 0; d < 3; d++) rect(ctx, "#8A6942", 3 + d * 3, 4, 2, 2);
+  });
 }

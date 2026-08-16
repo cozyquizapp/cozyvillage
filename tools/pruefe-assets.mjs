@@ -31,6 +31,17 @@ const PALETTE = [
   "FF95C0", "F2609E", "C43C74", "2E8792", "1D5E68", "F0A93C", "161E38"
 ];
 
+/**
+ * Cozywolfs Fellrosa ist eine Signalfarbe.
+ *
+ * In Fellgrund gibt es genau eine pinke Figur. Taucht dieses Rosa in einem
+ * Holz-, Gebäude- oder Pflanzenblatt auf, ist es fast immer ein
+ * Platzhalterfüller, der beim Zeichnen stehen geblieben ist – und er fällt
+ * im Spiel sofort auf, weil das Auge diese Farbe dem Wolf zuordnet.
+ * Reserviert für Dateien, deren Name "cozywolf" enthält.
+ */
+const WOLF_ROSA = ["FF95C0", "F2609E", "C43C74"];
+
 /* Grenzwerte. Figurendateien duerfen mehr Farben haben als eine einzelne
    Figur, weil mehrere Bilder in einer Datei liegen. */
 const MAX_FARBEN_FIGUR = 24;
@@ -117,6 +128,8 @@ function pruefe(datei) {
   const farben = new Map();
   let halbtransparent = 0;
   let deckend = 0;
+  const istWolfblatt = basename(datei).toLowerCase().includes("cozywolf");
+  const rosa = new Map();   // Fundstellen von Cozywolfs Fellrosa
 
   for (let i = 0; i < data.length; i += 4) {
     const a = data[i + 3];
@@ -125,6 +138,14 @@ function pruefe(datei) {
     deckend++;
     const key = hex(data[i], data[i + 1], data[i + 2]);
     farben.set(key, (farben.get(key) || 0) + 1);
+    if (!istWolfblatt && WOLF_ROSA.includes(key)) {
+      const px = (i / 4) % w, py = Math.floor((i / 4) / w);
+      const e = rosa.get(key) || { n: 0, x0: Infinity, y0: Infinity, x1: 0, y1: 0 };
+      e.n++;
+      e.x0 = Math.min(e.x0, px); e.y0 = Math.min(e.y0, py);
+      e.x1 = Math.max(e.x1, px); e.y1 = Math.max(e.y1, py);
+      rosa.set(key, e);
+    }
   }
 
   const art = artVon(datei);
@@ -175,6 +196,15 @@ function pruefe(datei) {
         `${schlimmste.toFixed(1)}× so groß wie im Inneren. Ergibt ein sichtbares Gitter`
       );
     }
+  }
+
+  // Cozywolfs Fellrosa gehört nur in Cozywolf-Blätter.
+  for (const [f, e] of rosa) {
+    fehler.push(
+      `#${f} ist eine Cozywolf-Farbe und hat in diesem Blatt nichts zu suchen: ` +
+      `${e.n} px im Bereich x ${e.x0}–${e.x1}, y ${e.y0}–${e.y1}. ` +
+      `Meist ein stehen gebliebener Platzhalterfüller`
+    );
   }
 
   // Jedes Figurenblatt hat mindestens zwei Zeilen à 64 px.

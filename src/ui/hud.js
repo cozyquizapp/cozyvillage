@@ -6,7 +6,7 @@
  */
 
 import { state, bus, kaufen, istKaufbar, zuruecksetzen, speichern } from "../game/state.js";
-import { RULES } from "../game/config.js";
+import { RULES, UPGRADES } from "../game/config.js";
 
 const css = `
 #ui {
@@ -65,6 +65,8 @@ const css = `
   margin: 4px 16px 16px; border: 2px solid #3f5a44; padding: 12px;
   display: grid; gap: 8px;
 }
+#ui .panel .ausbau.gesperrt { border-style: dashed; opacity: .62; }
+#ui .panel .ausbau .sperre { margin: 0; font-size: 11px; color: #8aa08c; }
 #ui .panel .ausbau h3 { margin: 0; font-size: 12px; color: #f0b84a; letter-spacing: .08em; text-transform: uppercase; }
 #ui .panel .ausbau p { margin: 0; font-size: 12px; line-height: 1.55; color: #c6d6c2; }
 #ui .panel .ausbau ul { margin: 0; padding-left: 16px; font-size: 11px; color: #9fb59c; }
@@ -143,52 +145,57 @@ function zeichne() {
   el.kisten.textContent = state.kisten;
   el.wagen.textContent = state.wagenLadung;
   el.lief.textContent = state.lieferungen;
-  if (el.panel.classList.contains("offen") && el.panel.dataset.ausbauId) {
-    setzeKnopf(el.panel.dataset.ausbauId);
-  }
+  for (const id of offeneAusbauten) setzeKnopf(id);
 }
+
+/** Welche Ausbauknöpfe im Panel gerade stehen – für die laufende Aktualisierung. */
+let offeneAusbauten = [];
 
 function schliesse() {
   el.panel.classList.remove("offen");
-  el.panel.dataset.ausbauId = "";
+  offeneAusbauten = [];
 }
 
 function oeffne(daten) {
   el.titel.textContent = daten.titel;
   el.inhalt.innerHTML = daten.zeilen.map((z) => `<div>${z}</div>`).join("");
   el.ausbau.innerHTML = "";
-  el.panel.dataset.ausbauId = "";
+  offeneAusbauten = [];
 
-  if (daten.ausbau) {
-    const a = daten.ausbau;
+  // Ein Ort kann mehrere Ausbaustufen anbieten; die nächste gesperrte steht
+  // als Ausblick dabei, damit sichtbar ist, worauf man hinarbeitet.
+  const liste = daten.ausbauten || (daten.ausbau ? [daten.ausbau] : []);
+  for (const a of liste) {
     const block = document.createElement("div");
-    block.className = "ausbau";
+    block.className = "ausbau" + (a.freigeschaltet ? "" : " gesperrt");
     block.innerHTML = `
       <h3>Ausbau · ${a.name}</h3>
       <p>${a.beschreibung}</p>
       <ul>${a.wirkung.map((w) => `<li>${w}</li>`).join("")}</ul>
-      <button id="kauf">Für ${a.kosten} Glühbeeren bauen</button>
-      ${a.hinweis ? `<p style="color:#8aa08c">${a.hinweis}</p>` : ""}`;
+      ${a.freigeschaltet
+        ? `<button data-kauf="${a.id}">Für ${a.kosten} Glühbeeren bauen</button>`
+        : `<p class="sperre">${a.hinweis}</p>`}`;
     el.ausbau.appendChild(block);
-    el.panel.dataset.ausbauId = a.id;
-    document.getElementById("kauf").addEventListener("click", () => {
-      if (kaufen(a.id)) schliesse();
-    });
-    setzeKnopf(a.id);
+    if (a.freigeschaltet) {
+      offeneAusbauten.push(a.id);
+      block.querySelector("button").addEventListener("click", () => {
+        if (kaufen(a.id)) schliesse();
+      });
+    }
   }
+  for (const id of offeneAusbauten) setzeKnopf(id);
   el.panel.classList.add("offen");
 }
 
 function setzeKnopf(id) {
-  const knopf = document.getElementById("kauf");
+  const knopf = el.ausbau.querySelector(`[data-kauf="${id}"]`);
   if (!knopf) return;
+  const up = UPGRADES[id];
   const moeglich = istKaufbar(id);
   knopf.disabled = !moeglich;
-  if (!moeglich) {
-    knopf.textContent = state.beeren < 36
-      ? `Noch ${36 - state.beeren} Glühbeeren nötig`
-      : "Noch nicht freigeschaltet";
-  }
+  knopf.textContent = moeglich
+    ? `Für ${up.cost} Glühbeeren bauen`
+    : `Noch ${up.cost - state.beeren} Glühbeeren nötig`;
 }
 
 // Für die Konsole, damit man den Slice von vorn spielen kann.
