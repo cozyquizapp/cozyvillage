@@ -33,9 +33,17 @@ const BLAETTER = {
   "wald-vorn": "waldrahmen_1_vorn.png"
 };
 
+/**
+ * Normalerweise liegen die Blätter als Dateien neben dem Spiel. Für eine
+ * einzelne, überall lauffähige HTML-Fassung legt `tools/baue-artifact.mjs`
+ * sie stattdessen als eingebettete Bilder unter `FELLGRUND_ASSETS` ab –
+ * derselbe Ladeweg, nur ohne Server dahinter.
+ */
 export function ladeTileset(scene) {
+  const eingebettet = globalThis.FELLGRUND_ASSETS;
   for (const [key, datei] of Object.entries(BLAETTER)) {
-    scene.load.image(key, `${TILESET_PFAD}/${datei}`);
+    const quelle = eingebettet && eingebettet[datei];
+    scene.load.image(key, quelle || `${TILESET_PFAD}/${datei}`);
   }
 }
 

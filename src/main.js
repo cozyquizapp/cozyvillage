@@ -21,4 +21,7 @@ const spiel = new Phaser.Game({
 
 starteOberflaeche();
 
+// Für Messungen von außen: Belegung der Lichtung, Gedränge auf dem Weg.
+window.fellgrundSpiel = spiel;
+
 export default spiel;
