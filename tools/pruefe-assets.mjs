@@ -79,6 +79,55 @@ function naechsteFarbe(farbe) {
   return { farbe: best, abstand: bestD };
 }
 
+/** Kantenlänge der Kiste, die das Spiel in Regale stellt. */
+const KISTE = 16;
+const FACH_MINDESTHOEHE = KISTE + 2;
+
+/**
+ * Misst die Fachhöhen eines Regals.
+ *
+ * Ein Regalfach ist im Bild ein waagerechter dunkler Streifen zwischen zwei
+ * hellen Brettern. Ist er niedriger als eine Kiste, kann das Spiel dort
+ * nichts hineinstellen – egal, wie sorgfältig es rechnet. Genau dieser
+ * Fehler ist dreimal unbemerkt durchgegangen, weil alle anderen Prüfungen
+ * nur Farben und Maße kannten.
+ */
+function fachhoehen(data, w, h) {
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[(y * w + x) * 4 + 3] === 0) continue;
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x >= x1) x1 = x + 1;
+      if (y >= y1) y1 = y + 1;
+    }
+  }
+  if (x1 <= x0 || y1 <= y0) return [];
+  const a = x0 + Math.round((x1 - x0) * 0.32);
+  const b = x0 + Math.round((x1 - x0) * 0.62);
+
+  const dunkel = [];
+  for (let y = y0; y < y1; y++) {
+    let summe = 0, n = 0;
+    for (let x = a; x < b; x++) {
+      const i = (y * w + x) * 4;
+      if (data[i + 3] !== 255) continue;
+      summe += (data[i] + data[i + 1] + data[i + 2]) / 3;
+      n++;
+    }
+    dunkel.push(n > 0 && summe / n < 62);
+  }
+
+  const faecher = [];
+  let start = -1;
+  dunkel.forEach((d, i) => {
+    if (d && start < 0) start = i;
+    if (!d && start >= 0) { if (i - start > 5) faecher.push(i - start); start = -1; }
+  });
+  return faecher;
+}
+
 function artVon(pfad) {
   // Nur der Dateiname zählt. Der Ordner heißt "tilesets" und würde sonst
   // jede Datei als Kachel einstufen.
@@ -195,6 +244,24 @@ function pruefe(datei) {
         `Kachel ${index} kachelt nicht nahtlos – der Farbsprung an der Naht ist ` +
         `${schlimmste.toFixed(1)}× so groß wie im Inneren. Ergibt ein sichtbares Gitter`
       );
+    }
+  }
+
+  // Regale müssen die Kisten des Spiels aufnehmen können.
+  if (/vorratsstand|regal/i.test(basename(datei))) {
+    const faecher = fachhoehen(data, w, h);
+    if (faecher.length === 0) {
+      warnungen.push("kein Regalfach erkannt – ist das wirklich ein Regal?");
+    } else {
+      const zuNiedrig = faecher.filter((f) => f < FACH_MINDESTHOEHE);
+      if (zuNiedrig.length) {
+        fehler.push(
+          `Regalfächer sind ${faecher.join(", ")} px hoch. Die Kiste des Spiels ` +
+          `ist ${KISTE} × ${KISTE} px, ein Fach braucht mindestens ` +
+          `${FACH_MINDESTHOEHE} px. ${zuNiedrig.length} von ${faecher.length} Fächern ` +
+          `sind zu flach – dort lässt sich nichts abstellen`
+        );
+      }
     }
   }
 
