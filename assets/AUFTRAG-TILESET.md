@@ -303,6 +303,56 @@ festgetretener Fleck, nicht wie ein Platz.
 | `dorfplatz_192x96.png` | 192 × 96 | 1 | gepflasterter Rund mit Randsteinen, Moos in den Fugen, Platz in der Mitte für das Nest |
 | `platzlaterne_32x64.png` | 32 × 64 | 3 | höhere Laterne für den Platzrand, drei Flackerstufen |
 
+### Grundsatz, der sich aus drei Fehlern in Folge ergeben hat
+
+Regalfächer zu flach für die Kiste. Wagenladefläche zu flach für die Kiste.
+Uferflecken, deren Randlinien ins Wasser ragen. Dreimal derselbe Bau­fehler:
+**Ein Bild und ein separat gesetztes Sprite müssen zusammenpassen, und sie tun
+es nie ganz.**
+
+Daraus zwei Regeln für alles Weitere.
+
+**Regel 1 — Behälter und Inhalt kommen als ein Bild.**
+
+Wo etwas sichtbar gefüllt wird, wird nicht der leere Behälter geliefert und das
+Spiel setzt Kisten hinein, sondern jeder Füllstand ist ein eigenes Bild. Der
+zeichnende Blick entscheidet dann, wie eine Kiste im Fach sitzt, mit Schatten,
+Überschneidung und Perspektive — was mit einzeln gesetzten Sprites nie
+gelingt.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `vorratsstand_1_128x96.png` | 128 × 96 | 6 | leer · ⅕ · ⅖ · ⅗ · ⅘ · voll |
+| `vorratsstand_2_128x96.png` | 128 × 96 | 6 | dieselben Füllstände, größeres Regal |
+| `vorratsstand_3_128x96.png` | 128 × 96 | 6 | dieselben Füllstände, überdachter Schuppen |
+| `verladestation_1_96x80.png` | 96 × 80 | 3 | 0, 1, 2 Kisten auf der Ladefläche |
+| `verladestation_2_96x80.png` | 96 × 80 | 5 | 0 bis 4 Kisten |
+| `verladestation_3_96x80.png` | 96 × 80 | 7 | 0 bis 6 Kisten |
+| `wurzelwagen_64x48.png` | 64 × 48 | 7 | leer, dann 1 bis 6 Kisten geladen |
+
+Die Füllstände müssen sich **aus der Entfernung** unterscheiden: Ein halbvolles
+Regal soll man als halbvoll erkennen, ohne Kisten zu zählen. Es geht nicht um
+die genaue Anzahl — es geht darum, dass man sieht, wie voll es ist.
+
+Der Wurzelwagen bleibt dabei bei der Korrektur von oben: **Draufsicht wie die
+Schiene**, kein Rhombus.
+
+**Regel 2 — Ein Rand ist ein Rand, keine Fläche mit Rand.**
+
+Die Uferflecken sind gefüllte Wasserblasen mit heller Randlinie. Legt man sie
+als Ufer um ein vorhandenes Becken, ragen ihre Randlinien zwangsläufig ins
+Wasser und werden zu geschwungenen hellen Strichen — nachgewiesen, indem ich
+sie abgeschaltet habe: dann sind die Striche weg. Ich habe drei Größen und drei
+Radien versucht; es liegt an der Bauart, nicht an der Platzierung.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `uferkante_64x32.png` | 64 × 32 | 6 | **fast vollständig durchsichtig**; gezeichnet ist nur ein 6–8 px breiter Uferstreifen mit ausgefranster Kante, in sechs Krümmungen |
+
+Damit lässt sich jede Beckenform umranden, ohne dass etwas ins Wasser ragt.
+Die vorhandenen `wasser_uferflecken.png` bleiben nützlich für den Fall, dass
+ein Becken **ganz** aus ihnen gestempelt wird — dafür waren sie gedacht.
+
 **Ausdrücklich nicht in Batch 5:** Küche, Kristallquelle, Axolotl, Biene,
 Maulwurf, Tag- und Nachtfassungen.
 

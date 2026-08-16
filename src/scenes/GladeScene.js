@@ -181,24 +181,68 @@ export default class GladeScene extends Phaser.Scene {
     if (!this.textures.exists("wasser-0")) return;
     const rx = p.rx, ry = p.ry;
 
-    // Ufer: überlappend gestempelte Flecken, kein Kachelsatz. Ein 9er-Satz
-    // könnte nur ein Rechteck umranden – Flecken folgen jeder Form.
-    if (this.textures.exists("ufer-rund-0")) {
-      for (let i = 0; i < 22; i++) {
-        const a = (i / 22) * Math.PI * 2;
-        const lang = i % 3 === 0;
-        const key = lang
-          ? `ufer-lang-${i % 3}`
-          : `ufer-rund-${i % 4}`;
-        this.add.image(
-          p.x + Math.cos(a) * (rx - 4), p.y + Math.sin(a) * (ry - 3), key
-        ).setDepth(2.6).setScale(0.9 + ((i * 7) % 3) * 0.08);
-      }
-    } else {
-      const ufer = this.add.graphics().setDepth(2.6);
-      ufer.fillStyle(0x2c4a34, 1).fillEllipse(p.x, p.y, rx * 2 + 10, ry * 2 + 8);
-      ufer.fillStyle(0x4a3b26, 1).fillEllipse(p.x, p.y, rx * 2 + 4, ry * 2 + 3);
+    /*
+     * Das Ufer.
+     *
+     * Die gelieferten Flecken sind 64 × 64 groß und zu zwei Dritteln gefüllt –
+     * gedacht, um daraus ein ganzes Becken zu stempeln. Ich hatte sie in voller
+     * Größe an den Rand der Maske gelegt; dadurch ragte jeder Fleck rund
+     * zweiundzwanzig Pixel über die Wasserkante hinaus, und seine helle
+     * Randlinie lag als geschwungener Streifen mitten im Becken. Genau das
+     * waren die "Striche im Wasser".
+     *
+     * Halbiert und enger gesetzt bilden dieselben Flecken einen acht Pixel
+     * breiten Uferrand – das, wofür eine Randlinie da ist.
+     */
+    /*
+     * Ufer und Wasserkante folgen derselben Linie.
+     *
+     * Vorher war die Wasserfläche eine glatte Ellipse und die Uferflecken lagen
+     * als Ring darauf. Jede Fleckenrandlinie, die dabei ins Becken ragte, wurde
+     * zu einem geschwungenen hellen Strich mitten im Wasser — das waren die
+     * "Striche", nicht die Wasserkacheln. Nachgewiesen, indem ich die Flecken
+     * abgeschaltet habe: Dann sind sie weg.
+     *
+     * Jetzt beschreibt eine einzige gewellte Linie beide Dinge: Sie ist die
+     * Maske für das Wasser und zugleich die Kante des Ufers. Die Flecken liegen
+     * ganz außerhalb davon und können deshalb nicht mehr hineinragen.
+     */
+    const welle = (a) => 1 + Math.sin(a * 3) * 0.07 + Math.sin(a * 5 + 1.3) * 0.05;
+    const rand = [];
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      const f = welle(a);
+      rand.push({ x: p.x + Math.cos(a) * rx * f, y: p.y + Math.sin(a) * ry * f, a });
     }
+
+    // Uferstreifen: dieselbe Linie, etwas weiter außen
+    const bank = this.add.graphics().setDepth(2.5);
+    for (const [zuschlag, farbe] of [[10, 0x37603c], [6, 0x6e6046], [2, 0x8a6942]]) {
+      bank.fillStyle(farbe, 1).beginPath();
+      rand.forEach((pt, i) => {
+        const f = welle(pt.a);
+        const x = p.x + Math.cos(pt.a) * (rx * f + zuschlag);
+        const y = p.y + Math.sin(pt.a) * (ry * f + zuschlag * 0.7);
+        i === 0 ? bank.moveTo(x, y) : bank.lineTo(x, y);
+      });
+      bank.closePath().fillPath();
+    }
+
+    /*
+     * Die gelieferten Uferflecken bleiben vorerst ungenutzt.
+     *
+     * Sie sind gefüllte Wasserblasen mit heller Randlinie – gedacht, um daraus
+     * ein Becken zu stempeln. Als Ufer um ein vorhandenes Becken gelegt,
+     * streuen sie ihre Randlinien zwangsläufig ins Wasser, egal in welcher
+     * Größe oder auf welchem Radius. Ich habe es in drei Fassungen versucht
+     * und jedes Mal dieselben geschwungenen Striche bekommen.
+     *
+     * Was hier gebraucht wird, ist kein Fleck, sondern eine **Kante**: ein
+     * Bildteil, das fast vollständig durchsichtig ist und nur die Uferlinie
+     * zeigt. Das ist bestellt. Bis dahin zeichne ich die Kante selbst – aus
+     * derselben gewellten Linie wie die Wassermaske, damit beide zwangsläufig
+     * übereinstimmen.
+     */
 
     const wasser = this.add.container(0, 0).setDepth(2.8);
     const kachel = 32;
@@ -206,12 +250,17 @@ export default class GladeScene extends Phaser.Scene {
     for (let y = p.y - ry - kachel; y < p.y + ry + kachel; y += kachel) {
       for (let x = p.x - rx - kachel; x < p.x + rx + kachel; x += kachel) {
         const k = this.add.image(x, y, "wasser-0").setOrigin(0, 0);
+        // Ohne Spiegeln liest man das 32er-Raster als Gitter im Wasser.
+        const wuerfel = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+        k.setFlipX((wuerfel & 1) === 1).setFlipY((wuerfel & 2) === 2);
         wasser.add(k);
         this.wasserKacheln.push(k);
       }
     }
     const form = this.make.graphics({ x: 0, y: 0, add: false });
-    form.fillStyle(0xffffff).fillEllipse(p.x, p.y, rx * 2, ry * 2);
+    form.fillStyle(0xffffff).beginPath();
+    rand.forEach((pt, i) => (i === 0 ? form.moveTo(pt.x, pt.y) : form.lineTo(pt.x, pt.y)));
+    form.closePath().fillPath();
     wasser.setMask(form.createGeometryMask());
 
     this.time.addEvent({
@@ -367,7 +416,11 @@ export default class GladeScene extends Phaser.Scene {
       const dx = nach.x - von.x, dy = nach.y - von.y;
       const laenge = Math.hypot(dx, dy);
       const waagerecht = Math.abs(dx) >= Math.abs(dy);
-      const anzahl = Math.max(1, Math.round(laenge / T));
+      // Aufrunden auf ein kleineres Raster als die Kachel: Bei runden Teilen
+      // wurde der Abstand größer als 32 px, und die Strecke bekam Lücken —
+      // zwischen Station und Weiche 3,3 px. Mit T − 6 überlappen die Teile
+      // immer, egal wie lang die Kante ist.
+      const anzahl = Math.max(1, Math.ceil(laenge / (T - 6)));
       for (let i = 0; i < anzahl; i++) {
         const q = (i + 0.5) / anzahl;
         lege(von.x + dx * q, von.y + dy * q, waagerecht ? "gleis-w" : "gleis-s");
