@@ -40,6 +40,12 @@ const BLAETTER = {
   "blatt-nutzbaum": "nutzbaum_64x96.png",
   "blatt-holz": "holzkette_64x32.png",
   "blatt-eichhorn": "bewohner_eichhoernchen.png",
+  "blatt-bau-biber": "bau_biber_96x80.png",
+  "blatt-kobel": "kobel_eichhorn_64x96.png",
+  "blatt-eulenstange": "sitzstange_eule_64x96.png",
+  "blatt-kueche": "kueche_96x80.png",
+  "blatt-glas": "marmeladenglas_32.png",
+  "blatt-dorfkram": "dorfkram_32.png",
   "blatt-prellbock": "prellbock_32.png",
   "blatt-bewegt": "bewegt.png",
   "blatt-uferflecken": "wasser_uferflecken.png",
@@ -262,6 +268,38 @@ export function setzeTileset(scene) {
     reihen.forEach((name, r) => {
       for (let i = 0; i < 4; i++) nimm("blatt-eichhorn", `${name}-${i}`, i * zw, r * zh, zw, zh);
     });
+  }
+
+  /*
+   * Unterkünfte – drei Ausbaustufen, jede in unbewohnt und bewohnt.
+   *
+   * Die zweite Zeile ist dieselbe Hütte mit Licht im Fenster, Rauch und
+   * Wäscheleine. Damit lässt sich am Bild ablesen, ob jemand daheim ist,
+   * ohne dass eine Zahl irgendwo stünde: `bau-2` ist leer, `bau-2-warm`
+   * bewohnt.
+   */
+  const unterkunft = (blatt, praefix, zw, zh) => {
+    const m = masse(scene, blatt);
+    if (!m) return;
+    for (let i = 0; i < 3; i++) {
+      nimm(blatt, `${praefix}-${i}`, i * zw, 0, zw, zh);
+      nimm(blatt, `${praefix}-${i}-warm`, i * zw, zh, zw, zh);
+    }
+  };
+  unterkunft("blatt-bau-biber", "bau", 96, 80);
+  unterkunft("blatt-kobel", "kobel", 64, 96);
+  unterkunft("blatt-eulenstange", "eulenstange", 64, 96);
+
+  // Küche – Kessel, Rauchfang, zweiter Kessel
+  stufenblatt("blatt-kueche", "kueche", 96, 80);
+  // Marmelade – ein Glas, drei Gläser, volles Brett
+  stufenblatt("blatt-glas", "glas", 32, 32);
+  // Dorfkram – acht Kleinigkeiten, die die Lichtung bewohnt aussehen lassen
+  const kram = masse(scene, "blatt-dorfkram");
+  if (kram) {
+    const namen = ["waescheleine", "feuerstelle", "bank", "brunnen",
+                   "blumenkasten", "schubkarre", "fass", "wegweiser"];
+    namen.forEach((name, i) => nimm("blatt-dorfkram", name, i * 32, 0, 32, 32));
   }
 
   // Wasser – vier Bilder

@@ -237,6 +237,54 @@ export const GLEISPLAN = {
 export const TREE_RING = { stepY: 10 * K, stepX: 15 * K, margin: 5 * K };
 
 /** Kleine Streuobjekte, damit der Boden nicht überall gleich aussieht. */
+/**
+ * Die Unterkünfte.
+ *
+ * Ohne sie war Fellgrund eine Fabrik: Tiere, die zwischen Beet und Station
+ * pendeln und nirgendwo hingehören. Jede Art bekommt ihr eigenes Zuhause an
+ * dem Ort, der zu ihr passt – der Biberbau steht im Wasser, Nussas Kobel bei
+ * den Nutzbäumen, die Eulenstange als leerer Platz für später.
+ *
+ * Alle drei wachsen in drei Stufen mit dem, was in Fellgrund passiert, und
+ * jede Stufe gibt es unbewohnt und bewohnt.
+ */
+export const UNTERKUENFTE = {
+  bau:         { x: 230, y: 520, label: "Biberbau" },
+  kobel:       { x: 390, y: 770, label: "Nussas Kobel" },
+  eulenstange: { x: 1300, y: 560, label: "Eulenstange" }
+};
+
+/**
+ * Dorfkram.
+ *
+ * Kleinigkeiten, die niemand baut und niemand zählt: eine Wäscheleine, eine
+ * Bank, ein Brunnen. Sie machen aus einer Anlage einen Ort, an dem jemand
+ * wohnt. Jedes Stück liegt bei etwas, das es erklärt.
+ */
+export const DORFKRAM = [
+  // Am Biberbau: Wäsche und ein Fass am Ufer
+  { bild: "waescheleine", x: 318, y: 600 },
+  { bild: "fass",         x: 196, y: 596 },
+  // Verladestation: der Arbeitshof
+  { bild: "schubkarre",   x: 548, y: 512 },
+  { bild: "wegweiser",    x: 596, y: 546 },
+  // Dorfplatz: Brunnen, Bank, Feuerstelle
+  { bild: "brunnen",      x: 700, y: 556 },
+  { bild: "bank",         x: 902, y: 548 },
+  { bild: "feuerstelle",  x: 690, y: 662 },
+  { bild: "blumenkasten", x: 880, y: 596 },
+  // Küche
+  { bild: "blumenkasten", x: 886, y: 716 },
+  { bild: "fass",         x: 738, y: 736 },
+  // Werkstatt
+  { bild: "fass",         x: 872, y: 250 },
+  { bild: "bank",         x: 726, y: 258 },
+  // Vorratsstand und Eulenstange im Osten
+  { bild: "fass",         x: 1206, y: 470 },
+  { bild: "bank",         x: 1246, y: 596 },
+  { bild: "wegweiser",    x: 1348, y: 638 }
+];
+
 export const PROPS = [
   { kind: "rock",  x: 560,  y: 210 }, { kind: "shrub", x: 1010, y: 200 },
   { kind: "rock",  x: 1290, y: 300 }, { kind: "shrub", x: 190,  y: 340 },

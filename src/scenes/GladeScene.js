@@ -20,7 +20,7 @@ import Phaser from "phaser";
 import {
   VIEW, GLADE, gladeHalf, PLACES, PATH, RAIL, PROPS, FUTURE_PARCELS,
   TREE_RING, RULES, UPGRADES, BEET_PLAETZE, ARBEITER, REGAL, WAGEN_BETT,
-  GLEISPLAN, NUTZBAEUME, HOLZWEG, ausbautenFuer, K
+  GLEISPLAN, NUTZBAEUME, HOLZWEG, UNTERKUENFTE, DORFKRAM, ausbautenFuer, K
 } from "../game/config.js";
 import { baueNetz, KNOTENART } from "../welt/graph.js";
 import { Wagen } from "../welt/wagen.js";
@@ -54,6 +54,7 @@ export default class GladeScene extends Phaser.Scene {
     this.baueNutzbaeume();
     this.baueWerkstatt();
     this.baueKueche();
+    this.baueUnterkuenfte();
     this.baueGleisnetz();
     this.baueWagen();
     this.baueArbeiter();
@@ -82,6 +83,7 @@ export default class GladeScene extends Phaser.Scene {
     this.aktualisiereRegal();
     this.aktualisiereWerkstatt();
     this.aktualisiereKueche();
+    this.aktualisiereUnterkuenfte();
 
     this.time.addEvent({
       delay: RULES.autosaveSeconds * 1000, loop: true, callback: speichern
@@ -335,6 +337,65 @@ export default class GladeScene extends Phaser.Scene {
     for (const p of PROPS) {
       const key = p.kind === "rock" ? "rock" : "shrub";
       this.tiefeSetzen(this.add.image(p.x, p.y, key).setOrigin(0.5, 1), p.y);
+    }
+    // Dorfkram: Wäscheleine, Bank, Brunnen. Nichts davon tut etwas – und
+    // genau deshalb sieht die Lichtung damit bewohnt aus statt betrieben.
+    for (const d of DORFKRAM) {
+      if (!this.textures.exists(d.bild)) continue;
+      this.tiefeSetzen(this.add.image(d.x, d.y, d.bild).setOrigin(0.5, 1), d.y);
+    }
+  }
+
+  /**
+   * Die Unterkünfte.
+   *
+   * Jede Art wohnt an dem Ort, der zu ihr gehört, und jede Hütte wächst in
+   * drei Stufen mit dem mit, was sie beherbergt. Die zweite Zeile jedes
+   * Blattes ist dieselbe Hütte mit Licht im Fenster: `bewohnt`. Daran ist
+   * ohne jede Zahl abzulesen, ob dort schon jemand lebt.
+   *
+   * Die Eulenstange bleibt vorerst dunkel. Sie ist der einzige Bau in
+   * Fellgrund, der auf jemanden wartet – so wie das Becken auf den Axolotl.
+   */
+  baueUnterkuenfte() {
+    const setzen = (id, praefix, beiKlick) => {
+      const u = UNTERKUENFTE[id];
+      if (!this.textures.exists(`${praefix}-0`)) return null;
+      const bild = this.add.image(u.x, u.y, `${praefix}-0`).setOrigin(0.5, 1);
+      this.tiefeSetzen(bild, u.y);
+      this.machAnklickbar(bild, beiKlick);
+      return bild;
+    };
+    this.bau = setzen("bau", "bau", () => this.oeffneNest());
+    this.kobel = setzen("kobel", "kobel", () => this.oeffneWerkstatt());
+    this.eulenstange = setzen("eulenstange", "eulenstange", () => bus.emit("oeffne", {
+      titel: UNTERKUENFTE.eulenstange.label,
+      zeilen: [
+        "Ein hohler Ast mit Windschutz, Laterne und einem Brett für das Dorfbuch.",
+        "Gebaut ist er – bewohnt noch nicht.",
+        "Eine Eule wird hier einziehen, sobald Fellgrund über die Lichtung hinauswächst."
+      ],
+      gesperrt: true
+    }));
+    this.aktualisiereUnterkuenfte();
+  }
+
+  aktualisiereUnterkuenfte() {
+    /*
+     * Die Stufe kommt aus dem, was tatsächlich in Fellgrund passiert ist,
+     * nicht aus einem eigenen Ausbau: Der Bau wächst mit jedem Biber, der
+     * einzieht, der Kobel mit der Holzkette.
+     */
+    if (this.bau) {
+      const stufe = Math.min(2, Math.max(0, arbeiterZahl() - 1));
+      const key = `bau-${stufe}-warm`;
+      if (this.textures.exists(key)) this.bau.setTexture(key);
+    }
+    if (this.kobel) {
+      // Vor der Werkstatt steht der Kobel leer – Nussa wohnt noch nicht hier.
+      const key = !werkstattSteht() ? "kobel-0"
+        : state.ausbauten.saege ? "kobel-2-warm" : "kobel-1-warm";
+      if (this.textures.exists(key)) this.kobel.setTexture(key);
     }
   }
 
@@ -714,7 +775,10 @@ export default class GladeScene extends Phaser.Scene {
    */
   baueKueche() {
     const k = PLACES.kueche;
-    const key = this.textures.exists("werkstatt-2") ? "werkstatt-2" : "station-1-0";
+    // Bis Batch 6 borgte sich die Küche das Bild der Werkstatt – zwei
+    // identische Häuser an der Strecke, eins davon gelogen.
+    const key = this.textures.exists("kueche-0") ? "kueche-0"
+      : this.textures.exists("werkstatt-2") ? "werkstatt-2" : "station-1-0";
     this.kueche = this.add.image(k.x, k.y, key).setOrigin(0.5, 1);
     this.tiefeSetzen(this.kueche, k.y);
     this.kueche.setVisible(kuecheSteht());
@@ -736,6 +800,31 @@ export default class GladeScene extends Phaser.Scene {
     this.kueche.setVisible(an);
     this.korbBild.setVisible(an && state.kuechenBeeren > 0);
     this.kuechenParzelle.setVisible(!an);
+
+    /*
+     * Drei Bilder für drei Zustände: kalter Kessel, Kessel unter Dampf,
+     * großer Kessel. Der Rauchfang steht nur da, wenn auch etwas kocht –
+     * so ist am Haus zu sehen, ob die Küche Nachschub hat.
+     */
+    if (an && this.textures.exists("kueche-0")) {
+      const stufe = state.ausbauten.grosserkessel ? 2 : state.kuechenBeeren > 0 ? 1 : 0;
+      this.kueche.setTexture(`kueche-${stufe}`);
+    }
+
+    /*
+     * Die fertigen Gläser standen bisher als eingefärbte Funken da. Jetzt
+     * gibt es sie als Bild: ein Glas, drei Gläser, ein volles Brett.
+     */
+    const glasStufe = state.marmelade >= 6 ? 2 : state.marmelade >= 3 ? 1 : 0;
+    if (this.textures.exists(`glas-${glasStufe}`)) {
+      if (!this.glasBild) {
+        this.glasBild = this.add.image(k.x + 62, k.y - 2, "glas-0").setOrigin(0.5, 1);
+        this.tiefeSetzen(this.glasBild, k.y + 1);
+      }
+      this.glasBild.setTexture(`glas-${glasStufe}`);
+      this.glasBild.setVisible(an && state.marmelade > 0);
+      return;
+    }
 
     const anzahl = Math.min(4, Math.ceil(state.marmelade / 2));
     while (this.glaeser.length > anzahl) this.glaeser.pop().destroy();
@@ -1048,6 +1137,7 @@ export default class GladeScene extends Phaser.Scene {
   beiAusbau(id) {
     const up = UPGRADES[id];
     if (!up) return;
+    this.aktualisiereUnterkuenfte();
     const ortPunkt = {
       beet: PLACES.beet, station: PLACES.station,
       store: PLACES.store, nest: PLACES.nest
