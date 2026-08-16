@@ -615,6 +615,38 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   /**
+   * Wählt die Animationszeile aus der **tatsächlichen Bewegung**.
+   *
+   * Vorher stand die Richtung an der Phase: „hin" hieß nach hinten, „zurück"
+   * nach vorn. Das stimmte für Bramble, weil sein Weg vom Beet oben links zur
+   * Station unten rechts führt – und war für Nussa genau verkehrt herum, weil
+   * ihr Weg von den Bäumen unten links nach oben rechts geht. Sie lief
+   * rückwärts dargestellt.
+   *
+   * Aus der Bewegung abgeleitet kann das nicht mehr passieren, egal wie ein
+   * Weg später liegt. Steht die Figur still, bleibt die letzte Richtung.
+   *
+   * @param {object} a   Tier mit `bild` und gemerkter Vorposition
+   * @param {string} art Zeilenpräfix, etwa "beaver" oder "eich"
+   */
+  laufReihe(a, art, x, y) {
+    const dx = x - (a.vorherX ?? x);
+    const dy = y - (a.vorherY ?? y);
+    a.vorherX = x;
+    a.vorherY = y;
+    if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
+      if (Math.abs(dy) > Math.abs(dx) * 0.6) a.blick = dy < 0 ? "hinten" : "vorn";
+      else a.blick = dx < 0 ? "links" : "rechts";
+    }
+    const blick = a.blick || "vorn";
+    a.bild.setFlipX(blick === "links");
+    // Nach links gibt es keine eigene Zeile – die Rechts-Zeile wird gespiegelt.
+    if (blick === "hinten") return `${art}-hinten-`;
+    if (blick === "rechts" || blick === "links") return `${art}-rechts-`;
+    return `${art}-`;
+  }
+
+  /**
    * Die Nutzbäume.
    *
    * Umgekehrt zum Beerenbusch: Wer hier erntet, macht den Baum sichtbar
@@ -1215,11 +1247,11 @@ export default class GladeScene extends Phaser.Scene {
       || a.phase === "annaehern" || a.phase === "entfernen";
     const wippen = a.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 * K : 0;
     const bild = (laeuft || a.phase === "ernten") ? Math.floor(this.time.now / 150) % 4 : 0;
+    const richtung = this.laufReihe(a, "beaver", x, y);
     let reihe;
-    if (a.phase === "ernten") reihe = "beaver-arbeit-";
-    else if (a.traegt) reihe = "beaver-carry-";
-    else if (a.phase === "hin" || a.phase === "annaehern") reihe = "beaver-hinten-";
-    else reihe = "beaver-rechts-";
+    if (a.phase === "ernten") { reihe = "beaver-arbeit-"; a.bild.setFlipX(false); }
+    else if (a.traegt) { reihe = "beaver-carry-"; a.bild.setFlipX(false); }
+    else reihe = richtung;
     let schluessel = reihe + bild;
     if (!this.textures.exists(schluessel)) {
       schluessel = this.textures.exists(`beaver-${bild}`) ? `beaver-${bild}` : "beaver-0";
@@ -1541,11 +1573,11 @@ export default class GladeScene extends Phaser.Scene {
 
     const laeuft = ["hin", "zurueck", "annaehern", "entfernen"].includes(a.phase);
     const bild = (laeuft || a.phase === "faellen") ? Math.floor(this.time.now / 150) % 4 : 0;
+    const richtung = this.laufReihe(a, "eich", x, y);
     let reihe;
-    if (a.phase === "faellen") reihe = "eich-arbeit-";
-    else if (a.traegt) reihe = "eich-carry-";
-    else if (a.phase === "hin" || a.phase === "annaehern") reihe = "eich-hinten-";
-    else reihe = "eich-rechts-";
+    if (a.phase === "faellen") { reihe = "eich-arbeit-"; a.bild.setFlipX(false); }
+    else if (a.traegt) { reihe = "eich-carry-"; a.bild.setFlipX(false); }
+    else reihe = richtung;
     let key = reihe + bild;
     if (!this.textures.exists(key)) key = this.textures.exists(`eich-${bild}`) ? `eich-${bild}` : "eich-0";
     a.bild.setTexture(key);
