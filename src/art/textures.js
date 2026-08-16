@@ -208,21 +208,14 @@ function drawBackground(ctx, scene) {
     }
   }
 
-  // Schienenstrecke
-  const rf = s(RAIL.from), rt = s(RAIL.to), rY = s(RAIL.y);
-  const schiene = scene && scene.textures.get("schiene");
-  if (schiene && schiene.key !== "__MISSING") {
-    const sb = schiene.getSourceImage();
-    const br = sb.width / K, ho = sb.height / K;
-    for (let x = rf; x < rt; x += br) {
-      ctx.drawImage(sb, 0, 0, sb.width, sb.height, x, rY - ho / 2, br, ho);
-    }
-  } else {
-    rect(ctx, PAL.ballast, rf - 4, rY - 6, rt - rf + 8, 13);
-    for (let x = rf; x < rt; x += 6) rect(ctx, PAL.tie, x, rY - 5, 4, 9);
-    rect(ctx, PAL.rail, rf - 4, rY - 5, rt - rf + 8, 1);
-    rect(ctx, PAL.rail, rf - 4, rY + 4, rt - rf + 8, 1);
-  }
+  // Die Schienenstrecke wird nicht mehr hier gezeichnet.
+  //
+  // Sie ist seit dem Gleisgraphen kein Streifen im Hintergrundbild mehr,
+  // sondern entsteht in `GladeScene.baueGleisnetz()` aus den Kanten des
+  // Netzes. Nur so kann sie Weichen, Kurven und Abzweige haben – und nur so
+  // stimmt sie zwangsläufig mit dem überein, worauf der Wagen tatsächlich
+  // fährt. Ein gemalter Streifen und ein Graph laufen sonst auseinander,
+  // und man sieht einen Wagen neben seinem Gleis fahren.
 }
 
 /* --------------------------------------------------------------- *

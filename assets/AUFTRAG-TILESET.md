@@ -220,8 +220,12 @@ Dorf. Gleichzeitig ist der Wald selbst gut und soll bleiben, was er ist.
 
 | Teil | Größe | Beschreibung |
 |---|---|---|
-| `waldrahmen_2_hinten.png` | 960 × 540 | derselbe Wald, aber als Rahmen um eine große Lichtung |
-| `waldrahmen_2_vorn.png` | 960 × 540 | unterste Waldreihe als Vordergrund, wie bisher |
+| `waldrahmen_2_hinten.png` | 1600 × 900 | derselbe Wald, aber als Rahmen um eine große Lichtung |
+| `waldrahmen_2_vorn.png` | 1600 × 900 | unterste Waldreihe als Vordergrund, wie bisher |
+
+Die Größe ist entschieden: **1600 × 900**. Das ist das Zweieinhalbfache der
+heutigen Kantenlänge und die Fläche, in die der Entwurf aus dem Konzeptbild
+passt — Mittelplatz rund 400 × 300, jedes der acht Gebiete rund 200 × 160.
 
 Drei Bedingungen, alle nachmessbar:
 
@@ -239,24 +243,31 @@ Die Lichtung soll außerdem **unten breiter** werden. Heute schließt sie sich a
 y = 300 sehr rasch (bei y = 330 sind nur noch 70 px offen), weshalb Cozywolfs
 Dorfplatz in eine Ecke gedrängt ist statt in der Mitte zu liegen.
 
-**B · Ein Schienennetz statt einer Linie**
+**B · Schienennetz — erledigt, bitte nicht produzieren**
 
-> „Die Schienen sind fast das Schwächste, sie wirken eindimensional, sind
-> einfach nur gerade und enden im Nichts."
+`schienen_32.png` (acht Netzteile) und `prellbock_32.png` (zwei Streckenenden)
+sind inzwischen da, erzeugt von `tools/zeichne-schienen.mjs`. Beide bestehen
+dieselbe Prüfung wie jede Lieferung.
 
-Es gibt bisher genau ein gerades Stück, das ich wiederhole. Für ein Netz fehlt
-alles andere:
+Der Grund, das als Code zu bauen statt zu bestellen: Gleisteile müssen exakt
+aneinanderpassen. Das Querschnittsprofil ist am gelieferten Schienenstück
+abgemessen und liegt an genau einer Stelle; gerade wie Kurve entstehen daraus,
+und ein Viertelkreis verlässt die Zelle genau dort, wo eine Gerade ankommt.
+Von Hand gezeichnet wäre die Chance groß, dass eine Kurve zwei Pixel daneben
+endet — derselbe Fehler wie bei den Regalfächern, nur schwerer zu sehen.
+
+Was hier **weiter fehlt** und von Hand besser wird:
 
 | Teil | Größe | Zellen | Beschreibung |
 |---|---|---|---|
-| `schienen_32.png` | 32 × 32 | 8 | gerade waagerecht, gerade senkrecht, vier Kurven (je 90°), Kreuzung, Weiche |
-| `prellbock_32.png` | 32 × 32 | 2 | Streckenende links, Streckenende rechts |
 | `verladepunkt_64x32.png` | 64 × 32 | 3 | Rampe, an der der Wagen anhält: leer, Kiste halb aufgeladen, Kiste im Wagen |
+| `signal_32.png` | 32 × 32 | 3 | Streckensignal wie im Konzeptbild: frei, belegt, gesperrt |
 
-Der Verladepunkt löst eine zweite Rückmeldung mit: Zurzeit erscheinen die
-Kisten im Wagen, ohne dass man sieht, wie sie hineinkommen. Mit einer
-sichtbaren Rampe zwischen Station und Gleis wird das Umladen ein eigener
-kleiner Schritt statt eines Sprungs.
+Der Verladepunkt löst eine Rückmeldung mit: Zurzeit erscheinen die Kisten im
+Wagen, ohne dass man sieht, wie sie hineinkommen. Mit einer sichtbaren Rampe
+zwischen Station und Gleis wird das Umladen ein eigener kleiner Schritt statt
+eines Sprungs. Das Signal braucht das Netz, sobald mehr als ein Wagen fährt —
+eine belegte Kante muss man sehen können.
 
 **C · Der Vorratsstand, drei Stufen neu**
 

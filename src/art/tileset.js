@@ -25,6 +25,8 @@ const BLAETTER = {
   "blatt-herzknospe": "herzknospe_32.png",
   "blatt-parzelle": "parzelle_80x48.png",
   "blatt-gueter": "gueter_64x32.png",
+  "blatt-schienen": "schienen_32.png",
+  "blatt-prellbock": "prellbock_32.png",
   "blatt-bewegt": "bewegt.png",
   "blatt-uferflecken": "wasser_uferflecken.png",
   "blatt-biber": "bewohner_biber.png",
@@ -162,6 +164,21 @@ export function setzeTileset(scene) {
     nimm("blatt-gueter", "schiene", zw, 0, zw, gue.h);
     nimm("blatt-gueter", "cart", zw * 2, 0, zw, gue.h);
     nimm("blatt-gueter", "cart-b", zw * 3, 0, zw, gue.h);
+  }
+
+  // Gleissatz aus tools/zeichne-schienen.mjs: acht Netzteile, zwei Prellböcke
+  const gl = masse(scene, "blatt-schienen");
+  if (gl) {
+    const k = gl.h;
+    const namen = ["gleis-w", "gleis-s", "gleis-lo", "gleis-ro",
+                   "gleis-lu", "gleis-ru", "gleis-x", "gleis-weiche"];
+    namen.forEach((name, i) => nimm("blatt-schienen", name, i * k, 0, k, k, { trimmen: false }));
+  }
+  const pb = masse(scene, "blatt-prellbock");
+  if (pb) {
+    const k = pb.h;
+    nimm("blatt-prellbock", "prellbock-links", 0, 0, k, k, { trimmen: false });
+    nimm("blatt-prellbock", "prellbock-rechts", k, 0, k, k, { trimmen: false });
   }
 
   // Wasser – vier Bilder

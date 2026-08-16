@@ -136,6 +136,36 @@ export const RAIL = {
   y: 262, from: 250, to: 535, home: 380, dock: 470
 };
 
+/**
+ * Der Streckenplan.
+ *
+ * Ab hier ist die Schiene keine Gerade mehr, sondern ein Graph. Für die eine
+ * Fahrt von der Verladestation zum Vorratsstand wäre das Übermaß – aber die
+ * Weiche zur Werkstatt ist schon eingezeichnet, und damit muss der Wagen
+ * bereits heute einen Weg *wählen* statt einer Zahl zu folgen. Aus demselben
+ * Plan entstehen später die acht Speichen und der Außenring: mehr Knoten,
+ * mehr Kanten, kein anderer Code.
+ *
+ * `halt` heißt: hier hält ein Wagen und lädt. `ende` bekommt einen Prellbock.
+ */
+export const GLEISPLAN = {
+  knoten: [
+    { id: "westende",  x: 258, y: 262, art: "ende" },
+    { id: "station",   x: 310, y: 262, art: "halt" },
+    { id: "weiche",    x: 416, y: 262, art: "durch" },
+    { id: "lager",     x: 470, y: 262, art: "halt" },
+    { id: "ostende",   x: 524, y: 262, art: "ende" },
+    { id: "werkstatt", x: 416, y: 326, art: "halt" }
+  ],
+  kanten: [
+    ["westende", "station"],
+    ["station", "weiche"],
+    ["weiche", "lager"],
+    ["lager", "ostende"],
+    ["weiche", "werkstatt"]
+  ]
+};
+
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */
 export const TREE_RING = { stepY: 10 * K, stepX: 15 * K, margin: 5 * K };
 
@@ -160,7 +190,9 @@ export const PROPS = [
  */
 export const FUTURE_PARCELS = [
   { x: 375, y: 172, rx: 36, ry: 18, label: "Küche" },
-  { x: 215, y: 285, rx: 36, ry: 18, label: "Holz- und Wurzelwerkstatt" }
+  // Liegt am Ende der Stichstrecke – der Wagen kann sie schon anfahren,
+  // lange bevor dort etwas steht.
+  { x: 416, y: 330, rx: 36, ry: 18, label: "Holz- und Wurzelwerkstatt" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */

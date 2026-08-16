@@ -20,8 +20,10 @@ import Phaser from "phaser";
 import {
   VIEW, GLADE, gladeHalf, PLACES, PATH, RAIL, PROPS, FUTURE_PARCELS,
   TREE_RING, RULES, UPGRADES, BEET_PLAETZE, ARBEITER, REGAL, WAGEN_BETT,
-  ausbautenFuer, K
+  GLEISPLAN, ausbautenFuer, K
 } from "../game/config.js";
+import { baueNetz, KNOTENART } from "../welt/graph.js";
+import { Wagen } from "../welt/wagen.js";
 import {
   state, bus, melde, speichern, istFreigeschaltet,
   kistenPlaetze, wagenKapazitaet, beerenProKiste, regalPlaetze, lagerKapazitaet,
@@ -34,6 +36,10 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   create() {
+    // Das Gleisnetz steht vor allem anderen: Bauplätze und Wagen beziehen
+    // ihre Positionen aus ihm, nicht mehr aus festen Zahlen.
+    this.netz = baueNetz(GLEISPLAN);
+
     this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
     this.baueWald();
     this.baueParzellen();
@@ -43,7 +49,7 @@ export default class GladeScene extends Phaser.Scene {
     this.baueStation();
     this.baueVorratsstand();
     this.baueNest();
-    this.baueEndanschlaege();
+    this.baueGleisnetz();
     this.baueWagen();
     this.baueArbeiter();
     this.baueLaterne();
@@ -55,7 +61,7 @@ export default class GladeScene extends Phaser.Scene {
       tint: [0xfff6d0, 0xffd05c]
     }).setDepth(900);
 
-    this.wagen = { phase: "wartet", timer: 0, blockiert: false };
+    this.fahrt = { phase: "wartet", timer: 0, blockiert: false };
 
     bus.on("ausbau", this.beiAusbau, this);
     this.events.once("shutdown", () => bus.off("ausbau", this.beiAusbau, this));
@@ -335,25 +341,67 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   /**
-   * Prellböcke.
+   * Zeichnet das Gleisnetz aus dem Graphen.
    *
-   * Die Strecke hörte an beiden Enden einfach auf – sie sah aus wie ein
-   * gemalter Streifen, nicht wie eine Schiene, die irgendwohin führt. Zwei
-   * Balken aus Wagenholz beenden sie sichtbar.
+   * Der Zeichner kennt den Streckenplan nicht – er liest die Kanten aus dem
+   * Netz und legt an jeden Knoten das Teil, das zu seinen Anschlüssen passt.
+   * Für acht Speichen und einen Außenring ändert sich hier keine Zeile,
+   * nur der Plan in `config.js`.
    */
-  baueEndanschlaege() {
-    for (const [x, richtung] of [[RAIL.from, -1], [RAIL.to, 1]]) {
-      const g = this.add.graphics().setDepth(9 + RAIL.y);
-      g.fillStyle(0x453017, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 4, 18);
-      g.fillStyle(0x6b4f33, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 3, 17);
-      g.fillStyle(0x8a6942, 1).fillRect(x + richtung * 3 - 2, RAIL.y - 9, 3, 2);
-      g.fillStyle(0x453017, 1).fillRect(x + richtung * 6 - 2, RAIL.y - 3, 5, 7);
+  baueGleisnetz() {
+    const T = 32;                         // Kantenlänge eines Gleisteils
+    const hat = (k) => this.textures.exists(k);
+    if (!hat("gleis-w")) return;          // ohne Gleissatz bleibt der Boden wie er ist
+
+    const lege = (x, y, key, winkel = 0) => {
+      const b = this.add.image(x, y, key).setDepth(4);
+      if (winkel) b.setAngle(winkel);
+      return b;
+    };
+
+    // Strecken: alle 32 px ein Teil, waagerecht oder senkrecht
+    for (const { von, nach } of this.netz.alleKanten()) {
+      const dx = nach.x - von.x, dy = nach.y - von.y;
+      const laenge = Math.hypot(dx, dy);
+      const waagerecht = Math.abs(dx) >= Math.abs(dy);
+      const anzahl = Math.max(1, Math.round(laenge / T));
+      for (let i = 0; i < anzahl; i++) {
+        const q = (i + 0.5) / anzahl;
+        lege(von.x + dx * q, von.y + dy * q, waagerecht ? "gleis-w" : "gleis-s");
+      }
+    }
+
+    // Knoten: Kreuzung, Weiche oder Prellbock
+    for (const k of this.netz.knoten.values()) {
+      const grad = k.kanten.length;
+      if (k.art === KNOTENART.ENDE) {
+        const nachbar = this.netz.knoten.get(k.kanten[0]);
+        const key = nachbar && nachbar.x < k.x ? "prellbock-rechts" : "prellbock-links";
+        lege(k.x, k.y, key);
+      } else if (grad >= 4) {
+        lege(k.x, k.y, "gleis-x");
+      } else if (grad === 3) {
+        // Abzweig: das Weichenteil zeigt von Haus aus nach rechts unten
+        const abzweig = k.kanten
+          .map((id) => this.netz.knoten.get(id))
+          .find((n) => Math.abs(n.y - k.y) > Math.abs(n.x - k.x));
+        const winkel = abzweig && abzweig.y < k.y ? -90 : 0;
+        lege(k.x, k.y, "gleis-weiche", winkel);
+      } else if (grad === 2) {
+        const [a, b] = k.kanten.map((id) => this.netz.knoten.get(id));
+        const knick = Math.sign(a.x - k.x) !== -Math.sign(b.x - k.x)
+          || Math.sign(a.y - k.y) !== -Math.sign(b.y - k.y);
+        if (knick) lege(k.x, k.y, "gleis-lu");
+      }
     }
   }
 
   baueWagen() {
-    this.wagenBild = this.add.image(RAIL.home, RAIL.y + 8, "cart").setOrigin(0.5, 1);
-    this.tiefeSetzen(this.wagenBild, RAIL.y + 8);
+    // Der Wagen ist jetzt ein Modell auf dem Graphen; das Bild folgt ihm.
+    this.wagen = new Wagen(this.netz, "wurzelwagen", "station");
+    const p = this.wagen.position();
+    this.wagenBild = this.add.image(p.x, p.y + 8, "cart").setOrigin(0.5, 1);
+    this.tiefeSetzen(this.wagenBild, p.y + 8);
     this.wagenKisten = [];
     this.machAnklickbar(this.wagenBild, () => bus.emit("oeffne", {
       titel: "Wurzelwagen",
@@ -733,7 +781,7 @@ export default class GladeScene extends Phaser.Scene {
     this.fahreWagen(dt);
     // Der Wagen merkt sich seine Blockade über mehrere Bilder hinweg, sonst
     // würde das Wartezeichen im Takt des Nachfassens flackern.
-    state.stau.lager = this.wagen.blockiert && this.wagen.phase === "abladen";
+    state.stau.lager = this.fahrt.blockiert && this.fahrt.phase === "abladen";
     this.zeigeStau();
     this.aktualisiereMeldung();
   }
@@ -861,38 +909,40 @@ export default class GladeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Der Kreislauf des Wurzelwagens, jetzt auf dem Graphen.
+   *
+   * Der Wagen bekommt ein Ziel und findet seinen Weg selbst. Für die eine
+   * Strecke von heute ist das dasselbe Ergebnis wie vorher – aber es ist
+   * dieselbe Zeile Code, die später acht Speichen bedient.
+   */
   fahreWagen(dt) {
-    const w = this.wagen;
-    const bild = this.wagenBild;
+    const f = this.fahrt;
     const tempo = wagenTempo();
 
-    if (w.phase === "wartet") {
+    if (f.phase === "wartet") {
       if (state.kisten >= kistenPlaetze()) {
         state.wagenLadung = state.kisten;
         state.kisten = 0;
         this.aktualisiereStation();
         this.aktualisiereWagen();
-        w.phase = "hin";
+        if (this.wagen.fahreZu("lager")) f.phase = "hin";
         bus.emit("aendert");
       }
-    } else if (w.phase === "hin") {
-      bild.x += tempo * dt;
-      if (bild.x >= RAIL.dock) {
-        bild.x = RAIL.dock;
-        w.phase = "abladen";
-        w.timer = RULES.unloadSeconds;
-      }
-    } else if (w.phase === "abladen") {
-      w.timer -= dt;
-      if (w.timer <= 0) {
+    } else if (f.phase === "hin") {
+      this.wagen.tick(dt, tempo);
+      if (this.wagen.amZiel) { f.phase = "abladen"; f.timer = RULES.unloadSeconds; }
+    } else if (f.phase === "abladen") {
+      f.timer -= dt;
+      if (f.timer <= 0) {
         const proKiste = beerenProKiste();
         const platz = Math.floor((lagerKapazitaet() - state.beeren) / proKiste);
         const menge = Math.min(state.wagenLadung, Math.max(0, platz));
         if (menge <= 0) {
           // Das Regal ist voll. Der Wagen steht am Stand und wartet, bis
           // Cozywolf etwas ausgibt – die ganze Kette hält sichtbar an.
-          w.blockiert = true;
-          w.timer = 0.4;
+          f.blockiert = true;
+          f.timer = 0.4;
         } else {
           // Der Bestand steigt erst hier, nie vorher.
           state.beeren += menge * proKiste;
@@ -902,21 +952,27 @@ export default class GladeScene extends Phaser.Scene {
           this.funken.emitParticleAt(PLACES.store.x, PLACES.store.y - 30 * K, 14);
           bus.emit("aendert");
           if (state.wagenLadung > 0) {
-            w.blockiert = true;           // Rest passt nicht mehr
-            w.timer = 0.4;
+            f.blockiert = true;           // Rest passt nicht mehr
+            f.timer = 0.4;
           } else {
-            w.blockiert = false;
+            f.blockiert = false;
             state.lieferungen++;
             this.weckeWolf();
             speichern();
-            w.phase = "zurueck";
+            if (this.wagen.fahreZu("station")) f.phase = "zurueck";
           }
         }
       }
-    } else if (w.phase === "zurueck") {
-      bild.x -= tempo * dt;
-      if (bild.x <= RAIL.home) { bild.x = RAIL.home; w.phase = "wartet"; }
+    } else if (f.phase === "zurueck") {
+      this.wagen.tick(dt, tempo);
+      if (this.wagen.amZiel) f.phase = "wartet";
     }
+
+    // Das Bild folgt dem Modell, nie umgekehrt.
+    const p = this.wagen.position();
+    this.wagenBild.setPosition(p.x, p.y + 8);
+    this.wagenBild.setDepth(10 + p.y + 8);
+    this.wagenBild.setFlipX(p.dx < -0.3);
     this.setzeWagenKisten();
   }
 
@@ -948,9 +1004,9 @@ export default class GladeScene extends Phaser.Scene {
       melde(`Das Beet ist abgeerntet – ${namen} ${wartend.length > 1 ? "warten" : "wartet"}`);
       return;
     }
-    if (this.wagen.phase === "hin") { melde("Der Wurzelwagen fährt zum Vorratsstand"); return; }
-    if (this.wagen.phase === "abladen") { melde("Ankunft – die Kisten wandern ins Regal"); return; }
-    if (this.wagen.phase === "zurueck") { melde("Der Wurzelwagen kehrt zur Verladestation zurück"); return; }
+    if (this.fahrt.phase === "hin") { melde("Der Wurzelwagen fährt zum Vorratsstand"); return; }
+    if (this.fahrt.phase === "abladen") { melde("Ankunft – die Kisten wandern ins Regal"); return; }
+    if (this.fahrt.phase === "zurueck") { melde("Der Wurzelwagen kehrt zur Verladestation zurück"); return; }
     const traeger = this.arbeiter.filter((a) => a.traegt).length;
     if (traeger > 0) {
       melde(traeger === 1
