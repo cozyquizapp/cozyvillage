@@ -437,8 +437,8 @@ export default class GladeScene extends Phaser.Scene {
     // nah genug, dass die Zuordnung ohne Nachdenken klappt.
     const orte = {
       beet: { x: PLACES.beet.x, y: PLACES.beet.y - 30 },
-      station: { x: PLACES.station.x, y: PLACES.station.y - 92 },
-      lager: { x: PLACES.store.x, y: PLACES.store.y - 104 }
+      station: { x: PLACES.station.x, y: PLACES.station.y - 84 },
+      lager: { x: PLACES.store.x, y: PLACES.store.y - 96 }
     };
     this.stauZeichen = {};
     for (const [id, p] of Object.entries(orte)) {
@@ -472,7 +472,7 @@ export default class GladeScene extends Phaser.Scene {
     while (this.stationKisten.length > state.kisten) this.stationKisten.pop().destroy();
     while (this.stationKisten.length < state.kisten) {
       const i = this.stationKisten.length;
-      const kiste = this.add.image(links + i * 22, s.y - 34, "crate").setOrigin(0.5, 1);
+      const kiste = this.add.image(links + i * 22, s.y + this.deckHoehe(), "crate").setOrigin(0.5, 1);
       this.tiefeSetzen(kiste, s.y + 1);
       this.stationKisten.push(kiste);
       // Die Kiste landet mit einem kurzen Stauchen, statt zu erscheinen.
@@ -480,7 +480,19 @@ export default class GladeScene extends Phaser.Scene {
       this.tweens.add({ targets: kiste, scaleX: 1, scaleY: 1, duration: 220, ease: "Back.easeOut" });
     }
     // Nach einem Ausbau stehen die alten Kisten falsch
-    this.stationKisten.forEach((k, i) => { k.x = links + i * 22; });
+    const hoehe = this.deckHoehe();
+    this.stationKisten.forEach((k, i) => { k.x = links + i * 22; k.y = s.y + hoehe; });
+  }
+
+  /**
+   * Höhe der Ladefläche über dem Fuß der Verladestation, am Bild gemessen.
+   *
+   * Stufe 1 ist ein flaches Podest (Mulde 2 px über dem Fuß), Stufe 2 hat ein
+   * Vordach und eine erhöhte Ladefläche (15 px). Vorher stand hier ein fester
+   * Wert, weshalb die Kisten auf Stufe 2 oben auf dem Dachbalken lagen.
+   */
+  deckHoehe() {
+    return this.station && this.station.texture.key === "station-1" ? -3 : -15;
   }
 
   /**

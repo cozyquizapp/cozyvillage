@@ -53,9 +53,9 @@ export function insideGlade(x, y) {
  */
 export const PLACES = {
   beet:    { x: 185, y: 160, label: "Glühbeerenbeet" },
-  station: { x: 300, y: 262, label: "Verladestation" },
-  store:   { x: 470, y: 248, label: "Vorratsstand" },
-  nest:    { x: 320, y: 322, label: "Cozywolfs Nest" },
+  station: { x: 310, y: 244, label: "Verladestation" },
+  store:   { x: 470, y: 238, label: "Vorratsstand" },
+  nest:    { x: 320, y: 326, label: "Cozywolfs Nest" },
   pond:    { x: 150, y: 232, label: "Wasserbecken", rx: 44, ry: 22 }
 };
 
@@ -74,7 +74,9 @@ export const PLACES = {
 export const REGAL = {
   reihen: [-48, -33, -15],
   spalten: [-40, -20, 0, 20, 40],
-  haufen: { x: 66, y: -8, dx: 16, dy: 13, proReihe: 2 }
+  // Der Haufen liegt vor dem Stand, nicht rechts daneben – dort stand er
+  // halb im Wald.
+  haufen: { x: -30, y: 14, dx: 20, dy: 13, proReihe: 4 }
 };
 
 /**
@@ -88,7 +90,9 @@ export const WAGEN_BETT = { dx: 7, dy: -17, reihe: 2, stapel: 9 };
 
 /** Brambles Weg – Tiere laufen ausschließlich auf echten Wegen. */
 export const PATH = {
-  from: { x: 225, y: 205 }, to: { x: 285, y: 250 }
+  // Das Wegende liegt links vor der Station, nicht darauf. Vorher stand das
+  // abliefernde Tier mitten im Gebäude.
+  from: { x: 225, y: 205 }, to: { x: 255, y: 250 }
 };
 
 /**
@@ -124,9 +128,12 @@ export const ARBEITER = [
  * Prellbock, damit die Strecke nicht im Nichts aufhört.
  */
 export const RAIL = {
-  // `home` liegt rechts neben der Station statt darunter – direkt darunter
-  // verschwand der Wagen hinter dem Gebäude und man sah ihn nie warten.
-  y: 272, from: 250, to: 535, home: 366, dock: 470
+  // Die Strecke liegt zwischen den Gebäuden und dem Dorfplatz: unter der
+  // Station und dem Vorratsstand, aber sechzehn Pixel über Cozywolfs Nest.
+  // Vorher lief sie mitten durch den Platz – das Herz des Dorfes lag auf
+  // dem Gleis. `home` liegt rechts neben der Station statt darunter, wo
+  // der wartende Wagen hinter dem Gebäude verschwand.
+  y: 262, from: 250, to: 535, home: 380, dock: 470
 };
 
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */

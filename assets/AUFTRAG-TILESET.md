@@ -202,6 +202,99 @@ dieses Rosa sonst auftaucht, ordnet das Auge es sofort dem Wolf zu.
 Maulwurf, Tag- und Nachtfassungen. Die Küche kommt, sobald die Holzkette im
 Spiel läuft.
 
+### Batch 5 — mehr Lichtung, ein Schienennetz
+
+Aus dem ersten vollständigen Spieltest. Zwei Rückmeldungen wiegen schwerer als
+alles bisher Gelieferte, und beide lassen sich nur mit neuen Bildern lösen.
+
+**A · Ein größerer Waldrahmen — der wichtigste Teil dieses Batches**
+
+> „Die Lichtung wirkt auf den ersten Blick sehr klein, wirkt nicht wie ein
+> Cozyvillage, eher wie eine cozy Mini-Lichtung. … Sie kann der äußere Rahmen
+> sein, aber darf nicht ein Drittel des Bildes einnehmen."
+
+Nachgemessen: Der jetzige Rahmen belegt **64,8 %** des Bildes, die freie
+Lichtung nur 35,2 %. Voll ausgebaut sind davon 57 % bebaut — es passen
+rechnerisch dreieinhalb weitere Bauplätze hinein, und das ist zu wenig für ein
+Dorf. Gleichzeitig ist der Wald selbst gut und soll bleiben, was er ist.
+
+| Teil | Größe | Beschreibung |
+|---|---|---|
+| `waldrahmen_2_hinten.png` | 960 × 540 | derselbe Wald, aber als Rahmen um eine große Lichtung |
+| `waldrahmen_2_vorn.png` | 960 × 540 | unterste Waldreihe als Vordergrund, wie bisher |
+
+Drei Bedingungen, alle nachmessbar:
+
+1. **Die Pixelgröße bleibt gleich.** Das Bild wird größer, nicht die Pixel.
+   Ein Baumstamm behält dieselbe Strichstärke wie bisher; er wird nicht
+   hochskaliert. Die Figuren bleiben 64 px — sie dürfen im größeren Bild
+   kleiner *wirken*, aber nicht kleiner *sein*.
+2. **Die freie Lichtung nimmt mindestens 60 % der Bildfläche ein** (heute
+   35,2 %). Der Wald wird also nicht nur absolut, sondern auch relativ
+   schmaler — ein Rahmen, kein Ring.
+3. **Die Öffnung bleibt organisch**, keine Ellipse und kein Rechteck: ein
+   Rand, der ein- und ausbuchtet, mit einzelnen vorstehenden Bäumen.
+
+Die Lichtung soll außerdem **unten breiter** werden. Heute schließt sie sich ab
+y = 300 sehr rasch (bei y = 330 sind nur noch 70 px offen), weshalb Cozywolfs
+Dorfplatz in eine Ecke gedrängt ist statt in der Mitte zu liegen.
+
+**B · Ein Schienennetz statt einer Linie**
+
+> „Die Schienen sind fast das Schwächste, sie wirken eindimensional, sind
+> einfach nur gerade und enden im Nichts."
+
+Es gibt bisher genau ein gerades Stück, das ich wiederhole. Für ein Netz fehlt
+alles andere:
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `schienen_32.png` | 32 × 32 | 8 | gerade waagerecht, gerade senkrecht, vier Kurven (je 90°), Kreuzung, Weiche |
+| `prellbock_32.png` | 32 × 32 | 2 | Streckenende links, Streckenende rechts |
+| `verladepunkt_64x32.png` | 64 × 32 | 3 | Rampe, an der der Wagen anhält: leer, Kiste halb aufgeladen, Kiste im Wagen |
+
+Der Verladepunkt löst eine zweite Rückmeldung mit: Zurzeit erscheinen die
+Kisten im Wagen, ohne dass man sieht, wie sie hineinkommen. Mit einer
+sichtbaren Rampe zwischen Station und Gleis wird das Umladen ein eigener
+kleiner Schritt statt eines Sprungs.
+
+**C · Der Vorratsstand, drei Stufen neu**
+
+Alle drei bisherigen Stufen haben denselben Fehler: Ihre Regalfächer sind 7 bis
+15 px hoch, die Kiste des Spiels ist 16 × 16 px. In kein einziges Fach lässt
+sich etwas hineinstellen — die Kisten liegen zwangsläufig darüber statt darin.
+`tools/pruefe-assets.mjs` misst das jetzt und verlangt **mindestens 18 px**.
+
+Dazu kommt: Stufe 1 ist 92 px hoch, Stufe 2 und 3 sind beide 66 px. Der Ausbau
+macht das Gebäude also kleiner statt größer, und die letzten beiden Stufen sind
+gleich groß.
+
+| Teil | Größe | Bedingung |
+|---|---|---|
+| `vorratsstand_1_128x96.png` | 128 × 96 | 3 Fächer, jedes ≥ 18 px hoch, jedes ≥ 5 Kisten breit |
+| `vorratsstand_2_128x96.png` | 128 × 96 | wie Stufe 1 plus ein Fach, **höher** als Stufe 1 |
+| `vorratsstand_3_128x96.png` | 128 × 96 | überdachter Schuppen, **höher** als Stufe 2 |
+
+Dieselbe Regel gilt für die Verladestation: Ihre Ladefläche liegt in Stufe 1
+zwei Pixel und in Stufe 2 fünfzehn Pixel über dem Fuß. Das ist in Ordnung, muss
+aber so bleiben — das Spiel setzt seine Kisten auf diese Höhen.
+
+**D · Cozywolfs Dorfplatz**
+
+> „Der Wolf ist nicht wirklich das Herz des Villages. Er soll einen eigenen
+> tollen Platz in der Mitte der Stadt haben."
+
+Zurzeit stempele ich einen Rund aus Wegflecken um sein Nest. Das wirkt wie ein
+festgetretener Fleck, nicht wie ein Platz.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `dorfplatz_192x96.png` | 192 × 96 | 1 | gepflasterter Rund mit Randsteinen, Moos in den Fugen, Platz in der Mitte für das Nest |
+| `platzlaterne_32x64.png` | 32 × 64 | 3 | höhere Laterne für den Platzrand, drei Flackerstufen |
+
+**Ausdrücklich nicht in Batch 5:** Küche, Kristallquelle, Axolotl, Biene,
+Maulwurf, Tag- und Nachtfassungen.
+
 **Ausdrücklich nicht in Batch 2:** Werkstatt, Küche, Kristallquelle,
 Ausbaustufe 3, Fass, Sack, Korb, Zaun, Torbogen, Wegweiser, die übrigen
 Bewohner. Für all das gibt es im Spiel noch keinen Ort. Sie kommen, sobald
