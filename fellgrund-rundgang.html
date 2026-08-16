@@ -1,0 +1,231 @@
+<title>Fellgrund Rundgang</title>
+
+<style>
+  /* ---------------------------------------------------------------
+     Farben aus Fellgrund selbst. Hell ist Pergament mit Waldtinte,
+     dunkel ist die Nachtlichtung. Beide Fassungen sind vollständig
+     definiert, damit die Seite in jeder Einstellung lesbar bleibt.
+     --------------------------------------------------------------- */
+  :root {
+    --grund:      #F2EDE0;
+    --karte:      #FBF8F0;
+    --tinte:      #23301F;
+    --tinte-leis: #5C6B54;
+    --linie:      #D8D0BC;
+    --linie-fein: #E7E0CE;
+    --gold:       #8A6106;
+    --gold-grund: #F6E9C4;
+    --moos:       #3B6B3F;
+    --schatten:   0 1px 0 rgba(35,48,31,.06);
+
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --grund:      #101A14;
+      --karte:      #18251C;
+      --tinte:      #E4EDDC;
+      --tinte-leis: #93A78F;
+      --linie:      #2F4433;
+      --linie-fein: #24352A;
+      --gold:       #F0B84A;
+      --gold-grund: #2A2A17;
+      --moos:       #8FC58C;
+      --schatten:   0 1px 0 rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --grund:      #101A14;
+    --karte:      #18251C;
+    --tinte:      #E4EDDC;
+    --tinte-leis: #93A78F;
+    --linie:      #2F4433;
+    --linie-fein: #24352A;
+    --gold:       #F0B84A;
+    --gold-grund: #2A2A17;
+    --moos:       #8FC58C;
+    --schatten:   0 1px 0 rgba(0,0,0,.3);
+  }
+
+  body {
+    background: var(--grund);
+    color: var(--tinte);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 20px 80px;
+  }
+  .blatt { max-width: 720px; margin: 0 auto; }
+
+  header { padding: 56px 0 36px; border-bottom: 2px solid var(--linie); }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(30px, 5vw, 42px);
+    line-height: 1.15;
+    margin: 0 0 10px;
+    text-wrap: balance;
+    font-weight: 600;
+  }
+  header p { margin: 0; color: var(--tinte-leis); font-size: 15px; max-width: 52ch; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    margin: 48px 0 4px;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  h2 + .unter { margin: 0 0 18px; color: var(--tinte-leis); font-size: 14px; }
+  p { max-width: 65ch; }
+
+  /* Die eine Zeile ------------------------------------------------ */
+  .formel {
+    background: var(--karte);
+    border: 2px solid var(--linie);
+    border-left: 5px solid var(--gold);
+    padding: 18px 20px;
+    margin: 20px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+  .formel b { color: var(--gold); font-weight: 700; }
+  .formel .beispiel { color: var(--tinte-leis); display: block; margin-top: 12px; font-size: 13px; }
+
+  /* Stufen --------------------------------------------------------- */
+  .stufen { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 1px; background: var(--linie-fein); border: 1px solid var(--linie-fein); }
+  .stufen li { background: var(--karte); padding: 12px 16px; display: grid; grid-template-columns: 110px 1fr; gap: 16px; align-items: baseline; }
+  .stufen code {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 700;
+    color: var(--gold); background: var(--gold-grund);
+    padding: 3px 8px; justify-self: start; letter-spacing: .03em;
+  }
+  .stufen span { font-size: 14.5px; color: var(--tinte-leis); }
+  @media (max-width: 520px) { .stufen li { grid-template-columns: 1fr; gap: 6px; } }
+
+  /* Rundgang ------------------------------------------------------- */
+  ol.rundgang { list-style: none; counter-reset: schritt; padding: 0; margin: 20px 0; display: grid; gap: 10px; }
+  ol.rundgang li {
+    counter-increment: schritt;
+    background: var(--karte);
+    border: 1px solid var(--linie-fein);
+    padding: 14px 18px 14px 52px;
+    position: relative;
+    box-shadow: var(--schatten);
+  }
+  ol.rundgang li::before {
+    content: counter(schritt);
+    position: absolute; left: 16px; top: 14px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--tinte-leis);
+    font-variant-numeric: tabular-nums;
+  }
+  ol.rundgang b { font-size: 15.5px; display: block; }
+  ol.rundgang span { font-size: 14.5px; color: var(--tinte-leis); }
+
+  /* Bekannt -------------------------------------------------------- */
+  .bekannt { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 8px; }
+  .bekannt li {
+    font-size: 14.5px; color: var(--tinte-leis);
+    padding-left: 24px; position: relative; max-width: 65ch;
+  }
+  .bekannt li::before {
+    content: "✓"; position: absolute; left: 0; top: 0;
+    color: var(--moos); font-weight: 700;
+  }
+  .bekannt li em { color: var(--tinte); font-style: normal; font-weight: 600; }
+
+  .schluss {
+    margin-top: 52px; padding: 24px 26px;
+    background: var(--gold-grund);
+    border-left: 5px solid var(--gold);
+  }
+  .schluss p { margin: 0; max-width: 60ch; }
+  .schluss p + p { margin-top: 12px; }
+  .schluss strong { font-family: var(--serif); font-size: 18px; }
+
+  a { color: var(--gold); }
+  a:focus-visible, li:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+</style>
+
+<div class="blatt">
+
+<header>
+  <h1>Rundgang durch Fellgrund</h1>
+  <p>Damit deine Beobachtungen bei mir ankommen, ohne dass etwas verloren geht.
+     Eine Zeile pro Sache, ein fester Weg über den Bildschirm, und eine Liste
+     dessen, was ich schon weiß.</p>
+</header>
+
+<h2>Die eine Zeile</h2>
+<p class="unter">Alles andere auf dieser Seite dient nur dazu, diese Zeile vollständig zu machen.</p>
+
+<div class="formel">
+<b>Ort</b> · <b>was ich sehe</b> · <b>was ich stattdessen erwartet hätte</b> · <b>Stufe</b>
+<span class="beispiel">Vorratsstand · die Kisten schweben über den Brettern · sie sollten in den Fächern stehen · stört</span>
+</div>
+
+<p><b>Die dritte Spalte ist die wichtigste.</b> „Sieht falsch aus“ hat zwanzig
+mögliche Ursachen, und ich rate dann. Sobald du sagst, was du erwartet hättest,
+bleibt meistens genau eine übrig. Wenn du nicht weißt, was du erwartet hättest,
+schreib das ruhig hin — auch das ist eine Auskunft.</p>
+
+<p><b>Nenn nicht die Lösung, nenn die Beobachtung.</b> „Verschieb die Schiene“
+schickt mich vielleicht in die falsche Ecke; „der Wagen sieht aus, als würde er
+gar nichts abholen“ trifft die Sache, auch wenn die Ursache woanders liegt.
+Falls du eine Vermutung hast, häng sie hinten an — nützlich, aber nicht bindend.</p>
+
+<h2>Vier Stufen</h2>
+<p class="unter">Damit ich weiß, wofür ich eine Stunde ausgeben soll und wofür nicht.</p>
+
+<ul class="stufen">
+  <li><code>fällt auf</code><span>Ist mir aufgefallen, stört mich aber nicht weiter.</span></li>
+  <li><code>stört</code><span>Fällt mir jedes Mal auf, wenn ich hinsehe.</span></li>
+  <li><code>falsch</code><span>Das ist ein Fehler, kein Geschmack. Es widerspricht sich selbst.</span></li>
+  <li><code>kaputt</code><span>So kann ich nicht weiterspielen oder nicht weitersehen.</span></li>
+</ul>
+
+<h2>Der Rundgang</h2>
+<p class="unter">In dieser Reihenfolge geht das Auge über das Bild. Wer sie einhält, vergisst nichts.</p>
+
+<ol class="rundgang">
+  <li><b>Erster Eindruck</b><span>Zehn Sekunden hinsehen, bevor du irgendetwas analysierst. Was fällt dir zuerst auf — angenehm oder unangenehm?</span></li>
+  <li><b>Waldrand und Rahmen</b><span>Wirkt die Lichtung geborgen oder eingesperrt? Verschwindet ein Tier auch wirklich hinter den vorderen Bäumen?</span></li>
+  <li><b>Der Boden</b><span>Sieht man ein Gitter? Erkennt man den Weg, auf dem die Tiere laufen? Wo ist toter Rasen?</span></li>
+  <li><b>Das Glühbeerenbeet</b><span>Erkennst du ohne hinzusehen, ob es abgeerntet ist? Sieht es überhaupt nach Beerenbeet aus?</span></li>
+  <li><b>Die Tiere</b><span>Aussehen, Gehen, Tragen, Arbeiten, Warten. Laufen sie da, wo sie sollen? Überdecken sie sich? Sind sie zu groß, zu klein, zu schnell?</span></li>
+  <li><b>Die Verladestation</b><span>Sieht man, wie voll sie ist? Ist erkennbar, dass ein Tier dort etwas abstellt?</span></li>
+  <li><b>Wurzelwagen und Schiene</b><span>Holt er sichtbar etwas ab und liefert er sichtbar etwas ab? Fährt er dorthin, wo es Sinn ergibt?</span></li>
+  <li><b>Der Vorratsstand</b><span>Erkennt man den Bestand am Regal, ohne auf die Zahl oben zu sehen?</span></li>
+  <li><b>Nest und Cozywolf</b><span>Ist er das Herz des Bildes? Merkt man, wenn er reagiert?</span></li>
+  <li><b>Wasserbecken</b><span>Wirkt es lebendig oder aufgeklebt? Passt es an diese Stelle?</span></li>
+  <li><b>Leiste oben, Statuszeile unten</b><span>Steht dort etwas, das im Bild fehlt? Steht dort etwas, das man gar nicht braucht?</span></li>
+  <li><b>Die Panels beim Anklicken</b><span>Ist beim Klick auf ein Gebäude klar, was du dort tun kannst und was es kostet?</span></li>
+  <li><b>Nach fünf Minuten</b><span>Was wolltest du tun und konntest es nicht? Wann war dir langweilig? Wann wolltest du weiterspielen?</span></li>
+</ol>
+
+<h2>Was ich schon weiß</h2>
+<p class="unter">Das musst du nicht melden — es steht auf meiner Liste oder ist bei ChatGPT.</p>
+
+<ul class="bekannt">
+  <li><em>Das Beet sieht nicht nach Beerenbeet aus.</em> Ich leihe mir Ziersträucher aus dem Naturblatt. Der richtige Busch mit vier Reifestufen liegt in Batch 4 bereit.</li>
+  <li><em>Die Kisten passen in kein Regalfach.</em> Gemessen: Fächer sind 7 bis 15 px hoch, die Kiste ist 16 px. Betrifft alle drei Ausbaustufen. Ist an ChatGPT gemeldet.</li>
+  <li><em>Der Vorratsstand wird beim Ausbau kleiner.</em> Stufe 1 ist 92 px hoch, Stufe 2 und 3 sind 66 px — und untereinander gleich groß.</li>
+  <li><em>Ab dem dritten Tier überdecken sich die Tiere.</em> Gemessen: bei vier Bibern zu 100 % der Zeit. Das Layout muss die Tiere auf mehrere Ketten verteilen.</li>
+  <li><em>43 % der Lichtung sind toter Rasen</em>, fast alles als ein Block in der Bildmitte-rechts.</li>
+  <li><em>Die Schiene reicht nicht bis zur Verladestation.</em> Der Wagen holt die Kisten nirgends sichtbar ab.</li>
+  <li><em>Die Sprechblase bei einem Stau schwebt zu hoch</em> über dem Gebäude, zu dem sie gehört.</li>
+</ul>
+
+<div class="schluss">
+  <p><strong>Wenn du nur einen Satz schreiben willst</strong></p>
+  <p>Dann diesen: <b>Was war der schlechteste Moment in den letzten fünf Minuten?</b>
+     Diese eine Antwort ist mehr wert als zehn Kleinigkeiten — sie zeigt, wo das
+     Spiel dich verliert, und das ist die einzige Stelle, die wirklich zählt.</p>
+</div>
+
+</div>
