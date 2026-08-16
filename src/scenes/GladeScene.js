@@ -28,7 +28,7 @@ import {
   state, bus, melde, speichern, istFreigeschaltet,
   kistenPlaetze, wagenKapazitaet, beerenProKiste, regalPlaetze, lagerKapazitaet,
   beetBuesche, reifeSekunden, arbeiterZahl, wagenTempo,
-  werkstattSteht, holzstapel, brettSekunden
+  werkstattSteht, holzstapel, brettSekunden, wagenZahl
 } from "../game/state.js";
 
 export default class GladeScene extends Phaser.Scene {
@@ -65,7 +65,6 @@ export default class GladeScene extends Phaser.Scene {
       tint: [0xfff6d0, 0xffd05c]
     }).setDepth(900);
 
-    this.fahrt = { phase: "wartet", timer: 0, blockiert: false };
 
     bus.on("ausbau", this.beiAusbau, this);
     this.events.once("shutdown", () => bus.off("ausbau", this.beiAusbau, this));
@@ -107,8 +106,29 @@ export default class GladeScene extends Phaser.Scene {
    * am Fußpunkt. Der Schein liegt unter dem Objekt, damit er es nicht
    * überdeckt.
    */
-  machAnklickbar(obj, handler) {
-    obj.setInteractive({ useHandCursor: true });
+  /**
+   * Macht ein Objekt anklickbar – und zeigt das auch.
+   *
+   * Zwei Klickarten, und der Unterschied ist der Grund, warum Knöpfe vorher
+   * „nur an ganz bestimmten Stellen" reagierten:
+   *
+   *   pixelgenau  für alles, was groß ist und viel Luft hat – Bäume, Büsche.
+   *               Ein Nutzbaum ist 64 × 96 und zu zwei Dritteln durchsichtig;
+   *               sein Rechteck lag über der Station und fing deren Klicks ab.
+   *
+   *   flächig     für Gebäude. Die Verladestation ist ein Unterstand: unter
+   *               dem Vordach ist sie durchsichtig. Pixelgenau wäre sie in
+   *               der Mitte nicht anklickbar – dort, wo man hinzeigt.
+   *
+   * Beide heben sich beim Überfahren leicht an, werden wärmer und bekommen
+   * einen Schein am Fußpunkt, der unter dem Objekt liegt.
+   */
+  machAnklickbar(obj, handler, { pixelgenau = false } = {}) {
+    // makePixelPerfect() liefert die Treffer-Funktion und baut die Fläche
+    // selbst; ein zweites Argument würde sie wieder überschreiben.
+    if (pixelgenau) obj.setInteractive(this.input.makePixelPerfect());
+    else obj.setInteractive();
+    obj.input.cursor = "pointer";
     const ruheY = obj.y;
     let schein = null;
     obj.on("pointerover", () => {
@@ -331,7 +351,7 @@ export default class GladeScene extends Phaser.Scene {
       const x = b.x + dx, y = b.y + dy;
       const bild = this.add.image(x, y, "bush-2").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, y);
-      this.machAnklickbar(bild, () => this.oeffneBeet());
+      this.machAnklickbar(bild, () => this.oeffneBeet(), { pixelgenau: true });
       return { bild, x, y, reife: 1, aktiv: false, belegt: null, index: i };
     });
     this.aktualisiereBeetplaetze();
@@ -367,7 +387,11 @@ export default class GladeScene extends Phaser.Scene {
 
   baueNest() {
     const n = PLACES.nest;
-    this.tiefeSetzen(this.add.image(n.x, n.y, "nest").setOrigin(0.5, 1), n.y - 2 * K);
+    // Das ganze Nest ist anklickbar, nicht nur der Wolf darin: Er ist klein,
+    // und wer auf sein Zuhause zeigt, meint ihn.
+    const mulde = this.add.image(n.x, n.y, "nest").setOrigin(0.5, 1);
+    this.tiefeSetzen(mulde, n.y - 2 * K);
+    this.machAnklickbar(mulde, () => this.oeffneNest());
     this.wolf = this.add.image(n.x - 1 * K, n.y - 8 * K, "wolf-sleep").setOrigin(0.5, 1);
     this.tiefeSetzen(this.wolf, n.y - 1);
     this.tiefeSetzen(this.add.image(n.x, n.y, "nest-rim").setOrigin(0.5, 1), n.y);
@@ -460,23 +484,54 @@ export default class GladeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Die Wagen.
+   *
+   * Es ist eine Liste, seit der zweite Wagen kaufbar ist. Beide teilen sich
+   * dasselbe Netz; die Kantenbelegung im Graphen sorgt dafür, dass keiner
+   * durch den anderen hindurchfährt – wer zuerst auf einer Kante ist, belegt
+   * sie, der andere wartet sichtbar am Knoten.
+   */
   baueWagen() {
-    // Der Wagen ist jetzt ein Modell auf dem Graphen; das Bild folgt ihm.
-    this.wagen = new Wagen(this.netz, "wurzelwagen", "station");
-    const p = this.wagen.position();
-    this.wagenBild = this.add.image(p.x, p.y + 8, "cart").setOrigin(0.5, 1);
-    this.tiefeSetzen(this.wagenBild, p.y + 8);
-    this.wagenKisten = [];
-    this.machAnklickbar(this.wagenBild, () => bus.emit("oeffne", {
-      titel: "Wurzelwagen",
+    this.wagen = [];
+    this.setzeWagenZahl();
+  }
+
+  setzeWagenZahl() {
+    const soll = wagenZahl();
+    while (this.wagen.length > soll) {
+      const w = this.wagen.pop();
+      this.netz.raeume(w.modell.id);
+      w.bild.destroy();
+      while (w.kisten.length) w.kisten.pop().destroy();
+    }
+    while (this.wagen.length < soll) {
+      const i = this.wagen.length;
+      const modell = new Wagen(this.netz, `wagen-${i}`, i === 0 ? "station" : "weiche");
+      const p = modell.position();
+      const bild = this.add.image(p.x, p.y + 8, "cart").setOrigin(0.5, 1);
+      this.tiefeSetzen(bild, p.y + 8);
+      this.machAnklickbar(bild, () => this.oeffneWagen());
+      this.wagen.push({
+        modell, bild, kisten: [],
+        phase: "wartet", timer: 0, blockiert: false, ladung: 0, art: "beeren"
+      });
+    }
+  }
+
+  oeffneWagen() {
+    bus.emit("oeffne", {
+      titel: this.wagen.length > 1 ? "Wurzelwagen" : "Der Wurzelwagen",
       zeilen: [
-        `Ladung pro Fahrt: ${wagenKapazitaet()} Kisten`,
+        `Wagen auf der Strecke: ${this.wagen.length}`,
+        `Ladung pro Fahrt: ${wagenKapazitaet()} Stück`,
         "Er fährt ausschließlich auf der sichtbaren Schiene.",
-        "Er fährt erst los, wenn die Verladestation voll ist.",
-        state.ausbauten.schnellschiene ? "Die Schiene ist geölt – er läuft leicht." : ""
+        "Er wählt sein Ziel: Beeren zum Vorratsstand, Holz zur Werkstatt.",
+        this.wagen.some((w) => w.modell.wartet)
+          ? "Ein Wagen wartet – der Abschnitt vor ihm ist belegt." : ""
       ].filter(Boolean),
       gesperrt: true
-    }));
+    });
   }
 
   /**
@@ -528,7 +583,7 @@ export default class GladeScene extends Phaser.Scene {
       const bild = this.add.image(n.x, n.y, "nutzbaum-0").setOrigin(0.5, 1);
       this.tiefeSetzen(bild, n.y);
       bild.setVisible(werkstattSteht());
-      this.machAnklickbar(bild, () => this.oeffneWald());
+      this.machAnklickbar(bild, () => this.oeffneWald(), { pixelgenau: true });
       return { bild, x: n.x, y: n.y, stufen: RULES.scheitProBaum, reife: 0, belegt: null, index: i };
     });
   }
@@ -542,7 +597,11 @@ export default class GladeScene extends Phaser.Scene {
 
     // Holzstapel links, Bretterstapel rechts der Werkbank – beide füllen sich
     // sichtbar, statt eine Zahl zu tragen.
-    this.holzBild = this.add.image(w.x - 46, w.y - 2, "holzstapel-0").setOrigin(0.5, 1);
+    // Kleiner und dicht an der Werkbank: als eigenständiger Haufen mitten
+    // auf der Wiese sah der Stapel aus wie herumliegendes Holz, nicht wie
+    // das Lager der Werkstatt.
+    this.holzBild = this.add.image(w.x - 38, w.y - 4, "holzstapel-0")
+      .setOrigin(0.5, 1).setScale(0.62);
     this.tiefeSetzen(this.holzBild, w.y + 1);
     this.bretterBilder = [];
     this.werkstattParzelle = this.add.image(w.x, w.y - 12, "parcel").setOrigin(0.5, 0.6).setDepth(5);
@@ -554,7 +613,8 @@ export default class GladeScene extends Phaser.Scene {
   baueNussa() {
     const bild = this.add.image(HOLZWEG.to.x, HOLZWEG.to.y, "eich-0").setOrigin(0.5, 1);
     this.tiefeSetzen(bild, HOLZWEG.to.y);
-    const last = this.add.image(0, 0, "scheit").setOrigin(0.5, 1).setVisible(false);
+    const last = this.add.image(0, 0, "scheit").setOrigin(0.5, 1)
+      .setScale(0.5).setVisible(false);
     this.nussa = {
       id: "nussa", name: "Nussa", bild, last,
       fortschritt: 1, nah: 0, phase: "hin", timer: 0, traegt: false,
@@ -579,8 +639,8 @@ export default class GladeScene extends Phaser.Scene {
     while (this.bretterBilder.length > anzahl) this.bretterBilder.pop().destroy();
     while (this.bretterBilder.length < anzahl) {
       const i = this.bretterBilder.length;
-      const b = this.add.image(w.x + 40 + (i % 2) * 4, w.y - 2 - Math.floor(i / 2) * 10, "bretter")
-        .setOrigin(0.5, 1);
+      const b = this.add.image(w.x + 34 + (i % 2) * 3, w.y - 4 - Math.floor(i / 2) * 7, "bretter")
+        .setOrigin(0.5, 1).setScale(0.62);
       this.tiefeSetzen(b, w.y + 1);
       this.bretterBilder.push(b);
       b.setAlpha(0);
@@ -661,8 +721,11 @@ export default class GladeScene extends Phaser.Scene {
       const i = this.stationKisten.length;
       // Erst die Beerenkisten, dann die Holzscheite – man sieht auf einen
       // Blick, worauf der Wagen als Nächstes reagieren wird.
+      // Ein Scheit ist als Bild 40 px breit, eine Kiste 16. Nebeneinander auf
+      // derselben Ladefläche muss beides gleich schwer wirken.
       const key = i < state.kisten ? "crate" : "scheit";
-      const kiste = this.add.image(links + i * 22, s.y + this.deckHoehe(), key).setOrigin(0.5, 1);
+      const kiste = this.add.image(links + i * 22, s.y + this.deckHoehe(), key)
+        .setOrigin(0.5, 1).setScale(key === "scheit" ? 0.5 : 1);
       this.tiefeSetzen(kiste, s.y + 1);
       this.stationKisten.push(kiste);
       // Die Kiste landet mit einem kurzen Stauchen, statt zu erscheinen.
@@ -675,7 +738,9 @@ export default class GladeScene extends Phaser.Scene {
       k.x = links + i * 22;
       k.y = s.y + hoehe;
       const soll = i < state.kisten ? "crate" : "scheit";
-      if (this.textures.exists(soll) && k.texture.key !== soll) k.setTexture(soll);
+      if (this.textures.exists(soll) && k.texture.key !== soll) {
+        k.setTexture(soll).setScale(soll === "scheit" ? 0.5 : 1);
+      }
     });
   }
 
@@ -730,35 +795,6 @@ export default class GladeScene extends Phaser.Scene {
       kiste.setAlpha(0);
       this.tweens.add({ targets: kiste, y: p.y, alpha: 1, duration: 260, ease: "Back.easeOut" });
     }
-  }
-
-  aktualisiereWagen() {
-    while (this.wagenKisten.length) this.wagenKisten.pop().destroy();
-    const key = state.wagenArt === "holz" && this.textures.exists("scheit") ? "scheit" : "crate";
-    for (let i = 0; i < state.wagenLadung; i++) {
-      const kiste = this.add.image(0, 0, key).setOrigin(0.5, 1);
-      this.tiefeSetzen(kiste, RAIL.y + 5);
-      this.wagenKisten.push(kiste);
-    }
-    this.setzeWagenKisten();
-  }
-
-  /**
-   * Die Kisten liegen in der Ladefläche, nicht daneben.
-   *
-   * Die Maße stammen aus dem gelieferten Wagenbild: Innenfläche 28 px breit,
-   * Boden 17 px über dem Fuß. Vorher hingen die Kisten hinter dem Wagen in
-   * der Luft, was aussah, als würde er sie hinterherziehen.
-   */
-  setzeWagenKisten() {
-    const x = this.wagenBild.x, fuss = this.wagenBild.y;
-    this.wagenKisten.forEach((k, i) => {
-      const spalte = i % 2, reihe = Math.floor(i / 2);
-      k.x = x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2 + reihe * 3;
-      k.y = fuss + WAGEN_BETT.dy - reihe * WAGEN_BETT.stapel;
-      // Weiter hinten liegende Kisten verschwinden hinter der Bordwand
-      k.setDepth(11 + RAIL.y + reihe * 0.1);
-    });
   }
 
   /* ----------------------------------------------------------- *
@@ -935,6 +971,10 @@ export default class GladeScene extends Phaser.Scene {
       case "schnellschiene":
         this.blitzeSchiene();
         break;
+      case "zweiterwagen":
+        this.setzeWagenZahl();
+        this.blitzeSchiene();
+        break;
       case "pfote2":
       case "pfote3":
       case "pfote4":
@@ -979,10 +1019,12 @@ export default class GladeScene extends Phaser.Scene {
     // nicht nur in dem Bild, in dem es erfolglos nachfasst.
     state.stau.station = this.arbeiter.some((a) => a.blockiert && a.phase === "abgeben")
       || (werkstattSteht() && this.nussa.blockiert && this.nussa.phase === "abgeben");
-    this.fahreWagen(dt);
-    // Der Wagen merkt sich seine Blockade über mehrere Bilder hinweg, sonst
+    for (const w of this.wagen) this.fahreWagen(w, dt);
+    // Ein Wagen merkt sich seine Blockade über mehrere Bilder hinweg, sonst
     // würde das Wartezeichen im Takt des Nachfassens flackern.
-    state.stau.lager = this.fahrt.blockiert && this.fahrt.phase === "abladen";
+    state.stau.lager = this.wagen.some(
+      (w) => w.blockiert && w.phase === "abladen" && w.art === "beeren");
+    state.wagenLadung = this.wagen.reduce((n, w) => n + w.ladung, 0);
     this.zeigeStau();
     this.aktualisiereMeldung();
   }
@@ -1114,110 +1156,128 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   /**
-   * Der Kreislauf des Wurzelwagens, jetzt auf dem Graphen.
+   * Der Kreislauf eines Wagens.
    *
-   * Der Wagen bekommt ein Ziel und findet seinen Weg selbst. Für die eine
-   * Strecke von heute ist das dasselbe Ergebnis wie vorher – aber es ist
-   * dieselbe Zeile Code, die später acht Speichen bedient.
+   * Jeder Wagen entscheidet für sich, wohin er fährt. Damit sie sich nicht
+   * dasselbe Gut greifen, wird die Ladung beim Losfahren sofort von der
+   * Station abgezogen.
    */
-  fahreWagen(dt) {
-    const f = this.fahrt;
+  fahreWagen(w, dt) {
     const tempo = wagenTempo();
 
-    if (f.phase === "wartet") {
+    if (w.phase === "wartet") {
       /*
        * Hier entsteht die Verzahnung der beiden Ketten.
        *
-       * Ein Wagen, zwei Ziele: Beerenkisten wollen zum Vorratsstand, Scheite
+       * Ein Netz, zwei Ziele: Beerenkisten wollen zum Vorratsstand, Scheite
        * zur Werkstatt. Beide belegen dieselben Plätze an der Verladestation.
-       * Der Wagen nimmt, wovon mehr wartet – bei Gleichstand das Holz, damit
-       * die Werkstatt nicht verhungert. Damit wird die Frage "wofür setze ich
-       * meine Tiere ein" zum ersten Mal eine Entscheidung.
+       * Ein Wagen nimmt, wovon mehr wartet – bei Gleichstand das Holz, damit
+       * die Werkstatt nicht verhungert.
        */
-      const platzImWerk = werkstattSteht()
-        ? holzstapel() - state.werkHolz : 0;
-      const holzFaehrt = state.scheite > 0 && platzImWerk > 0;
-      const beerenFaehrt = state.kisten > 0;
+      if (w.modell.knoten !== "station") {
+        if (w.modell.ziel !== "station") w.modell.fahreZu("station");
+        w.modell.tick(dt, tempo);
+        this.zeichneWagen(w);
+        return;
+      }
+      const platzImWerk = werkstattSteht() ? holzstapel() - state.werkHolz : 0;
+      const holzWartet = state.scheite > 0 && platzImWerk > 0;
+      const beerenWartet = state.kisten > 0;
       const voll = state.kisten + state.scheite >= kistenPlaetze();
 
-      if (voll || (holzFaehrt && state.scheite >= kistenPlaetze())) {
-        const nimmHolz = holzFaehrt && (state.scheite >= state.kisten || !beerenFaehrt);
+      if (voll || (holzWartet && state.scheite >= kistenPlaetze())) {
+        const nimmHolz = holzWartet && (state.scheite >= state.kisten || !beerenWartet);
         if (nimmHolz) {
-          state.wagenArt = "holz";
-          state.wagenLadung = Math.min(state.scheite, wagenKapazitaet(), platzImWerk);
-          state.scheite -= state.wagenLadung;
-        } else if (beerenFaehrt) {
-          state.wagenArt = "beeren";
-          state.wagenLadung = Math.min(state.kisten, wagenKapazitaet());
-          state.kisten -= state.wagenLadung;
+          w.art = "holz";
+          w.ladung = Math.min(state.scheite, wagenKapazitaet(), platzImWerk);
+          state.scheite -= w.ladung;
+        } else if (beerenWartet) {
+          w.art = "beeren";
+          w.ladung = Math.min(state.kisten, wagenKapazitaet());
+          state.kisten -= w.ladung;
         }
-        if (state.wagenLadung > 0) {
+        if (w.ladung > 0) {
           this.aktualisiereStation();
-          this.aktualisiereWagen();
-          if (this.wagen.fahreZu(state.wagenArt === "holz" ? "werkstatt" : "lager")) {
-            f.phase = "hin";
-          }
+          this.aktualisiereWagenkisten(w);
+          if (w.modell.fahreZu(w.art === "holz" ? "werkstatt" : "lager")) w.phase = "hin";
           bus.emit("aendert");
         }
       }
-    } else if (f.phase === "hin") {
-      this.wagen.tick(dt, tempo);
-      if (this.wagen.amZiel) { f.phase = "abladen"; f.timer = RULES.unloadSeconds; }
-    } else if (f.phase === "abladen") {
-      f.timer -= dt;
-      if (f.timer <= 0) {
-        const fertig = state.wagenArt === "holz"
-          ? this.ladeHolzAb() : this.ladeBeerenAb();
-        if (!fertig) { f.blockiert = true; f.timer = 0.4; }
+    } else if (w.phase === "hin") {
+      w.modell.tick(dt, tempo);
+      if (w.modell.amZiel) { w.phase = "abladen"; w.timer = RULES.unloadSeconds; }
+    } else if (w.phase === "abladen") {
+      w.timer -= dt;
+      if (w.timer <= 0) {
+        const fertig = w.art === "holz" ? this.ladeHolzAb(w) : this.ladeBeerenAb(w);
+        if (!fertig) { w.blockiert = true; w.timer = 0.4; }
         else {
-          f.blockiert = false;
-          if (this.wagen.fahreZu("station")) f.phase = "zurueck";
+          w.blockiert = false;
+          if (w.modell.fahreZu("station")) w.phase = "zurueck";
         }
       }
-    } else if (f.phase === "zurueck") {
-      this.wagen.tick(dt, tempo);
-      if (this.wagen.amZiel) f.phase = "wartet";
+    } else if (w.phase === "zurueck") {
+      w.modell.tick(dt, tempo);
+      if (w.modell.amZiel) w.phase = "wartet";
     }
+    this.zeichneWagen(w);
+  }
 
-    // Das Bild folgt dem Modell, nie umgekehrt.
-    const p = this.wagen.position();
-    this.wagenBild.setPosition(p.x, p.y + 8);
-    this.wagenBild.setDepth(10 + p.y + 8);
-    this.wagenBild.setFlipX(p.dx < -0.3);
-    this.setzeWagenKisten();
+  /** Das Bild folgt dem Modell, nie umgekehrt. */
+  zeichneWagen(w) {
+    const p = w.modell.position();
+    w.bild.setPosition(p.x, p.y + 8);
+    w.bild.setDepth(10 + p.y + 8);
+    w.bild.setFlipX(p.dx < -0.3);
+    w.kisten.forEach((k, i) => {
+      const spalte = i % 2, reihe = Math.floor(i / 2);
+      k.x = p.x - WAGEN_BETT.dx + spalte * WAGEN_BETT.dx * 2 + reihe * 3;
+      k.y = p.y + 8 + WAGEN_BETT.dy - reihe * WAGEN_BETT.stapel;
+      k.setDepth(11 + RAIL.y + reihe * 0.1);
+    });
+  }
+
+  aktualisiereWagenkisten(w) {
+    while (w.kisten.length) w.kisten.pop().destroy();
+    const key = w.art === "holz" && this.textures.exists("scheit") ? "scheit" : "crate";
+    for (let i = 0; i < w.ladung; i++) {
+      w.kisten.push(this.add.image(0, 0, key).setOrigin(0.5, 1)
+        .setScale(key === "scheit" ? 0.5 : 1));
+    }
+    this.zeichneWagen(w);
   }
 
   /** Gibt true zurück, wenn der Wagen vollständig leer ist. */
-  ladeBeerenAb() {
+  ladeBeerenAb(w) {
     const proKiste = beerenProKiste();
     const platz = Math.floor((lagerKapazitaet() - state.beeren) / proKiste);
-    const menge = Math.min(state.wagenLadung, Math.max(0, platz));
+    const menge = Math.min(w.ladung, Math.max(0, platz));
     if (menge <= 0) return false;
     // Der Bestand steigt erst hier, nie vorher.
     state.beeren += menge * proKiste;
-    state.wagenLadung -= menge;
-    this.aktualisiereWagen();
+    w.ladung -= menge;
+    this.aktualisiereWagenkisten(w);
     this.aktualisiereRegal();
     this.funken.emitParticleAt(PLACES.store.x, PLACES.store.y - 30 * K, 14);
     bus.emit("aendert");
-    if (state.wagenLadung > 0) return false;
+    if (w.ladung > 0) return false;
     state.lieferungen++;
     this.weckeWolf();
     speichern();
     return true;
   }
 
-  ladeHolzAb() {
+  ladeHolzAb(w) {
     const platz = holzstapel() - state.werkHolz;
-    const menge = Math.min(state.wagenLadung, Math.max(0, platz));
+    const menge = Math.min(w.ladung, Math.max(0, platz));
     if (menge <= 0) return false;
     state.werkHolz += menge;
-    state.wagenLadung -= menge;
-    this.aktualisiereWagen();
+    w.ladung -= menge;
+    this.aktualisiereWagenkisten(w);
     this.aktualisiereWerkstatt();
     this.funken.emitParticleAt(PLACES.werkstatt.x - 40, PLACES.werkstatt.y - 16, 10);
     bus.emit("aendert");
-    if (state.wagenLadung > 0) return false;
+    if (w.ladung > 0) return false;
     state.lieferungen++;
     this.weckeWolf();
     speichern();
@@ -1395,9 +1455,9 @@ export default class GladeScene extends Phaser.Scene {
       melde(`Das Beet ist abgeerntet – ${namen} ${wartend.length > 1 ? "warten" : "wartet"}`);
       return;
     }
-    if (this.fahrt.phase === "hin") { melde("Der Wurzelwagen fährt zum Vorratsstand"); return; }
-    if (this.fahrt.phase === "abladen") { melde("Ankunft – die Kisten wandern ins Regal"); return; }
-    if (this.fahrt.phase === "zurueck") { melde("Der Wurzelwagen kehrt zur Verladestation zurück"); return; }
+    if (this.wagen.some((w) => w.phase === "hin")) { melde("Ein Wurzelwagen ist unterwegs"); return; }
+    if (this.wagen.some((w) => w.phase === "abladen")) { melde("Ankunft – die Ladung wird abgeladen"); return; }
+    if (this.wagen.some((w) => w.phase === "zurueck")) { melde("Ein Wurzelwagen kehrt zur Verladestation zurück"); return; }
     const traeger = this.arbeiter.filter((a) => a.traegt).length;
     if (traeger > 0) {
       melde(traeger === 1

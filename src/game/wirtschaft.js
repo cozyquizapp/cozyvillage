@@ -91,6 +91,11 @@ export function brettSekunden(a) {
   return gebaut(a, "saege") ? 3.5 : RULES.brettSekunden;
 }
 
+/** Wagen auf der Strecke. */
+export function wagenZahl(a) {
+  return gebaut(a, "zweiterwagen") ? 2 : 1;
+}
+
 export function wagenTempo(a) {
   return RULES.cartSpeed * (gebaut(a, "schnellschiene") ? 1.6 : 1);
 }

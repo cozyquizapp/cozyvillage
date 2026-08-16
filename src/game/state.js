@@ -30,8 +30,8 @@ export const state = {
   scheite: 0,
   werkHolz: 0,
   bretter: 0,
+  /** Ladung je Wagen, als Liste – seit dem zweiten Wagen kann es mehr als eine geben. */
   wagenLadung: 0,
-  /** Was der Wagen gerade fährt: "beeren" oder "holz". */
   wagenArt: "beeren",
   lieferungen: 0,
   ausbauten: leereAusbauten(),
@@ -62,6 +62,7 @@ export const wagenTempo        = () => W.wagenTempo(state.ausbauten);
 export const werkstattSteht    = () => W.werkstattSteht(state.ausbauten);
 export const holzstapel        = () => W.holzstapel(state.ausbauten);
 export const brettSekunden     = () => W.brettSekunden(state.ausbauten);
+export const wagenZahl         = () => W.wagenZahl(state.ausbauten);
 
 /* --------------------------------------------------------------- *
  * Ausbauten

@@ -355,6 +355,18 @@ export const UPGRADES = {
     wirkung: ["Brett in 6 s → 3,5 s", "Holzstapel 6 → 10 Scheite"]
   },
 
+  zweiterwagen: {
+    id: "zweiterwagen", ort: "station", name: "Zweiter Wurzelwagen",
+    cost: 190, bretter: 8, unlockAfterDeliveries: 22,
+    beschreibung:
+      "Ein zweiter Wagen fährt auf derselben Strecke. Beide teilen sich das " +
+      "Netz: Wer zuerst auf eine Kante fährt, belegt sie, der andere wartet " +
+      "am Knoten. Beeren und Holz können damit gleichzeitig unterwegs sein.",
+    wirkung: ["Zweiter Wagen auf der Strecke",
+              "Beeren und Holz fahren nicht mehr abwechselnd",
+              "Belegte Gleisabschnitte werden sichtbar"]
+  },
+
   pfote2: {
     id: "pfote2", ort: "nest", name: "Fern zieht ein",
     cost: 64, unlockAfterDeliveries: 5,
