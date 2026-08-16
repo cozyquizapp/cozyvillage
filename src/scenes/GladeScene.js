@@ -29,7 +29,7 @@ import {
   kistenPlaetze, wagenKapazitaet, beerenProKiste, regalPlaetze, lagerKapazitaet,
   beetBuesche, reifeSekunden, arbeiterZahl, wagenTempo,
   werkstattSteht, holzstapel, brettSekunden, wagenZahl,
-  kuecheSteht, kuechenkorb, glasSekunden
+  kuecheSteht, kuechenkorb, glasSekunden, plaetzeFuer
 } from "../game/state.js";
 
 export default class GladeScene extends Phaser.Scene {
@@ -647,6 +647,23 @@ export default class GladeScene extends Phaser.Scene {
   }
 
   /**
+   * Darf die Trage-Zeile gezeigt werden?
+   *
+   * Die gelieferte Trage-Zeile ist **von vorn** gezeichnet: Die Figur sieht
+   * einen an und hält die Last vor sich. Sie hatte bisher Vorrang vor der
+   * Laufrichtung – und damit lief Nussa bergauf wieder verkehrt herum, denn
+   * sie trägt fast nur bergauf, weg von der Kamera.
+   *
+   * Also gilt sie nur, solange die Figur auch wirklich nach vorn schaut. In
+   * jeder anderen Richtung gewinnt die Laufzeile, und die Last wird als
+   * eigenes Bild danebengesetzt – bergauf hinter der Figur, weil sie sie dann
+   * verdeckt.
+   */
+  zeigtTragen(a, art) {
+    return a.traegt && a.blick === "vorn" && this.textures.exists(`${art}-carry-0`);
+  }
+
+  /**
    * Die Nutzbäume.
    *
    * Umgekehrt zum Beerenbusch: Wer hier erntet, macht den Baum sichtbar
@@ -822,10 +839,23 @@ export default class GladeScene extends Phaser.Scene {
   zeigeRinne() {
     if (this.rinne) return;
     const p = PLACES.pond, b = PLACES.beet;
-    const g = this.add.graphics().setDepth(6);
-    g.lineStyle(4 * K, 0x6b4f33, 1).lineBetween(p.x + 24 * K, p.y - 14 * K, b.x - 14 * K, b.y + 6 * K);
-    g.lineStyle(2 * K, 0x8a6942, 1).lineBetween(p.x + 24 * K, p.y - 15 * K, b.x - 14 * K, b.y + 5 * K);
-    g.lineStyle(1 * K, 0x4e93a8, 0.8).lineBetween(p.x + 24 * K, p.y - 15 * K, b.x - 14 * K, b.y + 5 * K);
+    /*
+     * Die Rinne besteht jetzt aus den gelieferten Stücken, nicht mehr aus drei
+     * gezogenen Linien. Die Linien liefen seit dem Umzug auf die große
+     * Lichtung als dünner Strich quer durch das Bild.
+     */
+    const vx = p.x + p.rx - 20, vy = p.y - p.ry + 10;
+    const nx = b.x - 40, ny = b.y + 40;
+    const schritte = Math.max(2, Math.round(Math.hypot(nx - vx, ny - vy) / 30));
+    const g = this.add.container(0, 0).setDepth(6);
+    for (let i = 0; i <= schritte; i++) {
+      const q = i / schritte;
+      const key = this.textures.exists("rinne-0")
+        ? (i === 0 ? "rinne-2" : i === schritte ? "rinne-3" : "rinne-1")
+        : null;
+      if (!key) break;
+      g.add(this.add.image(vx + (nx - vx) * q, vy + (ny - vy) * q, key).setOrigin(0.5, 0.5));
+    }
     this.rinne = g;
   }
 
@@ -1213,7 +1243,7 @@ export default class GladeScene extends Phaser.Scene {
     } else if (a.phase === "abgeben") {
       a.timer -= dt;
       if (a.timer <= 0) {
-        if (state.kisten < kistenPlaetze()) {
+        if (state.kisten < plaetzeFuer("beeren")) {
           state.kisten++;
           a.blockiert = false;
           a.traegt = false;
@@ -1248,9 +1278,10 @@ export default class GladeScene extends Phaser.Scene {
     const wippen = a.phase === "ernten" && Math.floor(this.time.now / 200) % 2 === 0 ? 1 * K : 0;
     const bild = (laeuft || a.phase === "ernten") ? Math.floor(this.time.now / 150) % 4 : 0;
     const richtung = this.laufReihe(a, "beaver", x, y);
+    const traegtVorn = this.zeigtTragen(a, "beaver");
     let reihe;
     if (a.phase === "ernten") { reihe = "beaver-arbeit-"; a.bild.setFlipX(false); }
-    else if (a.traegt) { reihe = "beaver-carry-"; a.bild.setFlipX(false); }
+    else if (traegtVorn) { reihe = "beaver-carry-"; a.bild.setFlipX(false); }
     else reihe = richtung;
     let schluessel = reihe + bild;
     if (!this.textures.exists(schluessel)) {
@@ -1259,10 +1290,16 @@ export default class GladeScene extends Phaser.Scene {
     a.bild.setTexture(schluessel);
     a.bild.setPosition(x, y + wippen);
     a.bild.setDepth(10 + y);
-    const kisteImSprite = this.textures.exists("beaver-carry-0");
-    a.kiste.setVisible(a.traegt && !kisteImSprite);
+    a.kiste.setVisible(a.traegt && !traegtVorn);
     if (a.kiste.visible) {
-      a.kiste.setPosition(x + 6 * K, y - 4 * K).setDepth(11 + y);
+      // Bergauf sieht man die Figur von hinten: Die Last liegt dann auf dem
+      // Rücken, also höher und weiter oben angesetzt – sonst verschwände sie
+      // vollständig hinter dem Tier, und der Weg wäre wieder nur eine Zahl.
+      const hinten = a.blick === "hinten";
+      const seite = a.blick === "links" ? -1 : 1;
+      a.kiste
+        .setPosition(x + (hinten ? 4 : 6) * K * seite, y - (hinten ? 15 : 4) * K)
+        .setDepth(11 + y);
     }
   }
 
@@ -1312,10 +1349,12 @@ export default class GladeScene extends Phaser.Scene {
       const platzImWerk = werkstattSteht() ? holzstapel() - state.werkHolz : 0;
       const holzWartet = state.scheite > 0 && platzImWerk > 0;
       const beerenWartet = state.kisten > 0;
-      const voll = state.kisten + state.scheite >= kistenPlaetze();
+      const beerenVoll = state.kisten >= plaetzeFuer("beeren");
+      const holzVoll = plaetzeFuer("holz") > 0 && state.scheite >= plaetzeFuer("holz");
 
-      if (voll || (holzWartet && state.scheite >= kistenPlaetze())) {
-        const nimmHolz = holzWartet && (state.scheite >= state.kisten || !beerenWartet);
+      if (beerenVoll || holzVoll) {
+        // Die volle Seite zuerst – sonst bliebe die andere Ware liegen.
+        const nimmHolz = holzWartet && (holzVoll || !beerenWartet);
         if (nimmHolz) {
           w.art = "holz";
           w.ladung = Math.min(state.scheite, wagenKapazitaet(), platzImWerk);
@@ -1548,7 +1587,7 @@ export default class GladeScene extends Phaser.Scene {
     } else if (a.phase === "abgeben") {
       a.timer -= dt;
       if (a.timer <= 0) {
-        if (state.kisten + state.scheite < kistenPlaetze()) {
+        if (state.scheite < plaetzeFuer("holz")) {
           state.scheite++;
           a.blockiert = false;
           a.traegt = false;
@@ -1574,18 +1613,27 @@ export default class GladeScene extends Phaser.Scene {
     const laeuft = ["hin", "zurueck", "annaehern", "entfernen"].includes(a.phase);
     const bild = (laeuft || a.phase === "faellen") ? Math.floor(this.time.now / 150) % 4 : 0;
     const richtung = this.laufReihe(a, "eich", x, y);
+    const traegtVorn = this.zeigtTragen(a, "eich");
     let reihe;
     if (a.phase === "faellen") { reihe = "eich-arbeit-"; a.bild.setFlipX(false); }
-    else if (a.traegt) { reihe = "eich-carry-"; a.bild.setFlipX(false); }
+    else if (traegtVorn) { reihe = "eich-carry-"; a.bild.setFlipX(false); }
     else reihe = richtung;
     let key = reihe + bild;
     if (!this.textures.exists(key)) key = this.textures.exists(`eich-${bild}`) ? `eich-${bild}` : "eich-0";
     a.bild.setTexture(key);
     a.bild.setPosition(x, y);
     a.bild.setDepth(10 + y);
-    const imSprite = this.textures.exists("eich-carry-0");
-    a.last.setVisible(a.traegt && !imSprite);
-    if (a.last.visible) a.last.setPosition(x + 6, y - 4).setDepth(11 + y);
+    a.last.setVisible(a.traegt && !traegtVorn);
+    if (a.last.visible) {
+      // Bergauf sieht man die Figur von hinten: Die Last liegt dann auf dem
+      // Rücken, also höher und weiter oben angesetzt – sonst verschwände sie
+      // vollständig hinter dem Tier, und der Weg wäre wieder nur eine Zahl.
+      const hinten = a.blick === "hinten";
+      const seite = a.blick === "links" ? -1 : 1;
+      a.last
+        .setPosition(x + (hinten ? 4 : 6) * K * seite, y - (hinten ? 15 : 4) * K)
+        .setDepth(11 + y);
+    }
   }
 
   /**

@@ -14,11 +14,6 @@ import { RULES, ARBEITER, BEET_PLAETZE } from "./config.js";
 
 const gebaut = (a, id) => !!(a && a[id]);
 
-/** Kistenplätze an der Verladestation. Voll heißt: die Tiere warten. */
-export function kistenPlaetze(a) {
-  return gebaut(a, "verladehof") ? 6 : gebaut(a, "wagenlager") ? 4 : 2;
-}
-
 /** Was der Wurzelwagen pro Fahrt mitnimmt. */
 export function wagenKapazitaet(a) {
   return kistenPlaetze(a);
@@ -117,4 +112,28 @@ export function wagenZahl(a) {
 
 export function wagenTempo(a) {
   return RULES.cartSpeed * (gebaut(a, "schnellschiene") ? 1.6 : 1);
+}
+
+/** Kistenplätze an der Verladestation insgesamt. */
+export function kistenPlaetze(a) {
+  return gebaut(a, "verladehof") ? 6 : gebaut(a, "wagenlager") ? 4 : 2;
+}
+
+/**
+ * Plätze für eine einzelne Ware.
+ *
+ * Solange nur Glühbeeren ankommen, gehört die ganze Station ihnen. Sobald die
+ * Werkstatt steht, bekommt jede Ware ihre eigene Hälfte.
+ *
+ * Ohne diese Teilung verhungert die Holzkette zwangsläufig: Zwei Biber füllen
+ * die Station schneller mit Kisten, als der Wagen sie leert, und das
+ * Eichhörnchen findet nie einen freien Platz für seinen Scheit. Kein Holz,
+ * keine Bretter, keine Küche – und für die spielende Person sieht es aus wie
+ * ein Stillstand ohne Grund. Genau das ist im Spieltest passiert.
+ */
+export function plaetzeFuer(a, ware) {
+  const gesamt = kistenPlaetze(a);
+  if (!werkstattSteht(a)) return ware === "beeren" ? gesamt : 0;
+  const holz = Math.max(1, Math.floor(gesamt / 2));
+  return ware === "holz" ? holz : gesamt - holz;
 }

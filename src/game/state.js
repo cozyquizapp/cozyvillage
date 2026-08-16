@@ -54,6 +54,7 @@ export const state = {
  */
 
 export const kistenPlaetze     = () => W.kistenPlaetze(state.ausbauten);
+export const plaetzeFuer       = (ware) => W.plaetzeFuer(state.ausbauten, ware);
 export const wagenKapazitaet   = () => W.wagenKapazitaet(state.ausbauten);
 export const beerenProKiste    = () => W.beerenProKiste(state.ausbauten);
 export const regalPlaetze      = () => W.regalPlaetze(state.ausbauten);

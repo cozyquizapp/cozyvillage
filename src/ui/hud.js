@@ -53,9 +53,12 @@ const css = `
 }
 #ui .status::before { content: "› "; color: #f0b84a; }
 #ui .hinweis {
-  position: absolute; right: 12px; top: 58px;
-  font-size: 10px; color: #7e937f; text-align: right; line-height: 1.6;
+  position: absolute; right: 12px; top: 62px;
+  font-size: 11px; color: #9fb59c; text-align: right; line-height: 1.7;
+  background: rgba(14,23,18,0.82); border: 2px solid #3f5a44;
+  padding: 7px 12px; max-width: 42ch;
 }
+#ui .hinweis b { color: #f0b84a; }
 /* Ohne diese Fläche landeten Klicks neben dem Panel auf der Leinwand – man
    wollte einen Ausbau kaufen und öffnete stattdessen die Verladestation. */
 #ui .abdeckung {
@@ -144,7 +147,7 @@ export function starteOberflaeche() {
       <div class="wert">${glas}<div class="zahl"><b id="w-marmelade">0</b><span>Marmelade</span></div></div>
       <div class="wert">${bluete}<div class="zahl"><b id="w-lief">0</b><span>Lieferungen</span></div></div>
     </div>
-    <div class="hinweis">Fahre über die Lichtung – was leuchtet, lässt sich anklicken.</div>
+    <div class="hinweis" id="hinweis"></div>
     <div class="status" id="status">…</div>
     <div class="abdeckung" id="abdeckung"></div>
     <div class="panel" id="panel">
@@ -163,6 +166,7 @@ export function starteOberflaeche() {
     marmelade: document.getElementById("w-marmelade"),
     lief: document.getElementById("w-lief"),
     status: document.getElementById("status"),
+    hinweis: document.getElementById("hinweis"),
     panel: document.getElementById("panel"),
     abdeckung: document.getElementById("abdeckung"),
     titel: document.getElementById("panel-titel"),
@@ -178,6 +182,50 @@ export function starteOberflaeche() {
   bus.on("meldung", (t) => { el.status.textContent = t; });
   bus.on("oeffne", oeffne);
   zeichne();
+}
+
+/**
+ * „Was kann ich tun?" – und zwar im Spiel beantwortet, nicht im Kopf.
+ *
+ * Im Spieltest stand die Frage im Raum, obwohl mehrere Ausbauten bezahlbar
+ * waren: Man sieht die Vorräte oben, aber nicht, wofür sie reichen. Diese
+ * Zeile nennt immer den günstigsten Ausbau, der jetzt möglich ist – und wenn
+ * keiner möglich ist, was genau dafür fehlt und woher es kommt.
+ */
+function naechsterSchritt() {
+  const offen = Object.values(UPGRADES)
+    .filter((u) => !state.ausbauten[u.id] && state.lieferungen >= u.unlockAfterDeliveries)
+    .sort((a, b) => a.cost - b.cost);
+  if (!offen.length) {
+    const naechster = Object.values(UPGRADES)
+      .filter((u) => !state.ausbauten[u.id])
+      .sort((a, b) => a.unlockAfterDeliveries - b.unlockAfterDeliveries)[0];
+    return naechster
+      ? `Nächster Ausbau nach ${naechster.unlockAfterDeliveries} Lieferungen`
+      : "Alles gebaut. Fellgrund ist fertig.";
+  }
+  const kaufbar = offen.filter((u) => istKaufbar(u.id));
+  if (kaufbar.length) {
+    const namen = kaufbar.slice(0, 2).map((u) => u.name).join(" · ");
+    const rest = kaufbar.length > 2 ? ` · und ${kaufbar.length - 2} weitere` : "";
+    return `<b>Jetzt möglich:</b> ${namen}${rest}`;
+  }
+  // Nichts bezahlbar – dann sagen, was fehlt und wo es herkommt
+  const u = offen[0];
+  if (state.beeren < u.cost) {
+    return `Für „${u.name}" fehlen ${u.cost - state.beeren} Glühbeeren.<br>Sie kommen vom Beet über die Verladestation.`;
+  }
+  if (state.bretter < (u.bretter || 0)) {
+    return state.ausbauten.werkstatt
+      ? `Für „${u.name}" fehlen ${u.bretter - state.bretter} Bretter.<br>Sie entstehen in der Werkstatt aus Holz.`
+      : `Für „${u.name}" fehlen ${u.bretter - state.bretter} Bretter.<br>Dafür muss zuerst die Werkstatt stehen.`;
+  }
+  if (state.marmelade < (u.marmelade || 0)) {
+    return state.ausbauten.kueche
+      ? `Für „${u.name}" fehlen ${u.marmelade - state.marmelade} Marmelade.<br>Sie wird in der Küche aus Glühbeeren gekocht.`
+      : `Für „${u.name}" fehlen ${u.marmelade - state.marmelade} Marmelade.<br>Dafür muss zuerst die Küche stehen.`;
+  }
+  return "Fahre über die Lichtung – was leuchtet, lässt sich anklicken.";
 }
 
 function puls(node) {
@@ -196,6 +244,7 @@ function zeichne() {
   el.kisten.textContent = state.kisten;
   el.wagen.textContent = state.wagenLadung;
   el.bretter.textContent = state.bretter;
+  el.hinweis.innerHTML = naechsterSchritt();
   el.marmelade.textContent = state.marmelade;
   el.lief.textContent = state.lieferungen;
   for (const id of offeneAusbauten) setzeKnopf(id);
