@@ -91,6 +91,25 @@ export function brettSekunden(a) {
   return gebaut(a, "saege") ? 3.5 : RULES.brettSekunden;
 }
 
+/* --------------------------------------------------------------- *
+ * Küche
+ * --------------------------------------------------------------- */
+
+/** Steht die Küche? Erst dann fährt der Wagen Beeren aus dem Lager. */
+export function kuecheSteht(a) {
+  return gebaut(a, "kueche");
+}
+
+/** Glühbeeren, die im Vorratskorb der Küche warten können. */
+export function kuechenkorb(a) {
+  return gebaut(a, "grosserkessel") ? 40 : RULES.kuechenkorb;
+}
+
+/** Sekunden für ein Glas Marmelade. */
+export function glasSekunden(a) {
+  return gebaut(a, "grosserkessel") ? 5 : RULES.glasSekunden;
+}
+
 /** Wagen auf der Strecke. */
 export function wagenZahl(a) {
   return gebaut(a, "zweiterwagen") ? 2 : 1;

@@ -68,6 +68,7 @@ export const PLACES = {
   station:   { x: 470,  y: 428, label: "Verladestation" },
   werkstatt: { x: 800,  y: 232, label: "Holz- und Wurzelwerkstatt" },
   store:     { x: 1140, y: 428, label: "Vorratsstand" },
+  kueche:    { x: 800,  y: 700, label: "Küche" },
   nest:      { x: 800,  y: 470, label: "Cozywolfs Nest" },
   pond:      { x: 250,  y: 528, label: "Wasserbecken", rx: 112, ry: 56 }
 };
@@ -219,14 +220,17 @@ export const GLEISPLAN = {
 
     { id: "station",   x: 470,  y: 470, art: "halt" },
     { id: "werkstatt", x: 800,  y: 268, art: "halt" },
-    { id: "lager",     x: 1140, y: 470, art: "halt" }
+    { id: "lager",     x: 1140, y: 470, art: "halt" },
+    { id: "kueche",    x: 800,  y: 738, art: "halt" },
+    { id: "quelle",    x: 1180, y: 700, art: "halt" }
   ],
   kanten: [
     ["ring-nw", "ring-n"], ["ring-n", "ring-no"],
     ["ring-no", "ring-o"], ["ring-o", "ring-so"],
     ["ring-so", "ring-s"], ["ring-s", "ring-sw"],
     ["ring-sw", "ring-w"], ["ring-w", "ring-nw"],
-    ["ring-w", "station"], ["ring-n", "werkstatt"], ["ring-o", "lager"]
+    ["ring-w", "station"], ["ring-n", "werkstatt"], ["ring-o", "lager"],
+    ["ring-s", "kueche"], ["ring-so", "quelle"]
   ]
 };
 /** Die Bäume auf der Lichtungskante werden aus dieser Vorschrift gesetzt. */
@@ -250,8 +254,7 @@ export const PROPS = [
  * frei auf offenem Rasen.
  */
 export const FUTURE_PARCELS = [
-  { x: 800,  y: 730, rx: 46, ry: 23, label: "Küche" },
-  { x: 1180, y: 690, rx: 46, ry: 23, label: "Kristallquelle" }
+  { x: 1180, y: 700, rx: 46, ry: 23, label: "Kristallquelle" }
 ];
 
 /** Wirtschaft. Ein Ausbau verändert immer Bild, Rhythmus und Leistung zugleich. */
@@ -259,8 +262,15 @@ export const RULES = {
   berriesPerCrate: 6,
   harvestSeconds: 1.0,
   dropSeconds: 0.5,
-  walkSpeed: 26 * K,
-  cartSpeed: 34 * K,
+  /*
+   * Tempi für die große Lichtung.
+   *
+   * Sie waren für 640 × 360 gewählt. Auf 1600 × 900 sind alle Wege rund
+   * zweieinhalbmal so lang – mit den alten Werten dauerte eine Runde über den
+   * Sortierring fünfunddreißig Sekunden, und die Lichtung wirkte eingeschlafen.
+   */
+  walkSpeed: 26 * K * 2.2,
+  cartSpeed: 34 * K * 2.4,
   unloadSeconds: 1.1,
   autosaveSeconds: 5,
   /** Sekunden, bis ein abgeernteter Busch wieder leuchtet. */
@@ -275,8 +285,17 @@ export const RULES = {
   faellSekunden: 1.6,
   /** Sekunden, die die Werkstatt für ein Brett aus einem Scheit braucht. */
   brettSekunden: 6,
-  /** Scheite, die im Holzstapel der Werkstatt Platz haben. */
-  holzstapel: 6
+
+  /** Scheite, die im Holzstapel der Werkstatt warten können. */
+  holzstapel: 6,
+
+  /* Küche */
+  /** Glühbeeren, die im Vorratskorb der Küche warten können. */
+  kuechenkorb: 24,
+  /** Glühbeeren für ein Glas Marmelade. */
+  beerenProGlas: 8,
+  /** Sekunden für ein Glas. */
+  glasSekunden: 9
 };
 
 /**
@@ -334,7 +353,7 @@ export const UPGRADES = {
     cost: 310, unlockAfterDeliveries: 36,
     beschreibung:
       "Aus der Station wird ein kleiner Hof mit zwei weiteren Plätzen.",
-    bretter: 10,
+    bretter: 10, marmelade: 6,
     wirkung: ["Kistenplätze 4 → 6", "Ladung pro Fahrt 4 → 6"]
   },
 
@@ -395,6 +414,27 @@ export const UPGRADES = {
               "Belegte Gleisabschnitte werden sichtbar"]
   },
 
+  kueche: {
+    id: "kueche", ort: "kueche", name: "Küche bauen",
+    cost: 160, bretter: 6, unlockAfterDeliveries: 20,
+    beschreibung:
+      "Am südlichen Halt entsteht eine Küche. Der Wurzelwagen holt Glühbeeren " +
+      "aus dem Vorratsstand und bringt sie hierher; daraus wird Marmelade. " +
+      "Erst damit lassen sich weitere Tiere versorgen – wer einzieht, will " +
+      "auch satt werden.",
+    wirkung: ["Dritter Halt am Ring wird bedient",
+              "Der Wagen holt Beeren aus dem Lager statt nur hinzubringen",
+              "Marmelade als dritter Baustoff"]
+  },
+  grosserkessel: {
+    id: "grosserkessel", ort: "kueche", name: "Großer Kessel",
+    cost: 240, bretter: 10, unlockAfterDeliveries: 30,
+    beschreibung:
+      "Ein zweiter, größerer Kessel über dem Feuer. Die Küche kocht schneller " +
+      "und hält mehr Beeren vorrätig.",
+    wirkung: ["Glas in 9 s → 5 s", "Vorratskorb 24 → 40 Glühbeeren"]
+  },
+
   pfote2: {
     id: "pfote2", ort: "nest", name: "Fern zieht ein",
     cost: 64, unlockAfterDeliveries: 5,
@@ -415,6 +455,7 @@ export const UPGRADES = {
     cost: 265, unlockAfterDeliveries: 32,
     beschreibung:
       "Der vierte Biber. Ohne ausgebautes Beet stehen jetzt Tiere herum.",
+    marmelade: 8,
     wirkung: ["Viertes Tier auf dem Weg"]
   }
 };

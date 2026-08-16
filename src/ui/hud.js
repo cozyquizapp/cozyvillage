@@ -126,6 +126,10 @@ export function starteOberflaeche() {
       <rect x="1" y="4" width="14" height="3" fill="#B5A177" stroke="#6B4F33" stroke-width="1"/>
       <rect x="1" y="8" width="14" height="3" fill="#9A8862" stroke="#6B4F33" stroke-width="1"/>
       <rect x="2" y="4.6" width="12" height="1" fill="#D2A468"/></svg>`;
+  const glas = `<svg viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="4" y="5" width="8" height="9" rx="1" fill="#F0885E" stroke="#453017" stroke-width="1.2"/>
+      <rect x="3" y="3" width="10" height="3" rx="1" fill="#B5A177" stroke="#453017" stroke-width="1.2"/>
+      <rect x="5.5" y="7" width="2" height="3" fill="#FFD05C"/></svg>`;
   const bluete = `<svg viewBox="0 0 16 16" aria-hidden="true">
       <path d="M7 8h2v7H7z" fill="#3E6440"/>
       <circle cx="8" cy="5.5" r="4.2" fill="#F5E9C0" stroke="#453017" stroke-width="1.2"/>
@@ -137,6 +141,7 @@ export function starteOberflaeche() {
       <div class="wert">${kiste}<div class="zahl"><b id="w-kisten">0</b><span>Station</span></div></div>
       <div class="wert">${wagen}<div class="zahl"><b id="w-wagen">0</b><span>im Wagen</span></div></div>
       <div class="wert">${brett}<div class="zahl"><b id="w-bretter">0</b><span>Bretter</span></div></div>
+      <div class="wert">${glas}<div class="zahl"><b id="w-marmelade">0</b><span>Marmelade</span></div></div>
       <div class="wert">${bluete}<div class="zahl"><b id="w-lief">0</b><span>Lieferungen</span></div></div>
     </div>
     <div class="hinweis">Fahre über die Lichtung – was leuchtet, lässt sich anklicken.</div>
@@ -155,6 +160,7 @@ export function starteOberflaeche() {
     kisten: document.getElementById("w-kisten"),
     wagen: document.getElementById("w-wagen"),
     bretter: document.getElementById("w-bretter"),
+    marmelade: document.getElementById("w-marmelade"),
     lief: document.getElementById("w-lief"),
     status: document.getElementById("status"),
     panel: document.getElementById("panel"),
@@ -190,6 +196,7 @@ function zeichne() {
   el.kisten.textContent = state.kisten;
   el.wagen.textContent = state.wagenLadung;
   el.bretter.textContent = state.bretter;
+  el.marmelade.textContent = state.marmelade;
   el.lief.textContent = state.lieferungen;
   for (const id of offeneAusbauten) setzeKnopf(id);
 }
@@ -241,10 +248,13 @@ function setzeKnopf(id) {
   const up = UPGRADES[id];
   const moeglich = istKaufbar(id);
   knopf.disabled = !moeglich;
-  const preis = up.bretter ? `${up.cost} Glühbeeren und ${up.bretter} Bretter` : `${up.cost} Glühbeeren`;
-  if (moeglich) knopf.textContent = `Für ${preis} bauen`;
+  const teile = [`${up.cost} Glühbeeren`];
+  if (up.bretter) teile.push(`${up.bretter} Bretter`);
+  if (up.marmelade) teile.push(`${up.marmelade} Marmelade`);
+  if (moeglich) knopf.textContent = `Für ${teile.join(", ")} bauen`;
   else if (state.beeren < up.cost) knopf.textContent = `Noch ${up.cost - state.beeren} Glühbeeren nötig`;
-  else knopf.textContent = `Noch ${(up.bretter || 0) - state.bretter} Bretter nötig`;
+  else if (state.bretter < (up.bretter || 0)) knopf.textContent = `Noch ${up.bretter - state.bretter} Bretter nötig`;
+  else knopf.textContent = `Noch ${(up.marmelade || 0) - state.marmelade} Marmelade nötig`;
 }
 
 // Für die Konsole, damit man den Slice von vorn spielen kann.

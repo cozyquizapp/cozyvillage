@@ -28,7 +28,8 @@ import {
   state, bus, melde, speichern, istFreigeschaltet,
   kistenPlaetze, wagenKapazitaet, beerenProKiste, regalPlaetze, lagerKapazitaet,
   beetBuesche, reifeSekunden, arbeiterZahl, wagenTempo,
-  werkstattSteht, holzstapel, brettSekunden, wagenZahl
+  werkstattSteht, holzstapel, brettSekunden, wagenZahl,
+  kuecheSteht, kuechenkorb, glasSekunden
 } from "../game/state.js";
 
 export default class GladeScene extends Phaser.Scene {
@@ -52,6 +53,7 @@ export default class GladeScene extends Phaser.Scene {
     this.baueNest();
     this.baueNutzbaeume();
     this.baueWerkstatt();
+    this.baueKueche();
     this.baueGleisnetz();
     this.baueWagen();
     this.baueArbeiter();
@@ -79,6 +81,7 @@ export default class GladeScene extends Phaser.Scene {
     this.aktualisiereStation();
     this.aktualisiereRegal();
     this.aktualisiereWerkstatt();
+    this.aktualisiereKueche();
 
     this.time.addEvent({
       delay: RULES.autosaveSeconds * 1000, loop: true, callback: speichern
@@ -540,7 +543,13 @@ export default class GladeScene extends Phaser.Scene {
     }
     while (this.wagen.length < soll) {
       const i = this.wagen.length;
-      const modell = new Wagen(this.netz, `wagen-${i}`, i === 0 ? "station" : "weiche");
+      // Startknoten aus dem Plan holen statt fest zu benennen: Seit dem
+      // Sortierring gibt es keinen Knoten „weiche" mehr, und ein Wagen auf
+      // einem unbekannten Knoten hat keine Position.
+      const halte = [...this.netz.knoten.values()]
+        .filter((k) => k.art === KNOTENART.HALT).map((k) => k.id);
+      const start = halte[i % Math.max(1, halte.length)] || halte[0];
+      const modell = new Wagen(this.netz, `wagen-${i}`, start);
       const p = modell.position();
       const bild = this.add.image(p.x, p.y + 8,
         this.textures.exists("wagen-0") ? "wagen-0" : "cart").setOrigin(0.5, 1);
@@ -643,6 +652,53 @@ export default class GladeScene extends Phaser.Scene {
     this.aktualisiereWerkstatt();
   }
 
+  /**
+   * Die Küche am südlichen Halt.
+   *
+   * Sie ist der erste Ort, der etwas **verbraucht**, statt etwas zu erzeugen:
+   * Der Wagen holt Glühbeeren aus dem Vorratsstand und bringt sie hierher.
+   * Damit fährt er zum ersten Mal auch von einem Gebäude zum anderen, statt
+   * nur von der Quelle zum Lager.
+   *
+   * Das Bild ist vorläufig die dritte Werkstattstufe – eine Werkbank unter
+   * offenem Dach. Eine eigene Küche ist bestellt.
+   */
+  baueKueche() {
+    const k = PLACES.kueche;
+    const key = this.textures.exists("werkstatt-2") ? "werkstatt-2" : "station-1-0";
+    this.kueche = this.add.image(k.x, k.y, key).setOrigin(0.5, 1);
+    this.tiefeSetzen(this.kueche, k.y);
+    this.kueche.setVisible(kuecheSteht());
+    this.machAnklickbar(this.kueche, () => this.oeffneKueche());
+
+    this.kuechenParzelle = this.add.image(k.x, k.y - 12, "parcel").setOrigin(0.5, 0.6).setDepth(5);
+    this.machAnklickbar(this.kuechenParzelle, () => this.oeffneKueche());
+
+    // Der Korb füllt sich sichtbar, die fertigen Gläser stehen daneben
+    this.korbBild = this.add.image(k.x - 40, k.y - 4, "crate").setOrigin(0.5, 1);
+    this.tiefeSetzen(this.korbBild, k.y + 1);
+    this.glaeser = [];
+    this.aktualisiereKueche();
+  }
+
+  aktualisiereKueche() {
+    const k = PLACES.kueche;
+    const an = kuecheSteht();
+    this.kueche.setVisible(an);
+    this.korbBild.setVisible(an && state.kuechenBeeren > 0);
+    this.kuechenParzelle.setVisible(!an);
+
+    const anzahl = Math.min(4, Math.ceil(state.marmelade / 2));
+    while (this.glaeser.length > anzahl) this.glaeser.pop().destroy();
+    while (this.glaeser.length < anzahl) {
+      const i = this.glaeser.length;
+      const g = this.add.image(k.x + 34 + (i % 2) * 12, k.y - 4 - Math.floor(i / 2) * 12, "spark")
+        .setOrigin(0.5, 1).setScale(5).setTint(0xf0885e);
+      this.tiefeSetzen(g, k.y + 1);
+      this.glaeser.push(g);
+    }
+  }
+
   /** Nussa, das Eichhörnchen. Sie kommt mit der Werkstatt und geht mit ihr. */
   baueNussa() {
     const bild = this.add.image(HOLZWEG.to.x, HOLZWEG.to.y, "eich-0").setOrigin(0.5, 1);
@@ -718,7 +774,8 @@ export default class GladeScene extends Phaser.Scene {
       station: { x: PLACES.station.x, y: PLACES.station.y - 84 },
       lager: { x: PLACES.store.x, y: PLACES.store.y - 96 },
       wald: { x: NUTZBAEUME[1].x, y: NUTZBAEUME[1].y - 104 },
-      werk: { x: PLACES.werkstatt.x, y: PLACES.werkstatt.y - 92 }
+      werk: { x: PLACES.werkstatt.x, y: PLACES.werkstatt.y - 92 },
+      kueche: { x: PLACES.kueche.x, y: PLACES.kueche.y - 92 }
     };
     this.stauZeichen = {};
     for (const [id, p] of Object.entries(orte)) {
@@ -890,6 +947,24 @@ export default class GladeScene extends Phaser.Scene {
     });
   }
 
+  oeffneKueche() {
+    const steht = kuecheSteht();
+    bus.emit("oeffne", {
+      titel: PLACES.kueche.label,
+      zeilen: steht ? [
+        `Im Korb: ${state.kuechenBeeren} von ${kuechenkorb()} Glühbeeren`,
+        `Marmelade im Regal: ${state.marmelade}`,
+        `Ein Glas braucht ${RULES.beerenProGlas} Beeren und ${glasSekunden()} Sekunden.`,
+        state.stau.kueche ? "Der Kessel steht still – es kommen keine Beeren an." : "",
+        this.gebauteZeile("kueche")
+      ].filter(Boolean) : [
+        "Ein vorbereiteter Platz am südlichen Halt.",
+        "Wer mehr Tiere aufnimmt, muss sie auch satt bekommen."
+      ],
+      ausbauten: this.ausbauListe("kueche")
+    });
+  }
+
   oeffneNest() {
     const namen = this.arbeiter.map((a) => a.name).join(", ");
     bus.emit("oeffne", {
@@ -948,6 +1023,15 @@ export default class GladeScene extends Phaser.Scene {
         this.nussa.bild.setVisible(true);
         this.aktualisiereWerkstatt();
         break;
+      case "kueche":
+        this.kueche.setVisible(true).setScale(0.4);
+        this.tweens.add({ targets: this.kueche, scale: 1, duration: 420, ease: "Back.easeOut" });
+        this.aktualisiereKueche();
+        break;
+      case "grosserkessel":
+        this.tweens.add({ targets: this.kueche, scaleX: 1.1, scaleY: 1.1,
+          duration: 260, yoyo: true, ease: "Sine.easeOut" });
+        break;
       case "saege":
         if (this.textures.exists("werkstatt-1")) this.werkstatt.setTexture("werkstatt-1");
         break;
@@ -1004,6 +1088,7 @@ export default class GladeScene extends Phaser.Scene {
     this.wachseBaeume(dt);
     if (werkstattSteht()) this.laufeNussa(dt);
     this.arbeiteWerkstatt(dt);
+    this.kocheMarmelade(dt);
     for (const a of this.arbeiter) this.laufeArbeiter(a, dt);
     // Ein Tier blockiert, solange es mit voller Kiste an der Station steht –
     // nicht nur in dem Bild, in dem es erfolglos nachfasst.
@@ -1168,6 +1253,24 @@ export default class GladeScene extends Phaser.Scene {
        * Ein Wagen nimmt, wovon mehr wartet – bei Gleichstand das Holz, damit
        * die Werkstatt nicht verhungert.
        */
+      /*
+       * Steht der Wagen am Vorratsstand und die Küche braucht Beeren, holt er
+       * sie dort ab. Das ist die erste Fahrt von Gebäude zu Gebäude – vorher
+       * ging alles nur von der Quelle zum Lager.
+       */
+      if (w.modell.knoten === "lager" && kuecheSteht()) {
+        const platz = kuechenkorb() - state.kuechenBeeren;
+        const menge = Math.min(platz, state.beeren, wagenKapazitaet() * beerenProKiste());
+        if (menge >= RULES.beerenProGlas) {
+          state.beeren -= menge;
+          w.art = "korb";
+          w.ladung = Math.ceil(menge / beerenProKiste());
+          w.korbBeeren = menge;
+          this.aktualisiereRegal();
+          this.aktualisiereWagenkisten(w);
+          if (w.modell.fahreZu("kueche")) { w.phase = "hin"; bus.emit("aendert"); return; }
+        }
+      }
       if (w.modell.knoten !== "station") {
         if (w.modell.ziel !== "station") w.modell.fahreZu("station");
         w.modell.tick(dt, tempo);
@@ -1203,11 +1306,37 @@ export default class GladeScene extends Phaser.Scene {
     } else if (w.phase === "abladen") {
       w.timer -= dt;
       if (w.timer <= 0) {
-        const fertig = w.art === "holz" ? this.ladeHolzAb(w) : this.ladeBeerenAb(w);
-        if (!fertig) { w.blockiert = true; w.timer = 0.4; }
+        const fertig = w.art === "holz" ? this.ladeHolzAb(w)
+          : w.art === "korb" ? this.ladeKorbAb(w)
+          : this.ladeBeerenAb(w);
+        if (!fertig) {
+          /*
+           * Voller Vorratsstand: Statt endlos zu warten fährt der Wagen seine
+           * Restladung zur Küche, wenn dort Platz ist.
+           *
+           * Das war zuerst eine Sackgasse: Die Küche verbraucht Beeren und
+           * würde das Lager entlasten – aber der Wagen, der sie beliefern
+           * müsste, hing am vollen Regal fest. Jetzt weicht er aus, und das
+           * ist zugleich die schönere Regel: Was nicht ins Lager passt, wird
+           * eingekocht.
+           */
+          if (w.art === "beeren" && w.modell.knoten === "lager" && kuecheSteht()
+              && kuechenkorb() - state.kuechenBeeren >= RULES.beerenProGlas) {
+            w.art = "korb";
+            w.korbBeeren = w.ladung * beerenProKiste();
+            this.aktualisiereWagenkisten(w);
+            if (w.modell.fahreZu("kueche")) {
+              w.phase = "hin";
+              w.blockiert = false;
+              melde("Das Regal ist voll – der Wagen bringt die Beeren in die Küche");
+              return;
+            }
+          }
+          w.blockiert = true; w.timer = 0.4;
+        }
         else {
           w.blockiert = false;
-          if (w.modell.fahreZu("station")) w.phase = "zurueck";
+          this.naechsteFahrt(w);
         }
       }
     } else if (w.phase === "zurueck") {
@@ -1215,6 +1344,31 @@ export default class GladeScene extends Phaser.Scene {
       if (w.modell.amZiel) w.phase = "wartet";
     }
     this.zeichneWagen(w);
+  }
+
+  /**
+   * Wohin nach dem Abladen?
+   *
+   * Steht der Wagen gerade am Vorratsstand und die Küche braucht Beeren, holt
+   * er sie sofort dort ab, statt erst leer zur Station zurückzufahren. Ohne
+   * diese Entscheidung wäre die Küche nie beliefert worden – der Wagen war nur
+   * in der Wartephase an der Station für sie ansprechbar.
+   */
+  naechsteFahrt(w) {
+    if (w.modell.knoten === "lager" && kuecheSteht()) {
+      const platz = kuechenkorb() - state.kuechenBeeren;
+      const menge = Math.min(platz, state.beeren, wagenKapazitaet() * beerenProKiste());
+      if (menge >= RULES.beerenProGlas) {
+        state.beeren -= menge;
+        w.art = "korb";
+        w.korbBeeren = menge;
+        w.ladung = Math.ceil(menge / beerenProKiste());
+        this.aktualisiereRegal();
+        this.aktualisiereWagenkisten(w);
+        if (w.modell.fahreZu("kueche")) { w.phase = "hin"; bus.emit("aendert"); return; }
+      }
+    }
+    if (w.modell.fahreZu("station")) w.phase = "zurueck";
   }
 
   /** Das Bild folgt dem Modell, nie umgekehrt. */
@@ -1269,6 +1423,23 @@ export default class GladeScene extends Phaser.Scene {
     if (w.ladung > 0) return false;
     state.lieferungen++;
     this.weckeWolf();
+    speichern();
+    return true;
+  }
+
+  ladeKorbAb(w) {
+    const platz = kuechenkorb() - state.kuechenBeeren;
+    const menge = Math.min(w.korbBeeren || 0, Math.max(0, platz));
+    if (menge <= 0) return false;
+    state.kuechenBeeren += menge;
+    w.korbBeeren -= menge;
+    w.ladung = Math.ceil((w.korbBeeren || 0) / beerenProKiste());
+    this.aktualisiereWagenkisten(w);
+    this.aktualisiereKueche();
+    this.funken.emitParticleAt(PLACES.kueche.x - 40, PLACES.kueche.y - 20, 8);
+    bus.emit("aendert");
+    if (w.korbBeeren > 0) return false;
+    state.lieferungen++;
     speichern();
     return true;
   }
@@ -1408,6 +1579,34 @@ export default class GladeScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Die Küche kocht Marmelade.
+   *
+   * Sie ist die dritte Engstelle: Kommt kein Nachschub aus dem Lager, steht
+   * sie still. Und weil sie Glühbeeren verbraucht, konkurriert sie mit den
+   * Ausbauten um denselben Vorrat – die Frage "kochen oder bauen" stellt das
+   * Spiel damit von selbst.
+   */
+  kocheMarmelade(dt) {
+    state.stau.kueche = false;
+    if (!kuecheSteht()) return;
+    if (state.kuechenBeeren < RULES.beerenProGlas) {
+      this.kuecheLeerSeit = (this.kuecheLeerSeit || 0) + dt;
+      state.stau.kueche = this.kuecheLeerSeit > 2;
+      return;
+    }
+    this.kuecheLeerSeit = 0;
+    this.kochTimer = (this.kochTimer || 0) + dt;
+    if (this.kochTimer >= glasSekunden()) {
+      this.kochTimer = 0;
+      state.kuechenBeeren -= RULES.beerenProGlas;
+      state.marmelade++;
+      this.aktualisiereKueche();
+      this.funken.emitParticleAt(PLACES.kueche.x, PLACES.kueche.y - 40, 8);
+      bus.emit("aendert");
+    }
+  }
+
   /** Wartezeichen ein- und ausblenden, mit ruhigem Wippen. */
   zeigeStau() {
     for (const [id, z] of Object.entries(this.stauZeichen)) {
@@ -1428,6 +1627,10 @@ export default class GladeScene extends Phaser.Scene {
     }
     if (state.stau.station) {
       melde("Die Verladestation ist voll – der Wurzelwagen kommt nicht nach");
+      return;
+    }
+    if (state.stau.kueche) {
+      melde("Der Kessel steht still – es kommen keine Beeren in der Küche an");
       return;
     }
     if (state.stau.werk) {

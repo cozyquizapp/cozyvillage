@@ -45,6 +45,7 @@ for (const up of folge) {
     kapazitaet,
     lieferungen: up.unlockAfterDeliveries,
     bretter: up.bretter || 0,
+    marmelade: up.marmelade || 0,
     passt
   });
   if (!passt) {
@@ -61,18 +62,21 @@ for (const up of folge) {
 /* Bretter sind die zweite Währung. Sie entstehen erst, wenn die Werkstatt
    steht – ein Ausbau, der Bretter kostet und vor ihr freigeschaltet wird,
    wäre genauso unbezahlbar wie ein zu teurer. */
-const werk = UPGRADES.werkstatt;
-for (const up of alle) {
-  if (!up.bretter) continue;
-  if (!werk || up.unlockAfterDeliveries <= werk.unlockAfterDeliveries) {
-    fehler.push(
-      `„${up.name}" kostet ${up.bretter} Bretter, wird aber nach ` +
-      `${up.unlockAfterDeliveries} Lieferungen sichtbar – die Werkstatt erst ` +
-      `nach ${werk ? werk.unlockAfterDeliveries : "nie"}. Bis dahin gibt es ` +
-      `keine Bretter.`
-    );
+for (const [wareId, feld, name] of [["werkstatt","bretter","Bretter"], ["kueche","marmelade","Marmelade"]]) {
+  const quelle = UPGRADES[wareId];
+  for (const up of alle) {
+    if (!up[feld]) continue;
+    if (!quelle || up.unlockAfterDeliveries <= quelle.unlockAfterDeliveries) {
+      fehler.push(
+        `„${up.name}" kostet ${up[feld]} ${name}, wird aber nach ` +
+        `${up.unlockAfterDeliveries} Lieferungen sichtbar – „${quelle ? quelle.name : "die Quelle"}" ` +
+        `erst nach ${quelle ? quelle.unlockAfterDeliveries : "nie"}. Bis dahin gibt es keine ${name}.`
+      );
+    }
   }
 }
+const werkAlt = UPGRADES.werkstatt;
+
 
 const breite = Math.max(...zeilen.map((z) => z.name.length));
 console.log("\nAusbaubaum in Kaufreihenfolge\n");
@@ -81,7 +85,7 @@ for (const z of zeilen) {
   console.log(
     `  ${z.passt ? "✓" : "✗"} ${z.name.padEnd(breite - 2)}   ` +
     `${String(z.lieferungen).padStart(7)}   ${String(z.kosten).padStart(6)}   ` +
-    `${String(z.kapazitaet).padStart(11)}${z.bretter ? `   + ${z.bretter} Bretter` : ""}`
+    `${String(z.kapazitaet).padStart(11)}${z.bretter ? `   +${z.bretter}B` : ""}${z.marmelade ? `   +${z.marmelade}M` : ""}`
   );
 }
 console.log("");

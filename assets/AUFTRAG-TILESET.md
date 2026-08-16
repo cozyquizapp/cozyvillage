@@ -820,3 +820,63 @@ Ohne diese Angaben ist das Paket für das Projekt nicht verwendbar.
 Das fertige Paket kommt nach `assets/tilesets/<paketname>/`. Wie es
 verdrahtet wird, steht in `assets/README.md`. Die Spiellogik muss dafür
 nicht angefasst werden.
+
+
+---
+
+### Batch 6 — die Unterkünfte, und damit erst ein Dorf
+
+Aus dem Spieltest, wörtlich:
+
+> „Es ist jetzt keine Cozyvillage, die Unterkünfte der Tiere fehlen, aber es
+> ist ein Anfang."
+
+Das trifft genau. Fellgrund hat inzwischen drei Produktionsketten, einen
+Sortierring, fünf Halte und fünf arbeitende Tiere — und **kein einziges Tier
+hat ein Zuhause**. Cozywolf schläft in seinem Nest in der Mitte; Bramble,
+Fern, Moos, Kiesel und Nussa laufen ihre Wege und verschwinden nirgends
+hinein. Ein Dorf ohne Wohnungen ist ein Betrieb.
+
+Das ist der wichtigste offene Punkt, wichtiger als jede weitere Maschine.
+
+**A · Eine Unterkunft je Art, in drei Stufen**
+
+Keine Häuser im menschlichen Sinn: Jede Art wohnt so, wie das Tier es täte.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `bau_biber_96x80.png` | 96 × 80 | 3 | Biberbau am Wasser: Reisighaufen → mit Eingang und Steg → mit Kamin und Fenster |
+| `kobel_eichhorn_64x96.png` | 64 × 96 | 3 | Kobel im Baum: Nest in der Astgabel → mit Dach → mit Leiter und Vorratsluke |
+| `sitzstange_eule_64x96.png` | 64 × 96 | 3 | Eulenunterschlupf: hohler Ast → mit Windschutz → mit Laterne und Dorfbuchbrett |
+
+Drei Stufen, weil eine Unterkunft dasselbe leisten soll wie jedes andere
+Gebäude: sichtbar besser werden, wenn man in sie investiert.
+
+**B · Bewohnte und unbewohnte Fassung**
+
+Wichtiger als die Ausbaustufe ist der Unterschied zwischen *steht leer* und
+*jemand wohnt hier*. Bitte je Stufe zusätzlich eine Zelle mit **Licht im
+Fenster, Rauch, Wäscheleine oder aufgeräumtem Vorplatz** — irgendein Zeichen,
+dass jemand da ist. Das ist der eigentliche Unterschied zwischen einem
+Betriebsgelände und einem Dorf.
+
+**C · Die Küche**
+
+Sie steht seit heute im Spiel und benutzt vorläufig die dritte
+Werkstattstufe als Bild — eine Werkbank, an der Marmelade gekocht wird.
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `kueche_96x80.png` | 96 × 80 | 3 | Kessel über offenem Feuer, Vorratskorb, Regal für die Gläser. Stufen: einfacher Kessel → mit Rauchfang → mit zweitem großen Kessel |
+| `marmeladenglas_32.png` | 32 × 32 | 3 | ein Glas, drei Gläser, ein volles Regalbrett |
+
+**D · Was zusammen ein Dorf ergibt**
+
+Kleinigkeiten, die keine Mechanik brauchen, aber den Unterschied machen:
+
+| Teil | Größe | Zellen | Beschreibung |
+|---|---|---|---|
+| `dorfkram_32.png` | 32 × 32 | 8 | Wäscheleine, Feuerstelle, Bank, Brunnen, Blumenkasten, Schubkarre, Fass, Wegweiser |
+
+Ausdrücklich nicht in Batch 6: Kristallquelle, Axolotl, Biene, Maulwurf,
+Tag- und Nachtfassungen, weitere Bezirke.
